@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Turntable Motion Lab</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body {
+      min-height: 100vh;
+      color: #eef3ff;
+      background:
+        radial-gradient(circle at 24% 18%, rgba(82, 102, 255, .24), transparent 31%),
+        radial-gradient(circle at 80% 80%, rgba(22, 193, 178, .14), transparent 28%),
+        #090c14;
+    }
+    button { font: inherit; }
+    .shell { display: grid; min-height: 100vh; grid-template-columns: minmax(0, 1fr) 290px; }
+    .stage { position: relative; display: grid; min-height: 560px; place-items: center; overflow: hidden; padding: 44px; }
+    .stage::before {
+      position: absolute; width: min(55vw, 520px); aspect-ratio: 1; border: 1px solid rgba(151, 166, 202, .09);
+      border-radius: 50%; box-shadow: 0 0 0 46px rgba(151,166,202,.025), 0 0 0 92px rgba(151,166,202,.018); content: '';
+    }
+    svg { position: relative; width: min(58vw, 520px); max-height: 72vh; overflow: visible; filter: drop-shadow(0 22px 42px rgba(0,0,0,.42)); }
+    .slice { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: filter 160ms ease, opacity 160ms ease, transform 220ms cubic-bezier(.2,.9,.2,1.2); }
+    .slice:hover { filter: brightness(1.14) drop-shadow(0 7px 8px rgba(0,0,0,.28)); transform: scale(1.045); }
+    .center { pointer-events: none; }
+    .center-value { fill: white; font-size: 26px; font-weight: 720; text-anchor: middle; }
+    .center-label { fill: #8790a6; font-size: 9px; font-weight: 700; letter-spacing: .16em; text-anchor: middle; }
+    .panel { display: flex; flex-direction: column; gap: 24px; padding: 34px 28px; border-left: 1px solid rgba(147,160,190,.14); background: rgba(12,16,27,.78); backdrop-filter: blur(18px); }
+    .eyebrow { margin: 0 0 9px; color: #7d8aad; font-size: 9px; font-weight: 800; letter-spacing: .18em; }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 500; line-height: 1.05; }
+    .lede { margin: 12px 0 0; color: #929bb1; font-size: 12px; line-height: 1.7; }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat { padding: 12px; border: 1px solid rgba(149,165,199,.13); border-radius: 10px; background: rgba(255,255,255,.025); }
+    .stat span { display: block; margin-bottom: 6px; color: #77829c; font-size: 8px; letter-spacing: .12em; }
+    .stat strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; }
+    .controls { display: grid; gap: 9px; }
+    .controls button {
+      min-height: 40px; padding: 0 13px; border: 1px solid rgba(139,157,199,.2); border-radius: 9px;
+      color: #dce5ff; background: rgba(91,109,255,.09); cursor: pointer; font-size: 11px; font-weight: 700; text-align: left;
+    }
+    .controls button:hover { border-color: rgba(130,150,255,.48); background: rgba(91,109,255,.17); }
+    .controls button.primary { color: white; background: #5468ff; border-color: #6678ff; }
+    .controls button.is-held { color: #07111e; background: #59ddc9; border-color: #59ddc9; }
+    .hint { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(149,165,199,.12); color: #747f97; font-size: 10px; line-height: 1.75; }
+    .hint kbd { display: inline-grid; min-width: 22px; height: 22px; place-items: center; margin-right: 5px; border: 1px solid #374158; border-radius: 5px; color: #aebbd8; background: #151b29; font: 10px ui-monospace, monospace; }
+    .toast { position: absolute; bottom: 24px; left: 24px; padding: 9px 12px; border: 1px solid rgba(136,154,194,.18); border-radius: 999px; color: #9aa7c2; background: rgba(12,16,27,.78); font: 9px ui-monospace, monospace; opacity: 0; transform: translateY(8px); transition: .2s ease; }
+    .toast.show { opacity: 1; transform: none; }
+    @media (max-width: 760px) { .shell { grid-template-columns: 1fr; } .panel { border-top: 1px solid rgba(147,160,190,.14); border-left: 0; } .stage { min-height: 440px; padding: 26px; } svg { width: min(86vw, 430px); } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="stage" aria-label="SVG 转盘动效画布">
+      <svg id="wheel" viewBox="-250 -250 500 500" role="img" aria-label="可交互的数据转盘">
+        <g id="slices"></g>
+        <g class="center">
+          <circle r="72" fill="#0c111d" stroke="rgba(184,198,230,.14)" />
+          <text class="center-value" y="-2" id="centerCount">5</text>
+          <text class="center-label" y="20">LIVE SLICES</text>
+        </g>
+      </svg>
+      <div class="toast" id="toast">DOUBLE CLICK · REMOVE SLICE</div>
+    </section>
+    <aside class="panel">
+      <header>
+        <p class="eyebrow">2018 · MOTION STUDY</p>
+        <h1>Turntable<br />Motion Lab</h1>
+        <p class="lede">比例数据先变成圆弧几何，再由相邻扇区的实时状态串成连续运动。</p>
+      </header>
+      <div class="stats">
+        <div class="stat"><span>SLICES</span><strong id="sliceCount">05</strong></div>
+        <div class="stat"><span>PLAYBACK</span><strong id="speedLabel">1.00×</strong></div>
+        <div class="stat"><span>STIFFNESS</span><strong id="stiffnessLabel">50</strong></div>
+        <div class="stat"><span>GEOMETRY</span><strong>SVG ARC</strong></div>
+      </div>
+      <div class="controls">
+        <button class="primary" id="randomize">R · 重组数据</button>
+        <button id="slowButton">按住 S · 慢动作观察</button>
+        <button id="reset">恢复 10 / 20 / 30</button>
+      </div>
+      <p class="hint"><kbd>R</kbd> 随机重组扇区<br /><kbd>S</kbd> 按住降低速度，松开立即恢复<br />双击任意扇区可移除；悬停可观察局部聚焦。</p>
+    </aside>
+  </main>
+  <script>
+    const colors = ['#536dfe','#20c6b7','#f3b84b','#f06f78','#8968ed','#3f9ae8','#e16bb4','#8bbd55'];
+    const slicesRoot = document.querySelector('#slices');
+    const toast = document.querySelector('#toast');
+    const countNodes = [document.querySelector('#sliceCount'), document.querySelector('#centerCount')];
+    const speedLabel = document.querySelector('#speedLabel');
+    const stiffnessLabel = document.querySelector('#stiffnessLabel');
+    const slowButton = document.querySelector('#slowButton');
+    let values = [10,20,30];
+    let current = [0,0,0];
+    let velocity = [0,0,0];
+    let pathNodes = [];
+    let slow = false;
+    let last = performance.now();
+    let animationFrame = 0;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const polar = (angle, radius=205) => ({ x: Math.cos(angle-Math.PI/2)*radius, y: Math.sin(angle-Math.PI/2)*radius });
+    const arcPath = (start, end) => {
+      const a = polar(start), b = polar(end), span = Math.max(0, end-start);
+      return `M0 0 L${a.x.toFixed(2)} ${a.y.toFixed(2)} A205 205 0 ${span > Math.PI ? 1 : 0} 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)} Z`;
+    };
+    function normalize(input) { const sum = input.reduce((a,b)=>a+b,0) || 1; return input.map(v => v/sum); }
+    function setValues(next) {
+      const oldLength = current.length;
+      values = next.length ? next : [1];
+      current = values.map((_,i) => current[i] ?? 0);
+      velocity = values.map((_,i) => velocity[i] ?? 0);
+      if (values.length !== oldLength) flash('DATA CHANGED · SPRING RE-TARGETED');
+      render();
+      requestTick();
+    }
+    function render() {
+      let angle = 0;
+      while (pathNodes.length < current.length) {
+        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+        path.setAttribute('class','slice');
+        path.addEventListener('dblclick', event => {
+          const index = Number(event.currentTarget.dataset.index);
+          if (values.length === 1) return flash('至少保留一个扇区');
+          const next = values.filter((_,i)=>i!==index);
+          current.splice(index,1); velocity.splice(index,1); setValues(next);
+        });
+        path.addEventListener('mouseenter', event => {
+          const index = Number(event.currentTarget.dataset.index);
+          flash(`SLICE ${String(index+1).padStart(2,'0')} · ${(current[index]*100).toFixed(1)}%`);
+        });
+        slicesRoot.appendChild(path);
+        pathNodes.push(path);
+      }
+      while (pathNodes.length > current.length) pathNodes.pop().remove();
+      current.forEach((fraction, index) => {
+        const end = angle + fraction * Math.PI * 2;
+        const path = pathNodes[index];
+        path.setAttribute('d', arcPath(angle,end));
+        path.setAttribute('fill', colors[index % colors.length]);
+        path.setAttribute('data-index', index);
+        path.setAttribute('aria-label', `扇区 ${index+1}`);
+        path.style.opacity = fraction < .0001 ? '0' : '1';
+        angle = end;
+      });
+      countNodes[0].textContent = String(values.length).padStart(2,'0');
+      countNodes[1].textContent = values.length;
+    }
+    function requestTick() {
+      if (animationFrame || document.hidden) return;
+      if (reducedMotion.matches) {
+        current = normalize(values);
+        velocity = values.map(() => 0);
+        render();
+        return;
+      }
+      animationFrame = requestAnimationFrame(tick);
+    }
+    function tick(now) {
+      animationFrame = 0;
+      const dt = Math.min(32, now-last) / 1000 * (slow ? .12 : 1);
+      last = now;
+      const target = normalize(values);
+      let moving = false;
+      for (let i=0;i<target.length;i++) {
+        const force = (target[i]-current[i]) * 50;
+        velocity[i] = (velocity[i] + force*dt) * Math.pow(.19,dt);
+        current[i] += velocity[i]*dt;
+        moving ||= Math.abs(target[i]-current[i]) > .00005 || Math.abs(velocity[i]) > .00005;
+      }
+      render();
+      if (moving) requestTick();
+    }
+    function randomize() {
+      const count = 4 + Math.floor(Math.random()*6);
+      setValues(Array.from({length:count},()=>8+Math.round(Math.random()*38)));
+    }
+    function setSlow(next) {
+      slow = next;
+      speedLabel.textContent = slow ? '0.12×' : '1.00×';
+      stiffnessLabel.textContent = slow ? '01' : '50';
+      slowButton.classList.toggle('is-held', slow);
+      slowButton.textContent = slow ? '松开 · 恢复正常速度' : '按住 S · 慢动作观察';
+    }
+    let toastTimer;
+    function flash(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),1300); }
+    document.querySelector('#randomize').addEventListener('click', randomize);
+    document.querySelector('#reset').addEventListener('click', () => { current=[0,0,0]; velocity=[0,0,0]; setValues([10,20,30]); });
+    slowButton.addEventListener('pointerdown', () => setSlow(true));
+    window.addEventListener('pointerup', () => setSlow(false));
+    window.addEventListener('keydown', e => { if (e.key.toLowerCase()==='s') setSlow(true); if (e.key.toLowerCase()==='r' && !e.repeat) randomize(); });
+    window.addEventListener('keyup', e => { if (e.key.toLowerCase()==='s') setSlow(false); });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && animationFrame) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      } else {
+        last = performance.now();
+        requestTick();
+      }
+    });
+    reducedMotion.addEventListener('change', () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      last = performance.now();
+      requestTick();
+    });
+    requestTick();
+  </script>
+</body>
+</html>

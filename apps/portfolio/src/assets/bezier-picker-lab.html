@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bezier Easing Picker</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #20242c; background: #eef1f5; }
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body { min-height: 100vh; background: radial-gradient(circle at 70% 10%, #fff, transparent 34%), #eef1f5; }
+    button, input { font: inherit; }
+    .shell { display: grid; min-height: 100vh; grid-template-rows: auto 1fr; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding: 28px 34px 22px; border-bottom: 1px solid #dfe3e9; background: rgba(255,255,255,.72); }
+    .eyebrow { margin: 0 0 6px; color: #7e8796; font-size: 9px; font-weight: 800; letter-spacing: .18em; }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 500; }
+    .live-value { max-width: 470px; padding: 9px 12px; border: 1px solid #d7dce5; border-radius: 8px; color: #516070; background: white; font: 10px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+    .workspace { display: grid; grid-template-columns: 190px minmax(300px, 1fr) minmax(260px, 360px); gap: 0; min-height: 520px; }
+    .presets { padding: 30px 24px; border-right: 1px solid #dfe3e9; background: rgba(249,250,252,.84); }
+    .panel-title { margin: 0 0 15px; color: #929aa8; font-size: 9px; font-weight: 800; letter-spacing: .15em; }
+    .preset-list { display: grid; gap: 7px; }
+    .preset { display: flex; min-height: 38px; align-items: center; gap: 9px; padding: 0 10px; border: 1px solid transparent; border-radius: 8px; color: #5a626f; background: transparent; cursor: pointer; font-size: 11px; text-align: left; }
+    .preset::before { width: 9px; height: 9px; border: 1px solid #a9b0bb; border-radius: 50%; content: ''; }
+    .preset:hover { background: #f0f3f7; }
+    .preset.active { border-color: #cdd8fb; color: #2f5fd1; background: #edf2ff; font-weight: 700; }
+    .preset.active::before { border: 3px solid #356ae6; }
+    .board-wrap { display: grid; place-items: center; padding: 32px; background-image: linear-gradient(rgba(94,105,124,.035) 1px, transparent 1px), linear-gradient(90deg,rgba(94,105,124,.035) 1px,transparent 1px); background-size: 24px 24px; }
+    .board-card { width: min(430px, 100%); padding: 22px; border: 1px solid #d9dee7; border-radius: 14px; background: rgba(255,255,255,.94); box-shadow: 0 18px 48px rgba(33,42,58,.09); }
+    .board-card svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: none; }
+    .grid { stroke: #e7eaf0; stroke-width: 1; }
+    .diagonal { stroke: #c8ced8; stroke-width: 1; stroke-dasharray: 4 5; }
+    .curve { fill: none; stroke: #151b24; stroke-width: 3; stroke-linecap: round; }
+    .handle-line.start { stroke: #ef656b; } .handle-line.end { stroke: #356ae6; }
+    .handle-line { stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .handle { cursor: grab; stroke-width: 3; fill: white; }
+    .handle:active { cursor: grabbing; }
+    .handle.start { stroke: #ef656b; } .handle.end { stroke: #356ae6; }
+    .coords { display: flex; justify-content: space-between; margin-top: 14px; color: #748092; font: 10px ui-monospace, monospace; }
+    .preview { display: flex; flex-direction: column; gap: 24px; padding: 30px 28px; border-left: 1px solid #dfe3e9; background: rgba(249,250,252,.84); }
+    .track { position: relative; height: 92px; overflow: hidden; border: 1px solid #dfe3ea; border-radius: 12px; background: white; }
+    .track::before { position: absolute; top: 50%; right: 18px; left: 18px; height: 1px; background: #e2e6ed; content: ''; }
+    .runner { position: absolute; top: 31px; left: 14px; width: 30px; height: 30px; border-radius: 9px; background: #356ae6; box-shadow: 0 8px 17px rgba(53,106,230,.28); animation: travel 2s infinite alternate; }
+    .runner::after { position: absolute; inset: 9px; border: 2px solid white; border-radius: 50%; content: ''; }
+    .track.disabled .runner { animation: none; opacity: .38; }
+    @keyframes travel { from { transform: translateX(0) rotate(0); } to { transform: translateX(calc(100% + 220px)) rotate(180deg); } }
+    .values { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+    .value { padding: 11px; border: 1px solid #e0e4ea; border-radius: 9px; background: white; }
+    .value span { display: block; margin-bottom: 5px; color: #9aa1ad; font-size: 8px; }
+    .value strong { color: #36404d; font: 12px ui-monospace, monospace; }
+    .copy { min-height: 40px; border: 0; border-radius: 9px; color: white; background: #285edb; cursor: pointer; font-size: 11px; font-weight: 750; }
+    .copy:hover { background: #184ec8; }
+    .note { margin: auto 0 0; color: #838c9a; font-size: 10px; line-height: 1.7; }
+    @media (max-width: 840px) { header { align-items: flex-start; flex-direction: column; } .workspace { grid-template-columns: 150px 1fr; } .preview { grid-column: 1 / -1; border-top: 1px solid #dfe3e9; border-left: 0; } }
+    @media (max-width: 560px) { .workspace { grid-template-columns: 1fr; } .presets { border-right: 0; } .preset-list { grid-template-columns: repeat(2,1fr); } .board-wrap { padding: 22px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div><p class="eyebrow">2017 · EXTRACTED UI COMPONENT</p><h1>Bezier Easing Picker</h1></div>
+      <code class="live-value" id="code">transition-timing-function: cubic-bezier(0.42, 0, 1, 1);</code>
+    </header>
+    <div class="workspace">
+      <aside class="presets">
+        <p class="panel-title">CURVE PRESETS</p>
+        <div class="preset-list" id="presets"></div>
+      </aside>
+      <section class="board-wrap" aria-label="贝塞尔曲线编辑区">
+        <div class="board-card">
+          <svg id="board" viewBox="0 0 300 300" role="img" aria-label="可拖拽控制点的三次贝塞尔曲线">
+            <path class="grid" id="grid" />
+            <line class="diagonal" x1="0" y1="300" x2="300" y2="0" />
+            <line class="handle-line start" id="startLine" x1="0" y1="300" />
+            <line class="handle-line end" id="endLine" x1="300" y1="0" />
+            <path class="curve" id="curve" />
+            <circle class="handle start" id="startHandle" r="8" tabindex="0" />
+            <circle class="handle end" id="endHandle" r="8" tabindex="0" />
+          </svg>
+          <div class="coords"><span id="startCoord"></span><span id="endCoord"></span></div>
+        </div>
+      </section>
+      <aside class="preview">
+        <div><p class="panel-title">MOTION PREVIEW</p><div class="track" id="track"><div class="runner" id="runner"></div></div></div>
+        <div><p class="panel-title">CONTROL POINTS</p><div class="values"><div class="value"><span>X1 / Y1</span><strong id="v1"></strong></div><div class="value"><span>X2 / Y2</span><strong id="v2"></strong></div></div></div>
+        <button class="copy" id="copy">复制 CSS 参数</button>
+        <p class="note">拖拽红、蓝控制点会进入 Self 模式；选择预设可立即比较速度、加速度和回弹节奏。</p>
+      </aside>
+    </div>
+  </main>
+  <script>
+    const SIZE = 300;
+    const options = [
+      ['Default', .25,.10,.25,1], ['Ease In', .42,0,1,1], ['Ease Out', 0,0,.58,1],
+      ['Ease Both', .42,0,.58,1], ['Linear', 0,0,1,1], ['None', 0,0,1,1]
+    ];
+    let point = { x1:.42, y1:0, x2:1, y2:1, picked:'Ease In' };
+    let dragging = null;
+    const board = document.querySelector('#board');
+    const curve = document.querySelector('#curve');
+    const startHandle = document.querySelector('#startHandle');
+    const endHandle = document.querySelector('#endHandle');
+    const startLine = document.querySelector('#startLine');
+    const endLine = document.querySelector('#endLine');
+    const runner = document.querySelector('#runner');
+    const track = document.querySelector('#track');
+    const code = document.querySelector('#code');
+    const grid = document.querySelector('#grid');
+    grid.setAttribute('d', Array.from({length:9},(_,i)=>{const p=(i+1)*30;return `M${p} 0V300 M0 ${p}H300`;}).join(' '));
+    const clamp = value => Math.max(0,Math.min(1,value));
+    const fmt = value => Number(value).toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+    function render() {
+      const sx=point.x1*SIZE, sy=(1-point.y1)*SIZE, ex=point.x2*SIZE, ey=(1-point.y2)*SIZE;
+      curve.setAttribute('d', point.picked==='None' ? '' : `M0 300 C${sx} ${sy}, ${ex} ${ey}, 300 0`);
+      startHandle.setAttribute('cx',sx); startHandle.setAttribute('cy',sy);
+      endHandle.setAttribute('cx',ex); endHandle.setAttribute('cy',ey);
+      startLine.setAttribute('x2',sx); startLine.setAttribute('y2',sy);
+      endLine.setAttribute('x2',ex); endLine.setAttribute('y2',ey);
+      const timing=`cubic-bezier(${fmt(point.x1)}, ${fmt(point.y1)}, ${fmt(point.x2)}, ${fmt(point.y2)})`;
+      runner.style.animationTimingFunction=timing;
+      track.classList.toggle('disabled',point.picked==='None');
+      code.textContent=point.picked==='None' ? 'transition: none;' : `transition-timing-function: ${timing};`;
+      document.querySelector('#startCoord').textContent=`P1  ${fmt(point.x1)} · ${fmt(point.y1)}`;
+      document.querySelector('#endCoord').textContent=`P2  ${fmt(point.x2)} · ${fmt(point.y2)}`;
+      document.querySelector('#v1').textContent=`${fmt(point.x1)}, ${fmt(point.y1)}`;
+      document.querySelector('#v2').textContent=`${fmt(point.x2)}, ${fmt(point.y2)}`;
+      document.querySelectorAll('.preset').forEach(el=>el.classList.toggle('active',el.dataset.name===point.picked));
+    }
+    const presetsRoot=document.querySelector('#presets');
+    options.forEach(([name,x1,y1,x2,y2])=>{
+      const button=document.createElement('button'); button.className='preset'; button.dataset.name=name; button.textContent=name;
+      button.addEventListener('click',()=>{point={x1,y1,x2,y2,picked:name};render();}); presetsRoot.appendChild(button);
+    });
+    const self=document.createElement('button'); self.className='preset'; self.dataset.name='Self'; self.textContent='Self'; presetsRoot.appendChild(self);
+    function updateFromPointer(event) {
+      const rect=board.getBoundingClientRect();
+      const x=clamp((event.clientX-rect.left)/rect.width), y=clamp(1-(event.clientY-rect.top)/rect.height);
+      if(dragging==='start'){point.x1=x;point.y1=y;}else{point.x2=x;point.y2=y;} point.picked='Self'; render();
+    }
+    [startHandle,endHandle].forEach((handle,index)=>handle.addEventListener('pointerdown',event=>{dragging=index?'end':'start';handle.setPointerCapture(event.pointerId);updateFromPointer(event);}));
+    board.addEventListener('pointermove',event=>{if(dragging)updateFromPointer(event);});
+    board.addEventListener('pointerup',()=>dragging=null); board.addEventListener('pointercancel',()=>dragging=null);
+    document.querySelector('#copy').addEventListener('click',async event=>{try{await navigator.clipboard.writeText(code.textContent);event.currentTarget.textContent='已复制';setTimeout(()=>event.currentTarget.textContent='复制 CSS 参数',1200);}catch{event.currentTarget.textContent='请手动复制上方代码';}});
+    render();
+  </script>
+</body>
+</html>

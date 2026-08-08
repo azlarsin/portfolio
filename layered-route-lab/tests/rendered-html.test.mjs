@@ -47,6 +47,111 @@ test("deep links are served by the frontend catch-all", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Layered Route Lab/);
+  assert.equal(html.match(/data-reconstructible="true"/g)?.length, 5);
+});
+
+test("server rendering starts from the requested route instead of the default deep stack", async () => {
+  const response = await render("/products");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+
+  assert.equal(html.match(/data-reconstructible="true"/g)?.length, 1);
+  assert.match(html, /data-surface-id="\/products"/);
+  assert.doesNotMatch(html, /data-surface-id="\/product\/1\/order\/2\/edit"/);
+});
+
+test("metadata stays static and resolves social images from the configured site URL", async () => {
+  const layout = await readFile(
+    new URL("../app/layout.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.doesNotMatch(layout, /next\/headers|headers\(\)/);
+  assert.match(layout, /process\.env\.NEXT_PUBLIC_SITE_URL/);
+  assert.match(layout, /process\.env\.ALLOW_LOCAL_DEMO_URL === "1"/);
+  assert.match(layout, /process\.env\.NODE_ENV === "production"/);
+  assert.match(layout, /cannot use localhost for a production build/);
+  assert.match(layout, /metadataBase/);
+  assert.match(layout, /url: "\/og\.png"/);
+});
+
+test("programmatic history updates notify the current URL store", async () => {
+  const app = await readFile(
+    new URL("../src/App.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    app,
+    /window\.addEventListener\(LOCATION_CHANGE_EVENT, onStoreChange\)/,
+  );
+  assert.equal(app.match(/notifyLocationChange\(\);/g)?.length, 2);
+});
+
+test("employee order deep links preserve the synthetic query for client reconstruction", async () => {
+  const response = await render(
+    "/employee/A-17/order/1?date=2026-08-06&period=%E5%8D%88%E9%A4%90&focus_item=%E9%A6%99%E8%8D%89%E7%83%A9%E9%A5%AD",
+  );
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /Layered Route Lab/);
+  assert.match(html, /__VINEXT_RSC_PARAMS__=\{"path":\["employee","A-17","order","1"\]\}/);
+  assert.match(html, /"pathname":"\/employee\/A-17\/order\/1"/);
+  assert.match(html, /\["period","午餐"\]/);
+  assert.match(html, /\["focus_item","香草烩饭"\]/);
+});
+
+test("agent execution keeps every step visible and reveals deep routes progressively", async () => {
+  const overlay = await readFile(
+    new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(overlay, /const AGENT_STEP_DELAY_MS = 500/);
+  assert.match(overlay, /function buildProgressiveNavigationTargets/);
+  assert.match(overlay, /buildRouteStack\(url\.pathname\)/);
+  assert.match(
+    overlay,
+    /const routeTargets = buildProgressiveNavigationTargets\(target\)/,
+  );
+  assert.match(overlay, /index === 0 \? "push" : "replace"/);
+  assert.match(overlay, /snapshot\.topEntered/);
+  assert.match(overlay, /function waitForPacingFloor/);
+  assert.match(overlay, /Math\.min\(remaining, 32\)/);
+  assert.match(overlay, /const convergenceDeadline = window\.performance\.now\(\) \+ 1_200/);
+  assert.match(overlay, /data-step-delay-ms=\{AGENT_STEP_DELAY_MS\}/);
+  assert.match(overlay, /data-step-state=/);
+  assert.match(overlay, /STEP DELAY:/);
+  assert.doesNotMatch(overlay, /await wait\(260\)/);
+});
+
+test("agent commands are acknowledged by the host App bridge and Alt+S starts execution", async () => {
+  const [app, overlay, bridge] = await Promise.all([
+    readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/appBridge.ts", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(bridge, /layered-route-lab:agent-command/);
+  assert.match(bridge, /layered-route-lab:agent-result/);
+  assert.match(bridge, /type: "route\.navigate"/);
+  assert.match(bridge, /type: "presenter\.advance"/);
+  assert.match(bridge, /type: "modal\.open"/);
+  assert.match(bridge, /type: "inspection\.set"/);
+  assert.match(bridge, /type: "playback\.set"/);
+  assert.match(overlay, /sendLabAppCommand/);
+  assert.match(overlay, /event\.altKey && event\.code === "KeyS"/);
+  assert.match(overlay, /window\.addEventListener\("keyup", handleKeyUp, true\)/);
+  assert.match(overlay, /setPlaybackPacing\(false\)/);
+  assert.match(overlay, /void runPlan\(plan\)/);
+  assert.match(overlay, /data-app-bridge="ready"/);
+  assert.match(overlay, /data-playback-mode=/);
+  assert.doesNotMatch(overlay, /new PopStateEvent|new KeyboardEvent/);
+  assert.match(app, /window\.addEventListener\(LAB_AGENT_COMMAND_EVENT/);
+  assert.match(app, /commitNavigation\(request\.command\.target, request\.command\.mode\)/);
+  assert.match(app, /data-agent-playback=\{agentPlaybackMode\}/);
+  assert.match(app, /releasePendingResponses\(\)/);
+  assert.match(app, /respondAfter\(request\.requestId, settleDuration\)/);
 });
 
 test("route reconstruction uses a branched behavior tree", async () => {
@@ -73,6 +178,8 @@ test("route reconstruction uses a branched behavior tree", async () => {
     routes,
     /path: "\/product\/1\/orders\/paid\/order\/1"/,
   );
+  assert.match(routes, /path: "\/employees"/);
+  assert.match(routes, /path: "\/employee\/A-17\/order\/1"/);
   assert.match(routes, /function flattenDemoRouteTree/);
   assert.match(presenter, /data-reconstructible=\{reconstructible\}/);
   assert.match(presenter, /页面刷新后会被重建/);
@@ -219,6 +326,14 @@ test("3D mode tiles every presenter by its index target", async () => {
   );
   assert.match(css, /inset: var\(--overview-mobile-top\)/);
   assert.match(css, /scale\(1\.008\)/);
+  assert.match(
+    css,
+    /\.presenter\[data-entered="false"\][\s\S]*?will-change: transform, opacity/,
+  );
+  assert.doesNotMatch(
+    css,
+    /^\.presenter \{[^}]*will-change/m,
+  );
 
   assert.match(app, /className="presenter-canvas"/);
   assert.match(app, /Math\.max\(1, overviewRows \/ 3\) \* 100/);

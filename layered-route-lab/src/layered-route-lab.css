@@ -176,6 +176,11 @@
     border-radius 360ms ease;
   backface-visibility: hidden;
   contain: layout style;
+}
+
+.presenter[data-entered="false"],
+.presenter[data-leaving="true"],
+.stage[data-d3="true"] .presenter {
   will-change: transform, opacity;
 }
 
@@ -589,6 +594,11 @@
   transition: transform 300ms ease-in-out, opacity 300ms ease-in-out,
     background-color 300ms ease-in-out, width 300ms ease-in-out,
     height 300ms ease-in-out;
+}
+
+.modal-card[data-active="false"],
+.modal-card[data-leaving="true"],
+.modal-card[data-prev-leaving="true"] {
   will-change: transform, opacity;
 }
 

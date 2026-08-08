@@ -7,10 +7,14 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "generate:agent": "node scripts/generate-agent-manifest.mjs",
+    "predev": "pnpm run generate:agent",
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
+    "prebuild": "pnpm run generate:agent",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "pnpm run build && node --test tests/rendered-html.test.mjs",
+    "test": "ALLOW_LOCAL_DEMO_URL=1 NEXT_PUBLIC_SITE_URL=http://localhost:3000 pnpm run build && pnpm run test:built",
+    "test:built": "ALLOW_LOCAL_DEMO_URL=1 NEXT_PUBLIC_SITE_URL=http://localhost:3000 node --test tests/*.test.mjs",
     "check": "pnpm run lint",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },

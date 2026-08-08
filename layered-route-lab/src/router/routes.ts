@@ -8,7 +8,11 @@ export type RouteId =
   | "product-order"
   | "product-order-edit"
   | "product-orders-paid"
-  | "product-paid-order";
+  | "product-paid-order"
+  | "employees"
+  | "employee"
+  | "employee-orders"
+  | "employee-order";
 
 export interface RouteDefinition {
   id: RouteId;
@@ -61,6 +65,22 @@ export const DEMO_ROUTE_TREE: readonly DemoRouteNode[] = [
             path: "/product/1/orders/paid",
             children: [
               { path: "/product/1/orders/paid/order/1" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: "/employees",
+    children: [
+      {
+        path: "/employee/A-17",
+        children: [
+          {
+            path: "/employee/A-17/orders",
+            children: [
+              { path: "/employee/A-17/order/1" },
             ],
           },
         ],
@@ -157,6 +177,38 @@ export const ROUTES: RouteDefinition[] = [
     eyebrow: "Filtered record",
     title: ({ orderId }) => `Paid order ${orderId}`,
     parent: ({ productId }) => `/product/${productId}/orders/paid`,
+    next: () => null,
+  },
+  {
+    id: "employees",
+    pattern: "/employees",
+    eyebrow: "Directory",
+    title: () => "Employees",
+    parent: () => null,
+    next: () => "/employee/A-17",
+  },
+  {
+    id: "employee",
+    pattern: "/employee/:employeeCode",
+    eyebrow: "Entity",
+    title: ({ employeeCode }) => `Employee ${employeeCode}`,
+    parent: () => "/employees",
+    next: ({ employeeCode }) => `/employee/${employeeCode}/orders`,
+  },
+  {
+    id: "employee-orders",
+    pattern: "/employee/:employeeCode/orders",
+    eyebrow: "Relation",
+    title: ({ employeeCode }) => `${employeeCode} / Orders`,
+    parent: ({ employeeCode }) => `/employee/${employeeCode}`,
+    next: ({ employeeCode }) => `/employee/${employeeCode}/order/1`,
+  },
+  {
+    id: "employee-order",
+    pattern: "/employee/:employeeCode/order/:orderId",
+    eyebrow: "Cross-entity record",
+    title: ({ employeeCode, orderId }) => `${employeeCode} / Order ${orderId}`,
+    parent: ({ employeeCode }) => `/employee/${employeeCode}/orders`,
     next: () => null,
   },
 ];

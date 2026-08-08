@@ -7,9 +7,19 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import Modal, { ModalRecord } from "./core/Modal";
 import Presenter from "./core/Presenter";
+import AgentDemoOverlay from "./agent/AgentDemoOverlay";
+import {
+  APP_INSPECTION_SETTLE_MS,
+  APP_NORMAL_SETTLE_MS,
+  APP_SURFACE_SETTLE_MS,
+  LAB_AGENT_COMMAND_EVENT,
+  respondToLabAgent,
+  type LabAgentCommandRequest,
+} from "./agent/appBridge";
 import {
   AppContext,
   type AppContextValue,
@@ -88,6 +98,8 @@ function keyboardTargetIsEditable(target: EventTarget | null) {
 
 type NavigationMode = "push" | "replace" | "pop";
 type InspectionMode = "off" | "stack" | "grid";
+type AgentPlaybackMode = "normal" | "paced";
+const LOCATION_CHANGE_EVENT = "layered-route-lab:location-change";
 
 interface PendingPresenterNavigation {
   path: string;
@@ -99,8 +111,37 @@ type PresenterCanvasStyle = CSSProperties & {
   "--overview-mobile-canvas-height": string;
 };
 
+interface AppProps {
+  initialPathname?: string;
+}
+
+function resolveInitialPathname(pathname: string) {
+  const requestedPath = pathname === "/"
+    ? DEFAULT_DEMO_ROUTE_PATH
+    : pathname;
+  return resolveRoute(requestedPath)?.path ||
+    normalizePath(DEFAULT_DEMO_ROUTE_PATH);
+}
+
 function currentPathWithSearch() {
   return `${window.location.pathname}${window.location.search}`;
+}
+
+function subscribeToLocationChange(onStoreChange: () => void) {
+  window.addEventListener("popstate", onStoreChange);
+  window.addEventListener(LOCATION_CHANGE_EVENT, onStoreChange);
+  return () => {
+    window.removeEventListener("popstate", onStoreChange);
+    window.removeEventListener(LOCATION_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function getBrowserLocation() {
+  return window.location.href;
+}
+
+function notifyLocationChange() {
+  window.dispatchEvent(new Event(LOCATION_CHANGE_EVENT));
 }
 
 function appendCachedRouteQuery(
@@ -119,15 +160,22 @@ function appendCachedRouteQuery(
   return `${route.path}${targetUrl.search}`;
 }
 
-export default function App() {
-  const [pathname, setPathname] = useState(DEFAULT_DEMO_ROUTE_PATH);
-  const [currentUrl, setCurrentUrl] = useState(
-    DEFAULT_DEMO_ROUTE_PATH,
+export default function App({
+  initialPathname = DEFAULT_DEMO_ROUTE_PATH,
+}: AppProps) {
+  const initialPath = resolveInitialPathname(initialPathname);
+  const [pathname, setPathname] = useState(initialPath);
+  const currentUrl = useSyncExternalStore(
+    subscribeToLocationChange,
+    getBrowserLocation,
+    () => initialPath,
   );
   const [presenters, setPresenters] = useState<PresenterRecord[]>([]);
   const [modals, setModals] = useState<ModalRecord[]>([]);
   const [inspectionMode, setInspectionMode] =
     useState<InspectionMode>("off");
+  const [agentPlaybackMode, setAgentPlaybackMode] =
+    useState<AgentPlaybackMode>("paced");
   const [leavingPresenterPath, setLeavingPresenterPath] = useState<
     string | null
   >(null);
@@ -158,6 +206,7 @@ export default function App() {
   const previousPresenterCountRef = useRef(presenterCount);
   const previousInspectionModeRef =
     useRef<InspectionMode>(inspectionMode);
+  const agentPlaybackModeRef = useRef<AgentPlaybackMode>("paced");
   const appContext = useMemo<AppContextValue>(
     () => ({
       get queryStringCacheMap() {
@@ -222,6 +271,7 @@ export default function App() {
           targetLocation,
         );
       }
+      notifyLocationChange();
 
       presentersRef.current = [];
       modalsRef.current = [];
@@ -230,7 +280,6 @@ export default function App() {
       setPresenters([]);
       setModals([]);
       setPathname(route.path);
-      setCurrentUrl(window.location.href);
     },
     [],
   );
@@ -521,6 +570,87 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    const pendingResponses = new Map<number, string>();
+
+    const respondAfter = (requestId: string, duration: number) => {
+      const responseTimer = window.setTimeout(() => {
+        pendingResponses.delete(responseTimer);
+        respondToLabAgent({ requestId, ok: true });
+      }, duration);
+      pendingResponses.set(responseTimer, requestId);
+    };
+
+    const releasePendingResponses = () => {
+      pendingResponses.forEach((requestId, timer) => {
+        window.clearTimeout(timer);
+        respondToLabAgent({ requestId, ok: true });
+      });
+      pendingResponses.clear();
+    };
+
+    const handleAgentCommand = (event: Event) => {
+      const request = (event as CustomEvent<LabAgentCommandRequest>).detail;
+      if (!request?.requestId || !request.command) return;
+
+      let settleDuration = agentPlaybackModeRef.current === "paced"
+        ? APP_SURFACE_SETTLE_MS
+        : APP_NORMAL_SETTLE_MS;
+      try {
+        switch (request.command.type) {
+          case "route.navigate": {
+            if (!resolveRoute(request.command.target)) {
+              throw new Error("宿主 App 无法解析目标路由");
+            }
+            commitNavigation(request.command.target, request.command.mode);
+            break;
+          }
+          case "presenter.advance":
+            pushNext();
+            break;
+          case "modal.open":
+            openModal();
+            break;
+          case "inspection.set":
+            settleDuration = agentPlaybackModeRef.current === "paced"
+              ? APP_INSPECTION_SETTLE_MS
+              : APP_NORMAL_SETTLE_MS;
+            setInspectionMode(request.command.target);
+            break;
+          case "inspection.cycle":
+            settleDuration = agentPlaybackModeRef.current === "paced"
+              ? APP_INSPECTION_SETTLE_MS
+              : APP_NORMAL_SETTLE_MS;
+            cycleInspectionMode();
+            break;
+          case "playback.set":
+            agentPlaybackModeRef.current = request.command.paced
+              ? "paced"
+              : "normal";
+            setAgentPlaybackMode(agentPlaybackModeRef.current);
+            if (!request.command.paced) releasePendingResponses();
+            settleDuration = 0;
+            break;
+        }
+      } catch (error) {
+        respondToLabAgent({
+          requestId: request.requestId,
+          ok: false,
+          error: error instanceof Error ? error.message : "宿主命令执行失败",
+        });
+        return;
+      }
+
+      respondAfter(request.requestId, settleDuration);
+    };
+
+    window.addEventListener(LAB_AGENT_COMMAND_EVENT, handleAgentCommand);
+    return () => {
+      window.removeEventListener(LAB_AGENT_COMMAND_EVENT, handleAgentCommand);
+      pendingResponses.forEach((_, timer) => window.clearTimeout(timer));
+    };
+  }, [commitNavigation, cycleInspectionMode, openModal, pushNext]);
+
+  useEffect(() => {
     const requestedPath =
       window.location.pathname === "/"
         ? DEFAULT_DEMO_ROUTE_PATH
@@ -540,23 +670,19 @@ export default function App() {
       "",
       initialLocation,
     );
-    const timer = window.setTimeout(() => {
-      pathnameRef.current = initialPath;
-      setPathname(initialPath);
-      setCurrentUrl(window.location.href);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
+    notifyLocationChange();
+    pathnameRef.current = initialPath;
+  }, [initialPath]);
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       const nextPath =
         resolveRoute(window.location.pathname)?.path || "/products";
+      const nextLocation = `${nextPath}${window.location.search}`;
       const presenterDepth = Number(
         event.state?.layeredPresenterDepth || 0,
       );
       const modalDepth = Number(event.state?.layeredModalDepth || 0);
-      setCurrentUrl(window.location.href);
 
       if (modalsRef.current.length > modalDepth) {
         startModalLeave(modalDepth, true);
@@ -605,9 +731,9 @@ export default function App() {
         (item) => item.path === nextPath,
       );
       if (isMountedParent) {
-        startPresenterLeave(nextPath, "pop");
+        startPresenterLeave(nextLocation, "pop");
       } else {
-        commitNavigation(nextPath, "pop");
+        commitNavigation(nextLocation, "pop");
       }
     };
 
@@ -714,7 +840,7 @@ export default function App() {
 
   return (
     <AppContext.Provider value={appContext}>
-      <main className="workbench">
+      <main className="workbench" data-agent-playback={agentPlaybackMode}>
         <section className="content-shell">
           <header className="workbench-bar">
             <div className="crumb">
@@ -851,6 +977,7 @@ export default function App() {
             </div>
           </div>
         </section>
+        <AgentDemoOverlay />
       </main>
     </AppContext.Provider>
   );

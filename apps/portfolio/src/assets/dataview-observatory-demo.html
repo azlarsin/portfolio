@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Distributed Network Observatory · Offline Reconstruction</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+      color: #dcecff;
+      background: #03091b;
+      --cyan: #42dff5;
+      --blue: #397cf6;
+      --violet: #9c7bff;
+      --green: #36e4aa;
+      --amber: #ffbf66;
+      --red: #ff6d86;
+      --panel: rgba(7, 20, 54, .86);
+      --line: rgba(71, 145, 255, .25);
+      --muted: #7890b6;
+    }
+    * { box-sizing: border-box; }
+    html, body { min-width: 860px; min-height: 100%; margin: 0; }
+    body { min-height: 100vh; overflow: hidden; background: radial-gradient(circle at 50% -20%, #163981 0, #071530 34%, #03091b 72%); }
+    button { font: inherit; }
+    button:focus-visible { outline: 1px solid var(--cyan); outline-offset: 2px; }
+    .archive-bar {
+      display: flex;
+      height: 25px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(74, 131, 225, .2);
+      color: #7187aa;
+      background: #020611;
+      font: 8px ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: .12em;
+    }
+    .archive-bar b { color: #54d9bc; font-weight: 600; }
+    .app {
+      position: relative;
+      display: grid;
+      height: calc(100vh - 25px);
+      min-height: 610px;
+      grid-template-rows: 66px minmax(0, 1fr) 25px;
+      overflow: hidden;
+      background-image: linear-gradient(rgba(36, 92, 178, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(36, 92, 178, .035) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      padding: 0 15px;
+      border-bottom: 1px solid rgba(69, 136, 239, .35);
+      background: linear-gradient(180deg, rgba(10, 32, 83, .96), rgba(4, 14, 41, .94));
+      box-shadow: 0 8px 35px rgba(0, 0, 0, .26);
+    }
+    .topbar::before, .topbar::after {
+      position: absolute;
+      bottom: -1px;
+      width: 20%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      content: "";
+    }
+    .topbar::before { left: 4%; }
+    .topbar::after { right: 4%; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-mark {
+      position: relative;
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 1px solid rgba(67, 204, 245, .6);
+      border-radius: 50%;
+      color: var(--cyan);
+      box-shadow: inset 0 0 18px rgba(42, 192, 244, .17), 0 0 18px rgba(42, 192, 244, .12);
+      font: 11px Georgia, serif;
+    }
+    .brand-mark::after { position: absolute; border: 1px dashed rgba(77, 148, 255, .46); border-radius: 50%; content: ""; inset: 4px; animation: spin 14s linear infinite; }
+    .brand strong, .brand span { display: block; }
+    .brand strong { font: 500 13px Georgia, serif; letter-spacing: .03em; }
+    .brand span { margin-top: 2px; color: #6981a9; font: 7px ui-monospace, monospace; letter-spacing: .1em; }
+    .nav { display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .nav button, .ghost-button, .segmented button, .chip, .profile-tab, .step-button {
+      border: 1px solid transparent;
+      color: #7991b8;
+      background: transparent;
+      cursor: pointer;
+    }
+    .nav button {
+      min-width: 86px;
+      height: 30px;
+      border-radius: 4px;
+      font-size: 8px;
+      letter-spacing: .04em;
+    }
+    .nav button:hover { color: #c3d8f8; background: rgba(63, 124, 224, .1); }
+    .nav button.active { border-color: rgba(54, 190, 244, .5); color: #e6f7ff; background: linear-gradient(180deg, rgba(38, 112, 228, .33), rgba(17, 73, 170, .18)); box-shadow: inset 0 -2px var(--cyan), 0 0 20px rgba(40, 154, 238, .1); }
+    .top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 7px; }
+    .clock { min-width: 58px; color: #a5b8d8; font: 10px ui-monospace, monospace; text-align: right; }
+    .live {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 7px;
+      border: 1px solid rgba(57, 218, 171, .26);
+      border-radius: 4px;
+      color: #67d6b5;
+      background: rgba(21, 121, 91, .09);
+      font: 7px ui-monospace, monospace;
+    }
+    .live i { width: 5px; height: 5px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.6s ease infinite; }
+    .ghost-button { height: 28px; padding: 0 9px; border-color: rgba(94, 135, 203, .3); border-radius: 4px; font-size: 7px; }
+    .ghost-button:hover, .ghost-button.active { border-color: rgba(66, 223, 245, .55); color: #cbefff; background: rgba(48, 129, 226, .15); }
+    .content { position: relative; min-height: 0; padding: 10px 12px; overflow: hidden; }
+    .view { display: none; height: 100%; animation: view-in 260ms ease both; }
+    .view.active { display: grid; }
+    .panel {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: linear-gradient(135deg, rgba(10, 33, 83, .9), rgba(4, 15, 42, .82));
+      box-shadow: inset 0 0 45px rgba(31, 92, 187, .06);
+    }
+    .panel::before, .panel::after { position: absolute; z-index: 3; width: 13px; height: 13px; border-color: var(--cyan); border-style: solid; content: ""; opacity: .7; pointer-events: none; }
+    .panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .panel::after { right: -1px; bottom: -1px; border-width: 0 2px 2px 0; }
+    .panel-head { display: flex; height: 35px; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid rgba(80, 142, 237, .16); }
+    .panel-head h2 { margin: 0; color: #c8daf4; font-size: 9px; font-weight: 600; letter-spacing: .04em; }
+    .panel-head small { color: #5f769d; font: 7px ui-monospace, monospace; }
+    .panel-body { height: calc(100% - 35px); min-height: 0; padding: 10px; }
+    .segmented { display: flex; gap: 2px; }
+    .segmented button { height: 21px; padding: 0 7px; border-radius: 3px; font-size: 7px; }
+    .segmented button.active { border-color: rgba(66, 223, 245, .45); color: #dffaff; background: rgba(49, 151, 230, .17); }
+    .overview { grid-template-columns: minmax(0, 1.35fr) minmax(285px, .65fr); grid-template-rows: 76px minmax(0, 1fr); gap: 9px; }
+    .kpis { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .kpi { position: relative; display: grid; grid-template-columns: 1fr auto; align-content: center; gap: 2px 8px; padding: 10px 12px; border: 1px solid rgba(69, 130, 220, .24); border-radius: 3px; background: linear-gradient(135deg, rgba(21, 61, 133, .58), rgba(5, 23, 62, .72)); }
+    .kpi::after { position: absolute; right: 8px; bottom: 7px; width: 34px; height: 1px; background: linear-gradient(90deg, transparent, var(--cyan)); content: ""; opacity: .55; }
+    .kpi span { grid-column: 1 / -1; color: #7087ac; font-size: 7px; }
+    .kpi strong { color: #f4fbff; font: 500 19px/1 ui-monospace, monospace; letter-spacing: -.04em; }
+    .kpi em { align-self: end; color: var(--green); font: 7px ui-monospace, monospace; font-style: normal; }
+    .overview-left { display: grid; min-height: 0; grid-template-columns: 1.2fr .8fr; grid-template-rows: minmax(0, 1.04fr) minmax(0, .96fr); gap: 8px; }
+    .trend-panel { grid-column: 1; }
+    .rank-panel { grid-column: 2; }
+    .table-panel { grid-column: 1 / -1; }
+    .overview-right { display: grid; min-height: 0; grid-template-rows: minmax(0, 1.2fr) minmax(0, .8fr); gap: 8px; }
+    .chart-wrap { position: relative; width: 100%; height: 100%; }
+    .chart-wrap svg { display: block; width: 100%; height: 100%; overflow: visible; }
+    .chart-grid line { stroke: rgba(101, 155, 226, .12); stroke-width: 1; }
+    .chart-labels { position: absolute; right: 7px; bottom: 1px; left: 7px; display: flex; justify-content: space-between; color: #587096; font: 6px ui-monospace, monospace; }
+    .chart-tooltip { position: absolute; top: 8px; left: 10px; color: var(--cyan); font: 7px ui-monospace, monospace; }
+    .rank-list { display: grid; height: 100%; align-content: space-around; gap: 5px; }
+    .rank-row { display: grid; grid-template-columns: 72px minmax(0, 1fr) 32px; align-items: center; gap: 7px; color: #8ca2c3; font-size: 7px; }
+    .rank-row b { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-track { height: 5px; overflow: hidden; border-radius: 99px; background: rgba(69, 107, 164, .2); }
+    .rank-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--cyan)); box-shadow: 0 0 8px rgba(66, 223, 245, .35); transform-origin: left; animation: bar-in 500ms ease both; }
+    .rank-row em { color: #c3d3eb; font: 7px ui-monospace, monospace; font-style: normal; text-align: right; }
+    table { width: 100%; border-collapse: collapse; color: #92a8c8; font-size: 7px; }
+    th { height: 21px; color: #627ba2; font-weight: 500; text-align: left; }
+    td { height: 22px; border-top: 1px solid rgba(87, 135, 209, .12); }
+    td:first-child { color: #bfd4f2; font-family: ui-monospace, monospace; }
+    .status { display: inline-flex; align-items: center; gap: 4px; }
+    .status::before { width: 4px; height: 4px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); content: ""; }
+    .status.watch::before { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+    .health-layout { display: grid; height: 100%; grid-template-columns: 44% 1fr; align-items: center; gap: 12px; }
+    .gauge {
+      position: relative;
+      display: grid;
+      width: min(150px, 100%);
+      aspect-ratio: 1;
+      place-items: center;
+      margin: auto;
+      border-radius: 50%;
+      background: conic-gradient(from 225deg, var(--cyan) calc(var(--value) * .75%), rgba(49, 91, 155, .19) 0 75%, transparent 0);
+      filter: drop-shadow(0 0 14px rgba(66, 223, 245, .16));
+    }
+    .gauge::before { position: absolute; border: 1px solid rgba(82, 151, 238, .36); border-radius: 50%; background: radial-gradient(circle, #102a60 0, #07152f 55%, #040c20 100%); content: ""; inset: 13%; }
+    .gauge::after { position: absolute; border: 1px dashed rgba(104, 157, 224, .28); border-radius: 50%; content: ""; inset: 5%; }
+    .gauge-value { position: relative; z-index: 2; text-align: center; }
+    .gauge-value strong { display: block; color: #edfbff; font: 500 28px ui-monospace, monospace; }
+    .gauge-value span { color: #6b83a8; font-size: 7px; }
+    .health-list { display: grid; gap: 9px; }
+    .health-item { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; color: #8198b9; font-size: 7px; }
+    .health-item b { color: #cfdef3; font: 7px ui-monospace, monospace; }
+    .health-item i { display: block; grid-column: 1 / -1; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(74, 112, 168, .2); }
+    .health-item i::after { display: block; width: var(--width); height: 100%; background: var(--color); box-shadow: 0 0 8px var(--color); content: ""; }
+    .alert-list { display: grid; height: 100%; align-content: space-around; gap: 6px; }
+    .alert-row { display: grid; grid-template-columns: 7px minmax(0, 1fr) auto; align-items: center; gap: 7px; padding: 6px 7px; border: 1px solid rgba(91, 132, 196, .12); color: #8ba0c0; background: rgba(25, 50, 98, .18); font-size: 7px; }
+    .alert-row i { width: 5px; height: 5px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 7px var(--amber); }
+    .alert-row b { color: #bcd0ee; font-weight: 500; }
+    .alert-row time { color: #536c94; font: 6px ui-monospace, monospace; }
+    .map-view { grid-template-columns: minmax(0, 1fr) 265px; grid-template-rows: minmax(0, 1fr) 146px; gap: 8px; }
+    .map-panel { grid-column: 1; }
+    .filter-panel { grid-column: 2; grid-row: 1 / -1; }
+    .map-bottom { display: grid; grid-column: 1; grid-template-columns: 1.1fr .9fr; gap: 8px; }
+    .map-stage { position: relative; width: 100%; height: 100%; min-height: 290px; }
+    .map-stage svg { display: block; width: 100%; height: 100%; }
+    .land { fill: rgba(19, 60, 119, .5); stroke: rgba(63, 142, 237, .46); stroke-width: 1; }
+    .lat-line, .lon-line { stroke: rgba(62, 133, 225, .09); stroke-width: 1; }
+    .node { cursor: pointer; }
+    .node circle { stroke: rgba(222, 248, 255, .7); stroke-width: .7; filter: drop-shadow(0 0 5px currentColor); transition: r 160ms ease, opacity 160ms ease; }
+    .node:hover circle, .node.selected circle { r: 7; stroke-width: 1.4; }
+    .node .halo { fill: none; stroke: currentColor; stroke-width: 1; opacity: .45; animation: node-pulse 2.2s ease infinite; }
+    .map-legend { position: absolute; bottom: 8px; left: 10px; display: flex; gap: 12px; color: #7288a9; font-size: 7px; }
+    .map-legend span { display: flex; align-items: center; gap: 5px; }
+    .map-legend i { width: 6px; height: 6px; border-radius: 50%; background: var(--color); box-shadow: 0 0 7px var(--color); }
+    .node-card { position: absolute; top: 9px; left: 10px; width: 178px; padding: 9px; border: 1px solid rgba(67, 194, 238, .36); border-radius: 3px; background: rgba(4, 16, 43, .91); box-shadow: 0 12px 30px rgba(0, 0, 0, .25); }
+    .node-card strong { display: block; color: #d8ecff; font: 9px ui-monospace, monospace; }
+    .node-card span { display: block; margin-top: 5px; color: #6d85aa; font-size: 7px; line-height: 1.55; }
+    .filter-section { padding: 10px; border-bottom: 1px solid rgba(73, 130, 214, .16); }
+    .filter-section h3 { margin: 0 0 8px; color: #758db2; font-size: 7px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip { min-height: 25px; padding: 0 8px; border-color: rgba(76, 127, 201, .22); border-radius: 3px; font-size: 7px; }
+    .chip.active { border-color: var(--chip-color, var(--cyan)); color: #e1f7ff; background: color-mix(in srgb, var(--chip-color, var(--cyan)) 16%, transparent); box-shadow: inset 0 -1px var(--chip-color, var(--cyan)); }
+    .filter-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-top: 8px; }
+    .filter-summary div { padding: 8px; border: 1px solid rgba(81, 133, 207, .17); background: rgba(16, 43, 91, .25); }
+    .filter-summary strong, .filter-summary span { display: block; }
+    .filter-summary strong { color: #edf8ff; font: 14px ui-monospace, monospace; }
+    .filter-summary span { margin-top: 3px; color: #637a9e; font-size: 6px; }
+    .data-contract { padding: 10px; }
+    .data-contract code { display: block; padding: 8px; border: 1px solid rgba(67, 121, 199, .18); color: #6ecfc8; background: rgba(0, 8, 25, .45); font: 6px/1.7 ui-monospace, monospace; white-space: pre-wrap; }
+    .profile-view { grid-template-columns: 155px minmax(0, 1fr); gap: 8px; }
+    .profile-nav { display: grid; align-content: start; gap: 6px; padding: 10px; }
+    .profile-nav h2 { margin: 0 0 6px; color: #6f88af; font-size: 7px; letter-spacing: .1em; }
+    .profile-tab { display: grid; min-height: 50px; grid-template-columns: 26px 1fr; align-items: center; gap: 7px; padding: 7px; border-color: rgba(76, 127, 201, .2); border-radius: 3px; text-align: left; }
+    .profile-tab:hover, .profile-tab.active { border-color: rgba(64, 206, 242, .5); color: #d9f4ff; background: rgba(31, 99, 184, .17); }
+    .profile-tab b { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 8px ui-monospace, monospace; }
+    .profile-tab strong, .profile-tab small { display: block; }
+    .profile-tab strong { font-size: 8px; }
+    .profile-tab small { margin-top: 3px; color: #61789e; font-size: 6px; }
+    .profile-grid { display: grid; min-height: 0; grid-template-columns: .8fr 1.2fr 1fr; grid-template-rows: 72px minmax(0, 1fr) 168px; gap: 8px; }
+    .profile-kpis { display: grid; grid-column: 1 / -1; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .profile-score { grid-column: 1; }
+    .profile-trend { grid-column: 2 / -1; }
+    .profile-distribution { grid-column: 1; }
+    .profile-events { grid-column: 2 / -1; }
+    .mini-donut {
+      display: grid;
+      width: 112px;
+      aspect-ratio: 1;
+      place-items: center;
+      margin: auto;
+      border-radius: 50%;
+      background: conic-gradient(var(--cyan) 0 44%, var(--violet) 44% 73%, var(--amber) 73% 89%, #2b5caa 89%);
+    }
+    .mini-donut::before { display: grid; width: 64%; aspect-ratio: 1; place-items: center; border-radius: 50%; color: #cfe9ff; background: #07152f; content: attr(data-total); font: 13px ui-monospace, monospace; }
+    .flow-view { grid-template-columns: minmax(0, 1fr) 260px; gap: 8px; }
+    .flow-main { display: grid; min-height: 0; grid-template-rows: 46px minmax(0, 1fr) 108px; }
+    .flow-controls { display: flex; align-items: center; gap: 6px; padding: 7px 10px; border-bottom: 1px solid rgba(75, 134, 221, .16); }
+    .step-button { height: 26px; padding: 0 9px; border-color: rgba(75, 129, 205, .24); border-radius: 3px; font-size: 7px; }
+    .step-button.active { border-color: var(--cyan); color: #dffaff; background: rgba(52, 150, 223, .17); }
+    .flow-stage { position: relative; min-height: 260px; overflow: hidden; background: radial-gradient(circle at 50% 50%, rgba(26, 92, 173, .2), transparent 48%); }
+    .flow-stage svg { width: 100%; height: 100%; }
+    .flow-edge { fill: none; stroke: rgba(54, 137, 237, .35); stroke-width: 2; stroke-dasharray: 5 8; animation: dash 3s linear infinite; }
+    .flow-edge.active { stroke: var(--cyan); filter: drop-shadow(0 0 5px var(--cyan)); }
+    .flow-node circle { fill: #0a265b; stroke: rgba(74, 149, 244, .6); stroke-width: 1.4; transition: fill 220ms ease, stroke 220ms ease; }
+    .flow-node text { fill: #849dc1; font: 8px Inter, sans-serif; text-anchor: middle; }
+    .flow-node.active circle { fill: #1557a6; stroke: var(--cyan); filter: drop-shadow(0 0 11px rgba(66, 223, 245, .7)); }
+    .flow-node.active text { fill: #e0f8ff; }
+    .packet { fill: var(--cyan); filter: drop-shadow(0 0 6px var(--cyan)); }
+    .flow-caption { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px; border-top: 1px solid rgba(75, 134, 221, .16); }
+    .flow-caption strong { color: #d8edff; font-size: 10px; }
+    .flow-caption p { margin: 0; color: #7890b4; font-size: 8px; line-height: 1.65; }
+    .flow-side { display: grid; min-height: 0; grid-template-rows: auto 1fr auto; }
+    .flow-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 9px; }
+    .flow-metrics div { padding: 8px; border: 1px solid rgba(81, 135, 213, .17); background: rgba(16, 43, 91, .24); }
+    .flow-metrics strong, .flow-metrics span { display: block; }
+    .flow-metrics strong { color: #dff5ff; font: 14px ui-monospace, monospace; }
+    .flow-metrics span { margin-top: 3px; color: #657da2; font-size: 6px; }
+    .event-log { min-height: 0; overflow: hidden; padding: 8px 10px; border-top: 1px solid rgba(75, 134, 221, .15); border-bottom: 1px solid rgba(75, 134, 221, .15); }
+    .event-log h3 { margin: 0 0 7px; color: #7189ae; font-size: 7px; letter-spacing: .08em; }
+    .event-line { display: grid; grid-template-columns: 35px 1fr; gap: 6px; padding: 5px 0; border-bottom: 1px dashed rgba(76, 126, 197, .13); color: #8096b6; font: 6px/1.45 ui-monospace, monospace; }
+    .event-line time { color: #4ed8c0; }
+    .offline-proof { padding: 9px 10px; color: #6b83a7; font: 6px/1.65 ui-monospace, monospace; }
+    .offline-proof b { color: #4dd6b4; font-weight: 600; }
+    .footer { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-top: 1px solid rgba(70, 130, 220, .26); color: #536b92; background: rgba(3, 10, 28, .95); font: 7px ui-monospace, monospace; letter-spacing: .03em; }
+    .footer strong { color: #6ed8c3; font-weight: 500; }
+    .tour-status { color: #7d98c1; }
+    .tour-status.running { color: var(--cyan); }
+    .toast { position: absolute; z-index: 100; right: 14px; bottom: 37px; padding: 8px 10px; border: 1px solid rgba(67, 196, 235, .35); border-radius: 4px; color: #cdefff; background: rgba(4, 18, 48, .96); box-shadow: 0 14px 36px rgba(0, 0, 0, .3); font-size: 7px; opacity: 0; pointer-events: none; transform: translateY(6px); transition: 180ms ease; }
+    .toast.show { opacity: 1; transform: none; }
+    @keyframes view-in { from { opacity: 0; transform: translateY(4px); } }
+    @keyframes bar-in { from { transform: scaleX(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 50% { opacity: .4; } }
+    @keyframes node-pulse { 0%, 100% { r: 7; opacity: .6; } 50% { r: 12; opacity: 0; } }
+    @keyframes dash { to { stroke-dashoffset: -26; } }
+    @media (max-width: 1000px) {
+      .topbar { grid-template-columns: 180px minmax(0,1fr) auto; padding: 0 9px; }
+      .brand span, .live { display: none; }
+      .nav button { min-width: 70px; }
+      .clock { display: none; }
+      .content { padding: 7px; }
+      .overview { grid-template-columns: minmax(0,1fr) 250px; }
+      .map-view { grid-template-columns: minmax(0,1fr) 235px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="archive-bar"><span>DATAVIEW · PURE FRONTEND ARCHIVE RECONSTRUCTION</span><b>SYNTHETIC DATA · 0 NETWORK REQUESTS</b></div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark">DV</div><div><strong>Network Observatory</strong><span>32:9 SCENE SYSTEM</span></div></div>
+      <nav class="nav" aria-label="演示场景">
+        <button class="active" data-view-button="overview">运行总览</button>
+        <button data-view-button="map">节点地图</button>
+        <button data-view-button="profile">网络画像</button>
+        <button data-view-button="flow">协作流</button>
+      </nav>
+      <div class="top-actions">
+        <span class="live"><i></i><span id="liveLabel">AUTO TICK</span></span>
+        <button class="ghost-button" id="toggleLive">暂停</button>
+        <button class="ghost-button" id="refreshData">刷新数据</button>
+        <button class="ghost-button" id="runTour">完整巡演</button>
+        <time class="clock" id="clock">00:00:00</time>
+      </div>
+    </header>
+    <section class="content">
+      <section class="view overview active" data-view="overview">
+        <div class="kpis" id="overviewKpis"></div>
+        <div class="overview-left">
+          <article class="panel trend-panel">
+            <header class="panel-head"><h2>全网遥测趋势</h2><div class="segmented" id="periodSwitch"><button class="active" data-period="day">24H</button><button data-period="week">7D</button></div></header>
+            <div class="panel-body"><div class="chart-wrap" id="overviewTrend"></div></div>
+          </article>
+          <article class="panel rank-panel">
+            <header class="panel-head"><h2>区域节点排行</h2><small>TOP 5</small></header>
+            <div class="panel-body"><div class="rank-list" id="regionRanks"></div></div>
+          </article>
+          <article class="panel table-panel">
+            <header class="panel-head"><h2>活跃节点样本</h2><small>AUTO SCROLL · LOCAL DATASET</small></header>
+            <div class="panel-body"><table><thead><tr><th>节点</th><th>匿名区域</th><th>角色</th><th>延迟</th><th>状态</th><th>最近事件</th></tr></thead><tbody id="overviewTable"></tbody></table></div>
+          </article>
+        </div>
+        <div class="overview-right">
+          <article class="panel">
+            <header class="panel-head"><h2>综合健康评分</h2><small>DETERMINISTIC MODEL</small></header>
+            <div class="panel-body"><div class="health-layout"><div class="gauge" id="healthGauge"><div class="gauge-value"><strong id="healthScore">92</strong><span>HEALTH SCORE</span></div></div><div class="health-list" id="healthList"></div></div></div>
+          </article>
+          <article class="panel">
+            <header class="panel-head"><h2>风险信号</h2><small id="alertCount">03 SIGNALS</small></header>
+            <div class="panel-body"><div class="alert-list" id="alertList"></div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view map-view" data-view="map">
+        <article class="panel map-panel">
+          <header class="panel-head"><h2>匿名节点拓扑</h2><small id="mapStatus">BY NETWORK · 18 VISIBLE</small></header>
+          <div class="panel-body">
+            <div class="map-stage">
+              <svg viewBox="0 0 1000 420" role="img" aria-label="合成节点分布地图">
+                <g opacity=".9">
+                  <line class="lat-line" x1="0" y1="80" x2="1000" y2="80"/><line class="lat-line" x1="0" y1="160" x2="1000" y2="160"/><line class="lat-line" x1="0" y1="240" x2="1000" y2="240"/><line class="lat-line" x1="0" y1="320" x2="1000" y2="320"/>
+                  <line class="lon-line" x1="160" y1="0" x2="160" y2="420"/><line class="lon-line" x1="320" y1="0" x2="320" y2="420"/><line class="lon-line" x1="480" y1="0" x2="480" y2="420"/><line class="lon-line" x1="640" y1="0" x2="640" y2="420"/><line class="lon-line" x1="800" y1="0" x2="800" y2="420"/>
+                </g>
+                <path class="land" d="M61 103l87-47 103 13 53 42-25 37-84 10-27 62-69 7-47-45z"/>
+                <path class="land" d="M285 263l58-37 52 18 30 75-24 76-43-12-27-77z"/>
+                <path class="land" d="M419 89l75-31 74 18 40-10 63 30 76-4 87 51-14 44-63 6-36 50-67 8-51-38-44 5-17 69-46 72-47-11-14-95-42-47 16-57z"/>
+                <path class="land" d="M795 288l53-27 68 19 28 49-42 32-76-4-39-35z"/>
+                <g id="mapNodes"></g>
+              </svg>
+              <div class="node-card" id="nodeDetail"><strong>NODE-A01</strong><span>REGION-01 · Gateway<br>Latency 21 ms · Healthy<br>Click any visible node to inspect.</span></div>
+              <div class="map-legend" id="mapLegend"></div>
+            </div>
+          </div>
+        </article>
+        <aside class="panel filter-panel">
+          <header class="panel-head"><h2>地图筛选器</h2><small>LOCAL STATE</small></header>
+          <div class="filter-section"><h3>Color mode</h3><div class="chips" id="mapModes"><button class="chip active" data-map-mode="family">按网络</button><button class="chip" data-map-mode="role">按角色</button><button class="chip" data-map-mode="risk">按风险</button></div></div>
+          <div class="filter-section"><h3>Network family</h3><div class="chips" id="familyFilters"><button class="chip active" style="--chip-color:#42dff5" data-family="alpha">Network α</button><button class="chip active" style="--chip-color:#9c7bff" data-family="beta">Network β</button><button class="chip active" style="--chip-color:#ffbf66" data-family="gamma">Network γ</button></div><div class="filter-summary"><div><strong id="visibleNodeCount">18</strong><span>VISIBLE NODES</span></div><div><strong id="healthyNodeCount">15</strong><span>HEALTHY</span></div></div></div>
+          <div class="data-contract"><h3>Front-end data contract</h3><code>staticDataset
+  → normalize()
+  → viewModel
+  → map / charts / table
+
+networkRequests: 0</code></div>
+        </aside>
+        <div class="map-bottom">
+          <article class="panel"><header class="panel-head"><h2>所选节点趋势</h2><small>24H</small></header><div class="panel-body"><div class="chart-wrap" id="mapTrend"></div></div></article>
+          <article class="panel"><header class="panel-head"><h2>分组分布</h2><small id="mapDistributionLabel">BY NETWORK</small></header><div class="panel-body"><div class="rank-list" id="mapRanks"></div></div></article>
+        </div>
+      </section>
+
+      <section class="view profile-view" data-view="profile">
+        <aside class="panel profile-nav">
+          <h2>ANONYMIZED NETWORKS</h2>
+          <button class="profile-tab active" data-profile="alpha"><b>α</b><span><strong>Network Alpha</strong><small>public telemetry</small></span></button>
+          <button class="profile-tab" data-profile="beta"><b>β</b><span><strong>Network Beta</strong><small>service mesh</small></span></button>
+          <button class="profile-tab" data-profile="gamma"><b>γ</b><span><strong>Network Gamma</strong><small>consortium</small></span></button>
+        </aside>
+        <div class="profile-grid">
+          <div class="profile-kpis" id="profileKpis"></div>
+          <article class="panel profile-score"><header class="panel-head"><h2>网络评分</h2><small id="profileName">NETWORK ALPHA</small></header><div class="panel-body"><div class="gauge" id="profileGauge"><div class="gauge-value"><strong id="profileScore">94</strong><span>STABILITY</span></div></div></div></article>
+          <article class="panel profile-trend"><header class="panel-head"><h2>交易与事件趋势</h2><div class="segmented"><button class="active">事件</button><button>吞吐</button></div></header><div class="panel-body"><div class="chart-wrap" id="profileTrend"></div></div></article>
+          <article class="panel profile-distribution"><header class="panel-head"><h2>角色分布</h2><small>SYNTHETIC</small></header><div class="panel-body"><div class="mini-donut" id="profileDonut" data-total="1,248"></div></div></article>
+          <article class="panel profile-events"><header class="panel-head"><h2>最新标准化事件</h2><small>VIEW MODEL OUTPUT</small></header><div class="panel-body"><table><thead><tr><th>事件 ID</th><th>类别</th><th>匿名节点</th><th>结果</th><th>耗时</th></tr></thead><tbody id="profileEvents"></tbody></table></div></article>
+        </div>
+      </section>
+
+      <section class="view flow-view" data-view="flow">
+        <article class="panel flow-main">
+          <div class="flow-controls"><button class="step-button active" data-flow-step="0">01 提交</button><button class="step-button" data-flow-step="1">02 验证</button><button class="step-button" data-flow-step="2">03 共识</button><button class="step-button" data-flow-step="3">04 归档</button><button class="ghost-button" id="playFlow">▶ 自动播放</button></div>
+          <div class="flow-stage">
+            <svg viewBox="0 0 900 360" role="img" aria-label="匿名协作流程">
+              <path class="flow-edge active" data-edge="0" d="M140 180 C220 80 280 80 360 180"/>
+              <path class="flow-edge" data-edge="1" d="M360 180 C440 280 520 280 600 180"/>
+              <path class="flow-edge" data-edge="2" d="M600 180 C680 80 740 80 820 180"/>
+              <g class="flow-node active" data-flow-node="0" transform="translate(140 180)"><circle r="43"/><text y="-2">CLIENT</text><text y="12">REQUEST</text></g>
+              <g class="flow-node" data-flow-node="1" transform="translate(360 180)"><circle r="43"/><text y="-2">POLICY</text><text y="12">VERIFY</text></g>
+              <g class="flow-node" data-flow-node="2" transform="translate(600 180)"><circle r="43"/><text y="-2">PEERS</text><text y="12">CONSENSUS</text></g>
+              <g class="flow-node" data-flow-node="3" transform="translate(820 180)"><circle r="43"/><text y="-2">LEDGER</text><text y="12">ARCHIVE</text></g>
+              <circle class="packet" r="4"><animateMotion dur="2.2s" repeatCount="indefinite" path="M140 180 C220 80 280 80 360 180 C440 280 520 280 600 180 C680 80 740 80 820 180"/></circle>
+            </svg>
+          </div>
+          <div class="flow-caption"><strong id="flowStatus">01 · 提交请求</strong><p id="flowDescription">客户端生成匿名事务载荷，前端场景将完整样本写入本地视图模型，作为后续动画与状态变化的唯一输入。</p></div>
+        </article>
+        <aside class="panel flow-side">
+          <header class="panel-head"><h2>流程遥测</h2><small>SIMULATION</small></header>
+          <div class="flow-metrics"><div><strong id="flowLatency">18 ms</strong><span>END-TO-END</span></div><div><strong id="flowPeers">12 / 12</strong><span>PEERS READY</span></div><div><strong>0</strong><span>API CALLS</span></div><div><strong id="flowRound">#028</strong><span>SIMULATION</span></div></div>
+          <div class="event-log"><h3>EVENT TRACE</h3><div id="eventLog"></div></div>
+          <div class="offline-proof"><b>OFFLINE PROOF</b><br>All transitions are produced by deterministic front-end state. No historical endpoint, identifier or production payload is present.</div>
+        </aside>
+      </section>
+    </section>
+    <footer class="footer"><span><strong>OFFLINE DATASET</strong> · RESPONSIVE 32:9 SCENE · SVG + CSS</span><span class="tour-status" id="tourStatus">MANUAL MODE · TICK 01</span><span>NETWORK REQUESTS <strong id="networkRequests">0</strong></span></footer>
+    <div class="toast" id="toast"></div>
+  </main>
+  <script>
+    (function () {
+      'use strict';
+      const colors = {alpha:'#42dff5',beta:'#9c7bff',gamma:'#ffbf66',healthy:'#36e4aa',watch:'#ffbf66',risk:'#ff6d86',gateway:'#42dff5',validator:'#9c7bff',archive:'#ffbf66'};
+      const ticks = [
+        {kpis:[1248,48291,99.97,18,3], trend:[36,42,39,54,50,62,58,71,67,78,74,86], week:[48,52,61,58,66,71,75,79,73,84,89,92], health:92},
+        {kpis:[1256,48733,99.98,17,2], trend:[39,44,43,57,55,64,62,73,70,82,78,89], week:[49,55,59,63,68,70,78,77,81,86,91,94], health:94},
+        {kpis:[1252,49108,99.96,21,4], trend:[44,40,47,52,61,58,69,65,76,72,84,80], week:[52,57,56,66,64,73,70,82,80,88,86,93], health:91}
+      ];
+      const regions = [
+        ['REGION-03',968],['REGION-01',842],['REGION-05',715],['REGION-02',604],['REGION-04',481]
+      ];
+      const nodes = [
+        {id:'NODE-A01',x:122,y:132,family:'alpha',role:'gateway',risk:'healthy',region:'REGION-01',latency:21},
+        {id:'NODE-A02',x:183,y:95,family:'alpha',role:'validator',risk:'healthy',region:'REGION-01',latency:18},
+        {id:'NODE-A03',x:244,y:151,family:'alpha',role:'archive',risk:'watch',region:'REGION-02',latency:42},
+        {id:'NODE-A04',x:332,y:275,family:'alpha',role:'gateway',risk:'healthy',region:'REGION-03',latency:23},
+        {id:'NODE-A05',x:371,y:334,family:'alpha',role:'validator',risk:'healthy',region:'REGION-03',latency:20},
+        {id:'NODE-A06',x:450,y:132,family:'alpha',role:'archive',risk:'healthy',region:'REGION-04',latency:25},
+        {id:'NODE-B01',x:515,y:93,family:'beta',role:'gateway',risk:'healthy',region:'REGION-02',latency:17},
+        {id:'NODE-B02',x:574,y:167,family:'beta',role:'validator',risk:'watch',region:'REGION-04',latency:51},
+        {id:'NODE-B03',x:635,y:118,family:'beta',role:'validator',risk:'healthy',region:'REGION-04',latency:19},
+        {id:'NODE-B04',x:694,y:217,family:'beta',role:'archive',risk:'healthy',region:'REGION-05',latency:26},
+        {id:'NODE-B05',x:751,y:162,family:'beta',role:'gateway',risk:'risk',region:'REGION-05',latency:88},
+        {id:'NODE-B06',x:812,y:128,family:'beta',role:'validator',risk:'healthy',region:'REGION-05',latency:16},
+        {id:'NODE-C01',x:817,y:302,family:'gamma',role:'gateway',risk:'healthy',region:'REGION-03',latency:22},
+        {id:'NODE-C02',x:875,y:325,family:'gamma',role:'archive',risk:'healthy',region:'REGION-03',latency:24},
+        {id:'NODE-C03',x:567,y:258,family:'gamma',role:'validator',risk:'healthy',region:'REGION-02',latency:15},
+        {id:'NODE-C04',x:616,y:314,family:'gamma',role:'gateway',risk:'watch',region:'REGION-02',latency:47},
+        {id:'NODE-C05',x:707,y:277,family:'gamma',role:'archive',risk:'healthy',region:'REGION-01',latency:29},
+        {id:'NODE-C06',x:918,y:179,family:'gamma',role:'validator',risk:'healthy',region:'REGION-05',latency:20}
+      ];
+      const profiles = {
+        alpha:{name:'NETWORK ALPHA',score:94,total:'1,248',kpis:[48291,18,99.98,3],trend:[32,38,45,42,55,61,58,69,73,78,86,91]},
+        beta:{name:'NETWORK BETA',score:88,total:'864',kpis:[27842,24,99.91,5],trend:[26,31,29,40,44,49,55,52,61,67,64,76]},
+        gamma:{name:'NETWORK GAMMA',score:91,total:'592',kpis:[18921,21,99.95,2],trend:[20,26,31,29,38,42,48,51,57,62,69,74]}
+      };
+      const flowSteps = [
+        {title:'01 · 提交请求',description:'客户端生成匿名事务载荷，前端场景将完整样本写入本地视图模型，作为后续动画与状态变化的唯一输入。',latency:'18 ms'},
+        {title:'02 · 策略验证',description:'规则节点检查格式、权限范围与字段完整性。演示使用本地确定性规则，因此结果可重复、可检查，也不需要任何接口。',latency:'26 ms'},
+        {title:'03 · 节点共识',description:'十二个模拟节点按固定序列返回确认；流动粒子、节点高亮与事件日志消费同一状态，不依赖独立的时间轴脚本。',latency:'63 ms'},
+        {title:'04 · 归档完成',description:'最终记录进入本地归档视图，指标、事件表和流程状态同时收敛，完整展示“数据—视图模型—动态图形”的前端闭环。',latency:'81 ms'}
+      ];
+      let state = {view:'overview',tick:0,period:'day',live:true,families:new Set(['alpha','beta','gamma']),mapMode:'family',selectedNode:'NODE-A01',profile:'alpha',flowStep:0,touring:false};
+      let liveTimer = null;
+      let tourTimer = null;
+      let flowTimer = null;
+      let toastTimer = null;
+
+      function fmt(value) {
+        if (typeof value !== 'number') return value;
+        return value.toLocaleString('en-US', {maximumFractionDigits:2});
+      }
+      function lineSvg(values, color) {
+        const width = 600, height = 180, pad = 12;
+        const max = Math.max.apply(null, values) * 1.08;
+        const min = Math.min.apply(null, values) * .86;
+        const points = values.map(function(value,index) {
+          const x = pad + index * ((width-pad*2)/(values.length-1));
+          const y = height-pad - ((value-min)/(max-min||1))*(height-pad*2);
+          return [x,y];
+        });
+        const pointString = points.map(function(point){return point[0].toFixed(1)+','+point[1].toFixed(1);}).join(' ');
+        const area = pad+','+(height-pad)+' '+pointString+' '+(width-pad)+','+(height-pad);
+        let grid = '';
+        for (let i=1;i<5;i+=1) grid += '<line x1="'+pad+'" y1="'+(i*height/5)+'" x2="'+(width-pad)+'" y2="'+(i*height/5)+'"/>';
+        return '<svg viewBox="0 0 '+width+' '+height+'" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="lineArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+color+'" stop-opacity=".32"/><stop offset="1" stop-color="'+color+'" stop-opacity="0"/></linearGradient></defs><g class="chart-grid">'+grid+'</g><polygon points="'+area+'" fill="url(#lineArea)"/><polyline points="'+pointString+'" fill="none" stroke="'+color+'" stroke-width="2.2" vector-effect="non-scaling-stroke"/>'+points.map(function(point){return '<circle cx="'+point[0]+'" cy="'+point[1]+'" r="2.3" fill="#07142f" stroke="'+color+'" stroke-width="1.5"/>';}).join('')+'</svg><span class="chart-tooltip">LATEST '+values[values.length-1]+'</span><div class="chart-labels"><span>T-11</span><span>T-08</span><span>T-05</span><span>NOW</span></div>';
+      }
+      function renderKpis(target, items, labels, units) {
+        target.innerHTML = items.map(function(value,index) {
+          const unit = units[index] || '';
+          const change = index === 4 ? 'review' : '+'+(index+2)+'.'+index+'%';
+          return '<div class="kpi"><span>'+labels[index]+'</span><strong>'+fmt(value)+unit+'</strong><em>'+change+'</em></div>';
+        }).join('');
+      }
+      function renderOverview() {
+        const tick = ticks[state.tick % ticks.length];
+        renderKpis(document.querySelector('#overviewKpis'), tick.kpis, ['活跃节点','遥测事件 / h','可用性','中位延迟','风险信号'],['','', '%',' ms','']);
+        document.querySelector('#overviewTrend').innerHTML = lineSvg(state.period === 'day' ? tick.trend : tick.week, '#42dff5');
+        const maxRank = regions[0][1];
+        document.querySelector('#regionRanks').innerHTML = regions.map(function(item,index){const value=item[1]+state.tick*7-index*3;return '<div class="rank-row"><b>0'+(index+1)+' · '+item[0]+'</b><div class="rank-track"><i style="width:'+(value/maxRank*100)+'%"></i></div><em>'+value+'</em></div>';}).join('');
+        const tableNodes = nodes.slice(state.tick, state.tick+5).concat(nodes.slice(0,Math.max(0,state.tick+5-nodes.length)));
+        document.querySelector('#overviewTable').innerHTML = tableNodes.map(function(node,index){return '<tr><td>'+node.id+'</td><td>'+node.region+'</td><td>'+node.role.toUpperCase()+'</td><td>'+node.latency+' ms</td><td><span class="status '+(node.risk==='healthy'?'':'watch')+'">'+(node.risk==='healthy'?'Healthy':'Review')+'</span></td><td>EVT-'+String(320+state.tick*5+index).padStart(4,'0')+'</td></tr>';}).join('');
+        document.querySelector('#healthGauge').style.setProperty('--value',tick.health);
+        document.querySelector('#healthScore').textContent = tick.health;
+        const health = [['连通性',98,'#42dff5'],['数据完整性',96,'#36e4aa'],['节点稳定性',91,'#9c7bff'],['告警处置',84,'#ffbf66']];
+        document.querySelector('#healthList').innerHTML = health.map(function(item){return '<div class="health-item"><span>'+item[0]+'</span><b>'+item[1]+'%</b><i style="--width:'+item[1]+'%;--color:'+item[2]+'"></i></div>';}).join('');
+        const alerts = [['Region-05 延迟偏离基线','WATCH','10:21'],['NODE-B05 连续重试','REVIEW','10:18'],['归档队列短时积压','WATCH','10:12']];
+        document.querySelector('#alertList').innerHTML = alerts.slice(0,tick.kpis[4]).map(function(item){return '<div class="alert-row"><i></i><b>'+item[0]+'</b><time>'+item[2]+'</time></div>';}).join('');
+        document.querySelector('#alertCount').textContent = String(tick.kpis[4]).padStart(2,'0')+' SIGNALS';
+      }
+      function colorForNode(node) {
+        return state.mapMode === 'family' ? colors[node.family] : (state.mapMode === 'role' ? colors[node.role] : colors[node.risk]);
+      }
+      function visibleNodes() {
+        return nodes.filter(function(node){return state.families.has(node.family);});
+      }
+      function renderMap() {
+        const visible = visibleNodes();
+        document.querySelector('#mapNodes').innerHTML = visible.map(function(node,index){
+          const color = colorForNode(node);
+          return '<g class="node '+(node.id===state.selectedNode?'selected':'')+'" data-node="'+node.id+'" tabindex="0" role="button" aria-label="'+node.id+'"><circle class="halo" cx="'+node.x+'" cy="'+node.y+'" r="9" style="color:'+color+';animation-delay:'+(index*.12)+'s"/><circle cx="'+node.x+'" cy="'+node.y+'" r="4.5" fill="'+color+'" style="color:'+color+'"/></g>';
+        }).join('');
+        const selected = nodes.find(function(node){return node.id===state.selectedNode;});
+        if (!selected || !state.families.has(selected.family)) state.selectedNode = visible.length ? visible[0].id : '';
+        const detail = nodes.find(function(node){return node.id===state.selectedNode;});
+        document.querySelector('#nodeDetail').innerHTML = detail ? '<strong>'+detail.id+'</strong><span>'+detail.region+' · '+detail.role.toUpperCase()+'<br>Latency '+detail.latency+' ms · '+(detail.risk==='healthy'?'Healthy':'Needs review')+'<br>Source: synthetic local dataset</span>' : '<strong>NO VISIBLE NODE</strong><span>Enable a network family to continue.</span>';
+        const modes = {
+          family:[['Network α',colors.alpha],['Network β',colors.beta],['Network γ',colors.gamma]],
+          role:[['Gateway',colors.gateway],['Validator',colors.validator],['Archive',colors.archive]],
+          risk:[['Healthy',colors.healthy],['Watch',colors.watch],['Risk',colors.risk]]
+        };
+        document.querySelector('#mapLegend').innerHTML = modes[state.mapMode].map(function(item){return '<span><i style="--color:'+item[1]+'"></i>'+item[0]+'</span>';}).join('');
+        document.querySelector('#visibleNodeCount').textContent = visible.length;
+        document.querySelector('#healthyNodeCount').textContent = visible.filter(function(node){return node.risk==='healthy';}).length;
+        document.querySelector('#mapStatus').textContent = 'BY '+state.mapMode.toUpperCase()+' · '+visible.length+' VISIBLE';
+        document.querySelector('#mapDistributionLabel').textContent = 'BY '+state.mapMode.toUpperCase();
+        document.querySelector('#mapTrend').innerHTML = lineSvg((ticks[state.tick%ticks.length].trend).map(function(v,index){return Math.max(8,v-(index%3)*4);}), '#9c7bff');
+        const groups = modes[state.mapMode].map(function(item,index){
+          const key = state.mapMode==='family' ? ['alpha','beta','gamma'][index] : (state.mapMode==='role' ? ['gateway','validator','archive'][index] : ['healthy','watch','risk'][index]);
+          return [item[0],visible.filter(function(node){return node[state.mapMode==='family'?'family':state.mapMode]===key;}).length,item[1]];
+        });
+        const max = Math.max.apply(null,groups.map(function(item){return item[1];}).concat([1]));
+        document.querySelector('#mapRanks').innerHTML = groups.map(function(item,index){return '<div class="rank-row"><b>0'+(index+1)+' · '+item[0]+'</b><div class="rank-track"><i style="width:'+(item[1]/max*100)+'%;background:'+item[2]+'"></i></div><em>'+item[1]+'</em></div>';}).join('');
+      }
+      function renderProfile() {
+        const profile = profiles[state.profile];
+        renderKpis(document.querySelector('#profileKpis'), profile.kpis, ['事件 / h','中位延迟','可用性','风险信号'],['',' ms','%','']);
+        document.querySelector('#profileName').textContent = profile.name;
+        document.querySelector('#profileScore').textContent = profile.score;
+        document.querySelector('#profileGauge').style.setProperty('--value',profile.score);
+        document.querySelector('#profileTrend').innerHTML = lineSvg(profile.trend.map(function(v){return v+state.tick*2;}), state.profile==='alpha'?colors.alpha:(state.profile==='beta'?colors.beta:colors.gamma));
+        document.querySelector('#profileDonut').setAttribute('data-total',profile.total);
+        const eventTypes = ['STATE_SYNC','POLICY_CHECK','NODE_HEARTBEAT','ARCHIVE_COMMIT','METRIC_ROLLUP'];
+        document.querySelector('#profileEvents').innerHTML = eventTypes.map(function(type,index){return '<tr><td>EVT-'+String(580+index+state.tick*5).padStart(4,'0')+'</td><td>'+type+'</td><td>NODE-'+state.profile.charAt(0).toUpperCase()+'0'+(index+1)+'</td><td><span class="status">Accepted</span></td><td>'+(12+index*3)+' ms</td></tr>';}).join('');
+      }
+      function renderFlow() {
+        const step = flowSteps[state.flowStep];
+        document.querySelectorAll('[data-flow-step]').forEach(function(button){button.classList.toggle('active',Number(button.dataset.flowStep)===state.flowStep);});
+        document.querySelectorAll('[data-flow-node]').forEach(function(node){node.classList.toggle('active',Number(node.dataset.flowNode)<=state.flowStep);});
+        document.querySelectorAll('[data-edge]').forEach(function(edge){edge.classList.toggle('active',Number(edge.dataset.edge)<state.flowStep);});
+        document.querySelector('#flowStatus').textContent = step.title;
+        document.querySelector('#flowDescription').textContent = step.description;
+        document.querySelector('#flowLatency').textContent = step.latency;
+        document.querySelector('#flowPeers').textContent = state.flowStep<2 ? '08 / 12' : '12 / 12';
+        document.querySelector('#flowRound').textContent = '#'+String(28+state.tick).padStart(3,'0');
+        document.querySelector('#eventLog').innerHTML = flowSteps.slice(0,state.flowStep+1).reverse().map(function(item,index){return '<div class="event-line"><time>10:'+String(21-index).padStart(2,'0')+'</time><span>'+item.title.replace(/^\d+ · /,'')+' · LOCAL_STATE_OK</span></div>';}).join('');
+      }
+      function renderAll() {
+        renderOverview();
+        renderMap();
+        renderProfile();
+        renderFlow();
+        document.querySelector('#tourStatus').textContent = (state.touring?'TOUR RUNNING':'MANUAL MODE')+' · TICK '+String(state.tick+1).padStart(2,'0');
+        document.querySelector('#tourStatus').classList.toggle('running',state.touring);
+      }
+      function setView(view) {
+        state.view = view;
+        document.querySelectorAll('[data-view]').forEach(function(section){section.classList.toggle('active',section.dataset.view===view);});
+        document.querySelectorAll('[data-view-button]').forEach(function(button){button.classList.toggle('active',button.dataset.viewButton===view);});
+        if (view==='map') renderMap();
+        if (view==='profile') renderProfile();
+        if (view==='flow') renderFlow();
+      }
+      function tickData(manual) {
+        state.tick = (state.tick+1)%ticks.length;
+        renderAll();
+        if (manual) flash('本地数据集推进到快照 '+String(state.tick+1).padStart(2,'0')+' · 0 requests');
+      }
+      function resetLiveTimer() {
+        clearInterval(liveTimer);
+        if (state.live) liveTimer = setInterval(function(){tickData(false);},6000);
+      }
+      function runTour() {
+        if (state.touring) return;
+        state.touring = true;
+        const views = ['overview','map','profile','flow'];
+        let index = 0;
+        setView(views[index]);
+        document.querySelector('#runTour').classList.add('active');
+        document.querySelector('#runTour').textContent = '巡演中 1 / 4';
+        renderAll();
+        clearInterval(tourTimer);
+        tourTimer = setInterval(function(){
+          index += 1;
+          if (index >= views.length) {
+            clearInterval(tourTimer);
+            state.touring = false;
+            document.querySelector('#runTour').classList.remove('active');
+            document.querySelector('#runTour').textContent = '完整巡演';
+            renderAll();
+            flash('四个纯前端场景巡演完成');
+            return;
+          }
+          if (views[index]==='profile') state.profile='beta';
+          if (views[index]==='flow') state.flowStep=3;
+          setView(views[index]);
+          document.querySelector('#runTour').textContent = '巡演中 '+(index+1)+' / 4';
+          renderAll();
+        },1500);
+      }
+      function playFlow() {
+        clearInterval(flowTimer);
+        state.flowStep = 0;
+        renderFlow();
+        document.querySelector('#playFlow').textContent = '播放中';
+        flowTimer = setInterval(function(){
+          state.flowStep += 1;
+          if (state.flowStep > 3) {
+            clearInterval(flowTimer);
+            state.flowStep = 3;
+            document.querySelector('#playFlow').textContent = '↻ 再次播放';
+            flash('协作流已在本地状态中收敛');
+          }
+          renderFlow();
+        },850);
+      }
+      function flash(message) {
+        const toast = document.querySelector('#toast');
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function(){toast.classList.remove('show');},1500);
+      }
+      document.querySelectorAll('[data-view-button]').forEach(function(button){button.addEventListener('click',function(){setView(button.dataset.viewButton);});});
+      document.querySelectorAll('[data-period]').forEach(function(button){button.addEventListener('click',function(){state.period=button.dataset.period;document.querySelectorAll('[data-period]').forEach(function(item){item.classList.toggle('active',item===button);});renderOverview();});});
+      document.querySelectorAll('[data-map-mode]').forEach(function(button){button.addEventListener('click',function(){state.mapMode=button.dataset.mapMode;document.querySelectorAll('[data-map-mode]').forEach(function(item){item.classList.toggle('active',item===button);});renderMap();flash('地图着色已切换为'+button.textContent);});});
+      document.querySelectorAll('[data-family]').forEach(function(button){button.addEventListener('click',function(){const family=button.dataset.family;if(state.families.has(family))state.families.delete(family);else state.families.add(family);button.classList.toggle('active',state.families.has(family));renderMap();});});
+      document.querySelector('#mapNodes').addEventListener('click',function(event){const node=event.target.closest('[data-node]');if(!node)return;state.selectedNode=node.dataset.node;renderMap();});
+      document.querySelector('#mapNodes').addEventListener('keydown',function(event){if(event.key!=='Enter'&&event.key!==' ')return;const node=event.target.closest('[data-node]');if(node){event.preventDefault();state.selectedNode=node.dataset.node;renderMap();}});
+      document.querySelectorAll('[data-profile]').forEach(function(button){button.addEventListener('click',function(){state.profile=button.dataset.profile;document.querySelectorAll('[data-profile]').forEach(function(item){item.classList.toggle('active',item===button);});renderProfile();});});
+      document.querySelectorAll('[data-flow-step]').forEach(function(button){button.addEventListener('click',function(){state.flowStep=Number(button.dataset.flowStep);renderFlow();});});
+      document.querySelector('#playFlow').addEventListener('click',playFlow);
+      document.querySelector('#refreshData').addEventListener('click',function(){tickData(true);});
+      document.querySelector('#toggleLive').addEventListener('click',function(){state.live=!state.live;document.querySelector('#toggleLive').textContent=state.live?'暂停':'继续';document.querySelector('#liveLabel').textContent=state.live?'AUTO TICK':'PAUSED';resetLiveTimer();flash(state.live?'自动数据推进已恢复':'已暂停自动数据推进');});
+      document.querySelector('#runTour').addEventListener('click',runTour);
+      setInterval(function(){document.querySelector('#clock').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});},1000);
+      resetLiveTimer();
+      renderAll();
+    }());
+  </script>
+</body>
+</html>

@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poke Prototype Editor · Archive Reconstruction</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: #353a43; background: #dfe2e6; }
+    * { box-sizing: border-box; }
+    html, body { min-width: 780px; min-height: 100%; margin: 0; }
+    body { min-height: 100vh; overflow: hidden; }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .archive-bar { display: flex; height: 28px; align-items: center; justify-content: space-between; padding: 0 13px; color: #9da8bc; background: #171d28; font: 8px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .11em; }
+    .archive-bar span:last-child { color: #68c7a5; }
+    .app { display: grid; height: calc(100vh - 28px); grid-template-rows: 52px minmax(0,1fr) 25px; background: #eff1f3; }
+    .topbar { display: grid; grid-template-columns: 168px minmax(0,1fr) 220px; align-items: stretch; border-bottom: 1px solid #cfd3d8; background: linear-gradient(#f7f8f9,#e9ebed); box-shadow: 0 1px 2px rgba(41,47,56,.06); }
+    .top-group { display: flex; align-items: stretch; }
+    .top-group.end { justify-content: flex-end; }
+    .top-action { display: grid; min-width: 54px; place-items: center; gap: 1px; padding: 6px 8px 4px; border: 0; border-right: 1px solid rgba(184,189,197,.45); color: #747b86; background: transparent; cursor: pointer; font-size: 8px; }
+    .top-action:hover, .top-action.active { color: #2763d6; background: rgba(255,255,255,.64); }
+    .top-action:disabled { color: #adb3bc; background: transparent; cursor: not-allowed; opacity: .58; }
+    .top-action b { display: block; color: #444b55; font-size: 15px; font-weight: 500; line-height: 16px; }
+    .top-action.primary { min-width: 84px; color: white; background: #2e67dd; border-color: #285cc7; }
+    .top-action.primary b { color: white; }
+    .top-center { display: flex; align-items: stretch; justify-content: center; }
+    .replay-progress { display: flex; min-width: 160px; align-items: center; gap: 8px; padding: 0 13px; border-left: 1px solid rgba(184,189,197,.45); color: #8a919b; font-size: 8px; }
+    .replay-progress i { display: block; width: 7px; height: 7px; border-radius: 50%; background: #9da5af; }
+    .replay-progress.running i { background: #2e67dd; box-shadow: 0 0 0 4px rgba(46,103,221,.12); }
+    .workspace { position: relative; display: grid; min-height: 0; grid-template-columns: 46px 188px minmax(360px,1fr) 226px; }
+    .toolrail { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 5px; border-right: 1px solid #d0d4d9; background: #f7f8f9; }
+    .tool { position: relative; display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 7px; color: #59616c; background: transparent; cursor: pointer; font: 15px Georgia,serif; }
+    .tool:hover { background: #e8ebef; }
+    .tool.active { color: white; background: #2e67dd; box-shadow: 0 5px 11px rgba(46,103,221,.23); }
+    .tool small { position: absolute; right: 3px; bottom: 2px; font: 6px ui-monospace,monospace; opacity: .65; }
+    .tool.spacer { margin-top: auto; }
+    .left-panel, .right-panel { min-height: 0; overflow: hidden; border-right: 1px solid #d0d4d9; background: #f6f7f8; }
+    .right-panel { border-right: 0; border-left: 1px solid #d0d4d9; }
+    .tabs { display: grid; height: 37px; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid #d5d9de; }
+    .tabs button { border: 0; border-bottom: 2px solid transparent; color: #8a9099; background: transparent; cursor: pointer; font-size: 9px; }
+    .tabs button.active { border-bottom-color: #2e67dd; color: #2e67dd; font-weight: 700; }
+    .panel-content { height: calc(100% - 37px); overflow: auto; }
+    .section-label { display: flex; min-height: 31px; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid #e1e3e7; color: #606873; font-size: 9px; font-weight: 700; }
+    .page-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 9px; padding: 12px; }
+    .page-thumb { padding: 7px; border: 1px solid transparent; border-radius: 7px; color: #6d7580; background: transparent; cursor: pointer; font-size: 8px; text-align: left; }
+    .page-thumb:hover { background: #eceff3; }
+    .page-thumb.active { border-color: #aebff0; color: #2e62cc; background: #edf2ff; }
+    .mini-page { display: grid; height: 94px; place-items: center; margin-bottom: 6px; border: 1px solid #cfd4da; background: white; box-shadow: 0 3px 9px rgba(40,48,60,.08); }
+    .mini-page::before { width: 42px; height: 14px; border-radius: 4px; background: #dbe3f8; box-shadow: 0 22px #eef0f4, 0 44px #eef0f4; content: ''; }
+    .layer-list { padding: 7px; }
+    .layer-row { display: grid; width: 100%; min-height: 30px; grid-template-columns: 20px minmax(0,1fr) auto; align-items: center; gap: 5px; padding: 0 7px; border: 0; border-radius: 5px; color: #68717c; background: transparent; cursor: pointer; font-size: 8px; text-align: left; }
+    .layer-row:hover { background: #e9edf2; }
+    .layer-row.active { color: #275fcb; background: #e9effd; font-weight: 700; }
+    .layer-row.nested { padding-left: 22px; }
+    .layer-row .layer-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .layer-row .rename-input { width: 100%; height: 22px; padding: 0 5px; font-size: 8px; }
+    .layer-row.container-row { color: #596578; font-weight: 700; }
+    .layer-row.container-row .layer-icon { border-color: #91a8d8; color: #315fae; background: #edf3ff; }
+    .layer-icon { display: grid; width: 16px; height: 16px; place-items: center; border: 1px solid #bdc4ce; border-radius: 4px; color: #7d8795; font-size: 7px; }
+    .layer-row em { color: #a8afb9; font-style: normal; }
+    .component-empty { padding: 22px 15px; color: #929aa5; font-size: 9px; line-height: 1.7; text-align: center; }
+    .component-list { display: grid; gap: 8px; padding: 10px; }
+    .component-card { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: center; gap: 8px; min-height: 52px; padding: 7px; border: 1px solid #d9dde4; border-radius: 8px; color: #5f6876; background: white; cursor: pointer; text-align: left; }
+    .component-card:hover { border-color: #b5c6ea; background: #f7f9ff; }
+    .component-preview { display: grid; height: 36px; place-items: center; border-radius: 6px; color: #315fae; background: linear-gradient(135deg,#e9efff,#dce8ff); font-size: 15px; }
+    .component-card strong, .component-card small { display: block; }
+    .component-card strong { font-size: 8px; }
+    .component-card small { margin-top: 3px; color: #9aa2ae; font-size: 7px; }
+    .component-card > em { color: #8da1c8; font-size: 10px; font-style: normal; }
+    .stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; background-color: #dfe2e6; background-image: radial-gradient(#c2c7ce .7px,transparent .7px); background-size: 14px 14px; }
+    .stage-top { position: absolute; z-index: 8; top: 10px; left: 50%; display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 1px solid rgba(157,164,174,.4); border-radius: 8px; color: #737c89; background: rgba(250,251,252,.9); box-shadow: 0 5px 13px rgba(43,51,63,.08); font: 8px ui-monospace,monospace; transform: translateX(-50%); }
+    .selection-chip { position: absolute; z-index: 9; top: 42px; left: 50%; padding: 4px 8px; border-radius: 99px; color: #285dbb; background: rgba(234,241,255,.94); box-shadow: 0 3px 10px rgba(42,74,132,.12); font: 7px ui-monospace,monospace; transform: translateX(-50%); }
+    .selection-chip[hidden] { display: none; }
+    .canvas-wrap { position: absolute; inset: 48px 28px 24px; display: grid; place-items: center; }
+    .phone-shell { position: relative; width: 300px; height: 558px; padding: 17px 10px 19px; border: 1px solid #bcc2ca; border-radius: 34px; background: #f7f8f9; box-shadow: 0 26px 56px rgba(44,51,62,.18), inset 0 0 0 4px white; }
+    .phone-shell::before { position: absolute; top: 7px; left: 50%; width: 43px; height: 4px; border-radius: 99px; background: #ced3d9; content: ''; transform: translateX(-50%); }
+    .phone-shell::after { position: absolute; bottom: 6px; left: 50%; width: 27px; height: 4px; border-radius: 99px; background: #d3d7dc; content: ''; transform: translateX(-50%); }
+    .artboard { position: relative; width: 280px; height: 522px; overflow: hidden; background: #f8f9fc; box-shadow: 0 0 0 1px #ccd1d8; touch-action: none; }
+    .statusbar { position: absolute; z-index: 20; top: 0; right: 0; left: 0; display: flex; height: 17px; align-items: center; justify-content: space-between; padding: 0 8px; color: #667080; font-size: 6px; pointer-events: none; }
+    .canvas-element { position: absolute; border: 1px solid transparent; cursor: move; user-select: none; }
+    .canvas-element.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.75), 0 0 0 2px #2f79ed; }
+    .canvas-element.selected::before, .canvas-element.selected::after { position: absolute; z-index: 4; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: #2f79ed; content: ''; }
+    .canvas-element.selected::before { top: -4px; left: -4px; } .canvas-element.selected::after { right: -4px; bottom: -4px; }
+    .canvas-element.text { display: flex; align-items: center; border-style: dashed; }
+    .canvas-element.nav { display: flex; align-items: center; justify-content: space-around; }
+    .canvas-container { position: absolute; overflow: visible; }
+    .canvas-container.mask { overflow: hidden; border-radius: 9px; }
+    .container-hit { position: absolute; z-index: 30; border: 1px solid transparent; cursor: move; inset: 0; }
+    .container-hit.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 0 0 2px #2f79ed; }
+    .container-hit.selected::before, .container-hit.selected::after { position: absolute; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: #2f79ed; content: ''; }
+    .container-hit.selected::before { top: -4px; left: -4px; }
+    .container-hit.selected::after { right: -4px; bottom: -4px; }
+    .canvas-container.expanded .container-hit { border: 1px dashed rgba(47,121,237,.65); pointer-events: none; }
+    .inspector-head { display: flex; min-height: 44px; align-items: center; gap: 9px; padding: 0 12px; border-bottom: 1px solid #d8dce1; background: #f9fafb; }
+    .inspector-icon { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #cdd2d9; border-radius: 5px; color: #617087; background: white; font-size: 9px; }
+    .inspector-head strong { display: block; font-size: 10px; }
+    .inspector-head span { display: block; margin-top: 2px; color: #9aa1ab; font-size: 7px; }
+    .inspector-section { padding: 12px; border-bottom: 1px solid #dde0e4; }
+    .inspector-section h3 { margin: 0 0 10px; color: #858e99; font-size: 8px; letter-spacing: .1em; }
+    .fields { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
+    label { display: grid; grid-template-columns: 17px minmax(0,1fr); align-items: center; gap: 4px; color: #9aa1ab; font-size: 7px; }
+    input, select { min-width: 0; height: 27px; padding: 0 7px; border: 1px solid #d7dbe1; border-radius: 5px; color: #4f5864; background: white; font-size: 9px; }
+    input[type=color] { padding: 3px; }
+    .full-field { display: grid; grid-template-columns: 40px minmax(0,1fr); align-items: center; gap: 6px; margin-top: 8px; color: #8e96a1; font-size: 8px; }
+    .interaction-button { display: flex; width: 100%; min-height: 34px; align-items: center; justify-content: space-between; padding: 0 10px; border: 1px solid #d5dbe6; border-radius: 7px; color: #3f67bd; background: #f3f6fc; cursor: pointer; font-size: 9px; font-weight: 700; }
+    .interaction-button.has-event::after { color: #27a978; content: '● 已配置'; font-size: 7px; }
+    .footer { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-top: 1px solid #cfd3d8; color: #9299a2; background: #f1f3f5; font: 7px ui-monospace, monospace; }
+    .footer strong { color: #647084; font-weight: 600; }
+    .toast { position: absolute; z-index: 40; right: 240px; bottom: 38px; padding: 9px 12px; border-radius: 8px; color: white; background: rgba(27,34,46,.9); box-shadow: 0 8px 24px rgba(24,29,39,.22); font-size: 9px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s ease; }
+    .toast.show { opacity: 1; transform: none; }
+    .context-menu { position: fixed; z-index: 120; width: 178px; padding: 5px; border: 1px solid rgba(139,149,164,.38); border-radius: 9px; color: #343b46; background: rgba(248,249,251,.98); box-shadow: 0 16px 46px rgba(20,27,39,.22), 0 2px 8px rgba(20,27,39,.1); opacity: 1; transform: translateY(0) scale(1); transform-origin: top left; transition: opacity 120ms ease, transform 120ms ease; user-select: none; backdrop-filter: blur(18px); }
+    .context-menu[hidden] { display: none; }
+    .context-menu.opening { opacity: 0; transform: translateY(-3px) scale(.985); }
+    .context-title { padding: 6px 9px 5px; overflow: hidden; color: #8a929e; font: 7px ui-monospace,monospace; letter-spacing: .06em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+    .context-item { display: grid; width: 100%; height: 29px; grid-template-columns: 18px minmax(0,1fr) auto; align-items: center; gap: 5px; padding: 0 8px; border: 0; border-radius: 6px; color: #4a5260; background: transparent; cursor: default; font-size: 9px; text-align: left; }
+    .context-item:not(:disabled):hover, .context-item:not(:disabled):focus-visible { color: white; background: #2f66d2; outline: 0; }
+    .context-item:disabled { color: #afb5be; }
+    .context-item .menu-icon { color: #7e8998; font-size: 9px; text-align: center; }
+    .context-item:not(:disabled):hover .menu-icon, .context-item:not(:disabled):focus-visible .menu-icon { color: white; }
+    .context-item kbd { color: #9ca4af; font: 7px ui-monospace,monospace; }
+    .context-item:not(:disabled):hover kbd, .context-item:not(:disabled):focus-visible kbd { color: rgba(255,255,255,.75); }
+    .context-separator { height: 1px; margin: 4px 7px; background: #dfe3e8; }
+    .context-love { padding: 10px 9px 11px; color: #777f8a; font-size: 9px; text-align: center; }
+    .confirm-layer { position: absolute; z-index: 110; display: grid; place-items: center; inset: 0; background: rgba(29,35,45,.36); backdrop-filter: blur(2px); }
+    .confirm-layer[hidden] { display: none; }
+    .confirm-card { width: 292px; padding: 18px; border: 1px solid #cbd1da; border-radius: 12px; background: #f9fafb; box-shadow: 0 26px 70px rgba(19,25,35,.28); }
+    .confirm-card strong { display: block; font-size: 11px; }
+    .confirm-card p { margin: 8px 0 16px; color: #7e8794; font-size: 9px; line-height: 1.6; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 7px; }
+    .confirm-actions button { height: 29px; padding: 0 12px; border: 1px solid #d2d7df; border-radius: 6px; color: #626b78; background: white; cursor: pointer; font-size: 8px; }
+    .confirm-actions button.danger { border-color: #d3515a; color: white; background: #d95d65; }
+    .interaction-panel { position: absolute; z-index: 25; right: 226px; bottom: 0; left: 234px; display: grid; grid-template-columns: 160px 1fr; min-height: 196px; border-top: 1px solid #c7ccd3; background: rgba(250,251,252,.98); box-shadow: 0 -12px 34px rgba(38,45,57,.14); transform: translateY(105%); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
+    .interaction-panel.open { transform: none; }
+    .interaction-side { padding: 14px; border-right: 1px solid #dce0e5; }
+    .interaction-side .close { float: right; border: 0; color: #858d98; background: transparent; cursor: pointer; }
+    .interaction-side strong { display: block; margin-bottom: 12px; font-size: 10px; }
+    .event-types { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
+    .event-types button { height: 30px; border: 1px solid #d7dce4; border-radius: 6px; color: #7d8795; background: white; cursor: pointer; font-size: 7px; }
+    .event-types button.active { border-color: #aebff0; color: #2b63d3; background: #edf2ff; }
+    .states { display: flex; gap: 5px; margin-top: 12px; }
+    .states span { padding: 5px 7px; border-radius: 5px; color: #68717f; background: #eceff3; font-size: 7px; }
+    .states span.active { color: white; background: #2e67dd; }
+    .interaction-form { display: grid; grid-template-columns: repeat(4,1fr) auto; align-content: start; gap: 9px; padding: 15px; }
+    .interaction-form label { display: grid; grid-template-columns: 1fr; gap: 5px; }
+    .interaction-form .save { align-self: end; height: 27px; padding: 0 12px; border: 0; border-radius: 6px; color: white; background: #2e67dd; cursor: pointer; font-size: 8px; font-weight: 700; }
+    .interaction-note { grid-column: 1 / -1; margin: 4px 0 0; color: #929aa5; font-size: 8px; line-height: 1.6; }
+    .preview-modal { position: absolute; z-index: 60; display: grid; place-items: center; inset: 0; padding: 28px; background: rgba(20,26,36,.64); opacity: 0; pointer-events: none; transition: opacity 220ms ease; }
+    .preview-modal.open { opacity: 1; pointer-events: auto; }
+    .preview-window { width: 352px; overflow: hidden; border: 1px solid #bbc2cc; border-radius: 14px; background: #edf0f4; box-shadow: 0 30px 80px rgba(12,17,25,.4); transform: translateY(12px) scale(.97); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
+    .preview-modal.open .preview-window { transform: none; }
+    .preview-titlebar { display: flex; height: 34px; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid #d2d7de; color: #76808e; background: #f8f9fa; font-size: 8px; }
+    .preview-titlebar button { border: 0; color: #66717f; background: transparent; cursor: pointer; }
+    .preview-body { display: grid; min-height: 560px; place-items: center; padding: 18px; background: #e2e5e9; }
+    .preview-phone { position: relative; width: 260px; height: 500px; overflow: hidden; border: 8px solid white; border-radius: 27px; background: #f8f9fc; box-shadow: 0 14px 32px rgba(35,43,55,.17); }
+    .preview-page { position: absolute; display: flex; flex-direction: column; inset: 0; padding: 62px 24px 30px; transition: transform 360ms cubic-bezier(.2,.8,.2,1), opacity 300ms ease; }
+    .preview-page.details { transform: translateX(105%); opacity: 0; }
+    .preview-phone.show-details .preview-page.home { transform: translateX(-105%); opacity: 0; }
+    .preview-phone.show-details .preview-page.details { transform: none; opacity: 1; }
+    .preview-page h2 { margin: 0 0 10px; font: 500 28px/1.05 Georgia,serif; }
+    .preview-page p { margin: 0; color: #8290a5; font-size: 10px; line-height: 1.6; }
+    .preview-cta { margin-top: 26px; height: 42px; border: 0; border-radius: 13px; color: white; background: #2e67dd; cursor: pointer; font-size: 10px; font-weight: 700; }
+    .preview-card { height: 120px; margin-top: 24px; border-radius: 18px; background: linear-gradient(135deg,#2f69de,#7a63e7); }
+    .preview-back { width: max-content; margin-bottom: 34px; border: 0; color: #2e67dd; background: transparent; cursor: pointer; font-size: 9px; }
+    .pulse { animation: pulse 650ms ease; }
+    @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(47,121,237,.18); } }
+  </style>
+</head>
+<body>
+  <div class="archive-bar"><span>POKE 0.9 · SOURCE-DRIVEN ARCHIVE RECONSTRUCTION</span><span>SYNTHETIC PROJECT · LOCAL ONLY · NO NETWORK</span></div>
+  <main class="app">
+    <header class="topbar">
+      <div class="top-group">
+        <button class="top-action" id="backToProjects"><b>‹</b>项目</button>
+        <button class="top-action" id="preview"><b>◉</b>APP 预览</button>
+        <button class="top-action" data-command="save"><b>⇧</b>保存</button>
+      </div>
+      <div class="top-center">
+        <button class="top-action" data-command="component" id="componentCommand"><b>◇</b>创建组件</button>
+        <button class="top-action" data-command="mask" id="maskCommand"><b>◐</b>Mask</button>
+        <button class="top-action" id="zoom"><b>− 100% +</b>缩放</button>
+        <button class="top-action" data-command="group" id="groupCommand"><b>⌘</b><span id="groupCommandText">组合</span></button>
+        <button class="top-action" data-command="export"><b>▱</b>导出</button>
+      </div>
+      <div class="top-group end">
+        <div class="replay-progress" id="replayProgress"><i></i><span id="replayStatus">READY · MANUAL MODE</span></div>
+        <button class="top-action primary" id="replay"><b>▶</b>重放演示</button>
+      </div>
+    </header>
+    <div class="workspace">
+      <nav class="toolrail" aria-label="绘制工具">
+        <button class="tool active" data-tool="select" title="选择">↖<small>V</small></button>
+        <button class="tool" data-tool="rect" title="矩形">■<small>R</small></button>
+        <button class="tool" data-tool="circle" title="圆形">●<small>O</small></button>
+        <button class="tool" data-tool="text" title="文字">Aa<small>T</small></button>
+        <button class="tool" data-tool="image" title="图片">▧<small>M</small></button>
+        <button class="tool" data-tool="input" title="输入框">▤<small>P</small></button>
+        <button class="tool" data-tool="nav" title="导航栏">⌂</button>
+        <button class="tool spacer" id="toggleLayers" title="图层">▱</button>
+      </nav>
+      <aside class="left-panel">
+        <div class="tabs" id="leftTabs"><button data-panel="pages">页面</button><button data-panel="components">组件</button><button class="active" data-panel="layers">图层</button></div>
+        <div class="panel-content" id="leftContent"></div>
+      </aside>
+      <section class="stage">
+        <div class="stage-top"><span>iPhone · 375 × 667</span><span>·</span><span id="pageName">Launch</span><span>· 右键打开 Context Menu</span></div>
+        <div class="selection-chip" id="selectionChip" hidden></div>
+        <div class="canvas-wrap"><div class="phone-shell"><div class="artboard" id="artboard"></div></div></div>
+      </section>
+      <aside class="right-panel" id="inspector"></aside>
+      <div class="toast" id="toast"></div>
+      <div class="context-menu" id="contextMenu" role="menu" aria-label="编辑器上下文菜单" hidden></div>
+      <div class="confirm-layer" id="confirmLayer" hidden>
+        <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+          <strong id="confirmTitle">确认操作</strong><p id="confirmMessage"></p>
+          <div class="confirm-actions"><button id="confirmCancel">取消</button><button class="danger" id="confirmOk">删除</button></div>
+        </div>
+      </div>
+      <section class="interaction-panel" id="interactionPanel">
+        <div class="interaction-side"><button class="close" id="closeInteraction">×</button><strong id="interactionTitle">按钮 · 交互事件</strong><div class="event-types"><button class="active">点击</button><button>双击</button><button>长按</button><button>滑动</button></div><div class="states"><span class="active">初始状态</span><span>状态 1</span><span>＋</span></div></div>
+        <div class="interaction-form"><label>目标<select id="eventTarget"><option value="details">Details 页面</option><option value="home">Launch 页面</option></select></label><label>转场<select id="eventEffect"><option>Push Left</option><option>Fade</option><option>Modal</option></select></label><label>缓动<select id="eventEasing"><option>Ease Out</option><option>Ease Both</option><option>Linear</option></select></label><label>时长<input id="eventDuration" value="0.35 s" /></label><button class="save" id="saveInteraction">保存事件</button><p class="interaction-note">原项目支持点击、双击、长按与四向滑动；事件既能改变元素状态，也能跳转页面，并携带开始时间、结束时间与 cubic-bezier 参数。</p></div>
+      </section>
+      <div class="preview-modal" id="previewModal">
+        <div class="preview-window"><div class="preview-titlebar"><span>LIVE PREVIEW · SYNTHETIC PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><div class="preview-phone" id="previewPhone"><div class="preview-page home"><h2>Make ideas tangible.</h2><p>Build a small interaction, inspect every state, then test it as a real flow.</p><div class="preview-card"></div><button class="preview-cta" id="previewCta">Open prototype →</button></div><div class="preview-page details"><button class="preview-back" id="previewBack">← Back</button><h2>Interaction linked.</h2><p>The button navigated to another page with the transition configured in the editor.</p><div class="preview-card" style="background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div></div></div></div>
+      </div>
+    </div>
+    <footer class="footer"><span><strong id="footerMode">SELECT</strong> · DOCUMENT / SYNTHETIC-MOBILE-PROTOTYPE</span><span id="footerState">6 ELEMENTS · 2 PAGES · 0 EVENTS</span></footer>
+  </main>
+  <script>
+    (function () {
+      'use strict';
+
+      const originalElements = [
+        {id:'hero',name:'Hero Gradient',type:'rect',x:0,y:0,w:280,h:230,fill:'#e9efff',radius:0,opacity:100},
+        {id:'mark',name:'Product Mark',type:'circle',x:24,y:42,w:34,h:34,fill:'#2e67dd',radius:50,opacity:100},
+        {id:'title',name:'Headline',type:'text',x:24,y:92,w:225,h:64,fill:'#222a36',radius:0,opacity:100,text:'Make ideas tangible.'},
+        {id:'copy',name:'Description',type:'text',x:24,y:160,w:222,h:42,fill:'#718096',radius:0,opacity:100,text:'Design states, connect events, preview the flow.'},
+        {id:'cta',name:'Primary Button',type:'rect',x:24,y:252,w:232,h:48,fill:'#464d5c',radius:8,opacity:100,text:'Open prototype →'},
+        {id:'nav',name:'Bottom Navigation',type:'nav',x:0,y:466,w:280,h:56,fill:'#ffffff',radius:0,opacity:100,text:'Home\nExplore\nProfile'}
+      ];
+
+      const clone = value => JSON.parse(JSON.stringify(value));
+      const artboard = document.querySelector('#artboard');
+      const stage = document.querySelector('.stage');
+      const leftContent = document.querySelector('#leftContent');
+      const inspector = document.querySelector('#inspector');
+      const toast = document.querySelector('#toast');
+      const interactionPanel = document.querySelector('#interactionPanel');
+      const previewModal = document.querySelector('#previewModal');
+      const contextMenu = document.querySelector('#contextMenu');
+      const confirmLayer = document.querySelector('#confirmLayer');
+      const selectionChip = document.querySelector('#selectionChip');
+      const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+      let elements = clone(originalElements);
+      let containers = [];
+      let components = [];
+      let pages = [
+        {id:'home',name:'Launch'},
+        {id:'details',name:'Details'}
+      ];
+      let selectedIds = new Set(['cta']);
+      let lastHomeSelection = new Set(['cta']);
+      let activePanel = 'layers';
+      let currentPage = 'home';
+      let expandedContainerId = null;
+      let clipboard = null;
+      let eventElementIds = new Set();
+      let dragging = null;
+      let replaying = false;
+      let idSequence = 100;
+      let toastTimer = null;
+      let confirmAction = null;
+      let menuContext = null;
+
+      function uid(prefix) {
+        idSequence += 1;
+        return prefix + '-' + idSequence;
+      }
+
+      function esc(value) {
+        const table = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+        return String(value == null ? '' : value).replace(/[&<>"']/g, character => table[character]);
+      }
+
+      function elementLabel(item) {
+        return {rect:'▰',circle:'●',text:'Aa',image:'▧',input:'⌨',nav:'⌂',group:'⌘',mask:'◐',component:'◇'}[item.type] || '◇';
+      }
+
+      function getElement(id) {
+        return elements.find(item => item.id === id) || null;
+      }
+
+      function getContainer(id) {
+        return containers.find(item => item.id === id) || null;
+      }
+
+      function getEntity(id) {
+        return getContainer(id) || getElement(id);
+      }
+
+      function selected() {
+        const firstId = selectedIds.values().next().value;
+        return firstId ? getEntity(firstId) : null;
+      }
+
+      function containerBounds(container) {
+        const children = container.childIds.map(getElement).filter(Boolean);
+        if (!children.length) return {x:0,y:0,w:1,h:1};
+        const x = Math.min.apply(null, children.map(item => item.x));
+        const y = Math.min.apply(null, children.map(item => item.y));
+        const right = Math.max.apply(null, children.map(item => item.x + item.w));
+        const bottom = Math.max.apply(null, children.map(item => item.y + item.h));
+        return {x:x,y:y,w:Math.max(1,right-x),h:Math.max(1,bottom-y)};
+      }
+
+      function syncContainer(container) {
+        if (!container) return;
+        Object.assign(container, containerBounds(container));
+      }
+
+      function getTopEntityIds() {
+        const seen = new Set();
+        const ids = [];
+        elements.forEach(item => {
+          if (item.containerId) {
+            if (!seen.has(item.containerId) && getContainer(item.containerId)) {
+              seen.add(item.containerId);
+              ids.push(item.containerId);
+            }
+          } else {
+            ids.push(item.id);
+          }
+        });
+        return ids;
+      }
+
+      function visualItemsForId(id) {
+        const container = getContainer(id);
+        if (container) return container.childIds.map(getElement).filter(Boolean);
+        const item = getElement(id);
+        return item ? [item] : [];
+      }
+
+      function selectedVisualItems() {
+        const seen = new Set();
+        const result = [];
+        selectedIds.forEach(id => {
+          visualItemsForId(id).forEach(item => {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              result.push(item);
+            }
+          });
+        });
+        return result;
+      }
+
+      function boundsForItems(items) {
+        if (!items.length) return {x:0,y:0,w:0,h:0};
+        const x = Math.min.apply(null, items.map(item => item.x));
+        const y = Math.min.apply(null, items.map(item => item.y));
+        const right = Math.max.apply(null, items.map(item => item.x + item.w));
+        const bottom = Math.max.apply(null, items.map(item => item.y + item.h));
+        return {x:x,y:y,w:right-x,h:bottom-y};
+      }
+
+      function selectionRules() {
+        const ids = Array.from(selectedIds);
+        const entities = ids.map(getEntity).filter(Boolean);
+        const rootElementsOnly = entities.length === ids.length && entities.every(item => !getContainer(item.id) && !item.containerId);
+        const onlyContainer = ids.length === 1 ? getContainer(ids[0]) : null;
+        return {
+          count: ids.length,
+          canCopy: ids.length > 0,
+          canDelete: ids.length > 0,
+          canGroup: ids.length >= 2 && rootElementsOnly,
+          canUngroup: Boolean(onlyContainer && onlyContainer.type === 'group'),
+          canMask: ids.length >= 2 && rootElementsOnly,
+          canComponent: Boolean((ids.length >= 1 && rootElementsOnly) || (onlyContainer && onlyContainer.type !== 'component')),
+          onlyContainer: onlyContainer
+        };
+      }
+
+      function flash(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('show'), 1500);
+      }
+
+      function createElementNode(item, offsetX, offsetY, selectId) {
+        const node = document.createElement('div');
+        const isSelected = selectedIds.has(selectId);
+        node.className = 'canvas-element ' + item.type + (isSelected ? ' selected' : '');
+        node.dataset.id = item.id;
+        node.dataset.selectId = selectId;
+        Object.assign(node.style, {
+          left:(item.x-offsetX)+'px',
+          top:(item.y-offsetY)+'px',
+          width:item.w+'px',
+          height:item.h+'px',
+          background:item.type === 'text' ? 'transparent' : item.fill,
+          borderRadius:item.radius + (item.type === 'circle' ? '%' : 'px'),
+          opacity:item.opacity/100,
+          color:item.type === 'text' ? item.fill : (item.id === 'cta' ? 'white' : '#556170'),
+          fontSize:item.id === 'title' ? '29px' : (item.id === 'copy' ? '10px' : '10px'),
+          fontFamily:item.id === 'title' ? 'Georgia,serif' : 'inherit',
+          fontWeight:item.id === 'cta' ? '700' : '500',
+          lineHeight:item.id === 'title' ? '1.02' : (item.id === 'copy' ? '1.5' : '1'),
+          padding:item.type === 'text' ? '2px' : (item.id === 'cta' ? '0 15px' : '0'),
+          justifyContent:item.id === 'cta' ? 'center' : 'space-around',
+          alignItems:'center'
+        });
+        if (item.type === 'nav') {
+          node.innerHTML = '<span>⌂<br><small>Home</small></span><span>◇<br><small>Explore</small></span><span>○<br><small>Profile</small></span>';
+        } else {
+          node.textContent = item.text || '';
+        }
+        node.addEventListener('pointerdown', startDrag);
+        node.addEventListener('contextmenu', event => openElementContext(event, selectId));
+        return node;
+      }
+
+      function renderContainer(container) {
+        syncContainer(container);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'canvas-container ' + container.type + (expandedContainerId === container.id ? ' expanded' : '');
+        wrapper.dataset.containerId = container.id;
+        Object.assign(wrapper.style, {
+          left:container.x+'px',
+          top:container.y+'px',
+          width:container.w+'px',
+          height:container.h+'px'
+        });
+        container.childIds.map(getElement).filter(Boolean).forEach(item => {
+          const selectId = expandedContainerId === container.id ? item.id : container.id;
+          wrapper.appendChild(createElementNode(item, container.x, container.y, selectId));
+        });
+        const hit = document.createElement('div');
+        hit.className = 'container-hit' + (selectedIds.has(container.id) ? ' selected' : '');
+        hit.dataset.selectId = container.id;
+        hit.dataset.containerId = container.id;
+        hit.title = expandedContainerId === container.id ? 'Esc 退出容器编辑' : '双击进入容器';
+        hit.addEventListener('pointerdown', startDrag);
+        hit.addEventListener('dblclick', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          expandedContainerId = container.id;
+          selectedIds = new Set();
+          renderAll();
+          flash('已进入 ' + container.name + ' · Esc 退出');
+        });
+        hit.addEventListener('contextmenu', event => openElementContext(event, container.id));
+        wrapper.appendChild(hit);
+        artboard.appendChild(wrapper);
+      }
+
+      function renderCanvas() {
+        artboard.innerHTML = '<div class="statusbar"><span>9:41</span><span>◉ ◌ 100%</span></div>';
+        if (currentPage === 'details') {
+          artboard.innerHTML += '<div class="details-canvas" style="position:absolute;inset:0;padding:62px 24px;background:#f8f9fc"><button id="canvasBack" style="border:0;background:transparent;color:#2e67dd;font-size:9px;padding:0">← Back</button><h2 style="margin:54px 0 12px;font:500 31px/1.03 Georgia,serif">Interaction<br>linked.</h2><p style="margin:0;color:#8290a5;font-size:10px;line-height:1.7">This page is the target of the CTA event.</p><div style="height:170px;margin-top:28px;border-radius:24px;background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div>';
+          artboard.querySelector('#canvasBack').addEventListener('click', () => switchPage('home'));
+          return;
+        }
+        const renderedContainers = new Set();
+        elements.forEach(item => {
+          if (item.containerId) {
+            if (!renderedContainers.has(item.containerId)) {
+              const container = getContainer(item.containerId);
+              if (container) {
+                renderedContainers.add(item.containerId);
+                renderContainer(container);
+              }
+            }
+          } else {
+            artboard.appendChild(createElementNode(item, 0, 0, item.id));
+          }
+        });
+      }
+
+      function setSelection(id, additive) {
+        if (!id || !getEntity(id)) return;
+        if (additive) {
+          const next = new Set(selectedIds);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+          selectedIds = next;
+        } else if (!selectedIds.has(id) || selectedIds.size !== 1) {
+          selectedIds = new Set([id]);
+        }
+        if (currentPage === 'home') lastHomeSelection = new Set(selectedIds);
+      }
+
+      function startDrag(event) {
+        if (event.button !== 0 || currentPage !== 'home') return;
+        event.preventDefault();
+        event.stopPropagation();
+        closeContextMenu();
+        const id = event.currentTarget.dataset.selectId || event.currentTarget.dataset.id;
+        const wasSelected = selectedIds.has(id);
+        if (event.shiftKey) {
+          setSelection(id, true);
+          if (!selectedIds.size) selectedIds = new Set([id]);
+        } else if (!wasSelected) {
+          setSelection(id, false);
+        }
+        const movableItems = selectedVisualItems();
+        dragging = {
+          label:selectedIds.size > 1 ? selectedIds.size + ' 个图层' : (getEntity(id) ? getEntity(id).name : '图层'),
+          startX:event.clientX,
+          startY:event.clientY,
+          origins:movableItems.map(item => ({id:item.id,x:item.x,y:item.y}))
+        };
+        renderCanvas();
+        renderLayers();
+        renderInspector();
+        updateChrome();
+      }
+
+      window.addEventListener('pointermove', event => {
+        if (!dragging) return;
+        const dx = Math.round(event.clientX - dragging.startX);
+        const dy = Math.round(event.clientY - dragging.startY);
+        dragging.origins.forEach(origin => {
+          const item = getElement(origin.id);
+          if (item) {
+            item.x = origin.x + dx;
+            item.y = origin.y + dy;
+          }
+        });
+        containers.forEach(syncContainer);
+        renderCanvas();
+        syncInspectorValues();
+      });
+
+      window.addEventListener('pointerup', () => {
+        if (!dragging) return;
+        const label = dragging.label;
+        dragging = null;
+        renderAll();
+        flash('已移动 ' + label);
+      });
+
+      function renderLayerRow(item, nested) {
+        const isContainer = Boolean(getContainer(item.id));
+        const active = selectedIds.has(item.id);
+        return '<button class="layer-row ' + (nested ? 'nested ' : '') + (isContainer ? 'container-row ' : '') + (active ? 'active' : '') + '" data-layer="' + esc(item.id) + '"><span class="layer-icon">' + elementLabel(item) + '</span><span class="layer-name">' + esc(item.name) + '</span><em>' + (isContainer ? item.childIds.length + '›' : '⌁') + '</em></button>';
+      }
+
+      function renderLayers() {
+        if (activePanel === 'pages') {
+          leftContent.innerHTML = '<div class="section-label"><span>默认项目分组</span><b>＋</b></div><div class="page-grid">' + pages.map(page => '<button class="page-thumb ' + (currentPage === page.id ? 'active' : '') + '" data-page="' + page.id + '"><div class="mini-page"></div>' + esc(page.name) + '</button>').join('') + '</div>';
+          leftContent.querySelectorAll('[data-page]').forEach(button => {
+            button.addEventListener('click', () => switchPage(button.dataset.page));
+            button.addEventListener('contextmenu', event => openPageContext(event, button.dataset.page));
+          });
+          return;
+        }
+
+        if (activePanel === 'components') {
+          if (!components.length) {
+            leftContent.innerHTML = '<div class="section-label"><span>项目组件</span><b>＋</b></div><div class="component-empty">选择一个或多个元素，然后使用顶部“创建组件”。<br><br>组件会保留内部图层与状态；点击组件卡片可创建实例。</div>';
+          } else {
+            leftContent.innerHTML = '<div class="section-label"><span>项目组件 · ' + components.length + '</span><b>＋</b></div><div class="component-list">' + components.map(component => '<button class="component-card" data-component="' + component.id + '"><span class="component-preview">◇</span><span><strong>' + esc(component.name) + '</strong><small>' + component.items.length + ' layers · reusable</small></span><em>＋</em></button>').join('') + '</div>';
+            leftContent.querySelectorAll('[data-component]').forEach(button => {
+              button.addEventListener('click', () => insertComponent(button.dataset.component));
+              button.addEventListener('contextmenu', event => openComponentContext(event, button.dataset.component));
+            });
+          }
+          return;
+        }
+
+        if (currentPage === 'details') {
+          leftContent.innerHTML = '<div class="section-label"><span>Details · 图层</span><b>＋</b></div><div class="layer-list"><button class="layer-row"><span class="layer-icon">Aa</span><span>Details Headline</span><em>⌁</em></button><button class="layer-row"><span class="layer-icon">▰</span><span>Gradient Card</span><em>⌁</em></button><button class="layer-row"><span class="layer-icon">←</span><span>Back Action</span><em>⌁</em></button></div>';
+          return;
+        }
+
+        const rows = [];
+        getTopEntityIds().slice().reverse().forEach(id => {
+          const container = getContainer(id);
+          if (container) {
+            rows.push(renderLayerRow(container, false));
+            container.childIds.slice().reverse().forEach(childId => {
+              const child = getElement(childId);
+              if (child) rows.push(renderLayerRow(child, true));
+            });
+          } else {
+            const item = getElement(id);
+            if (item) rows.push(renderLayerRow(item, false));
+          }
+        });
+        leftContent.innerHTML = '<div class="section-label"><span>Launch · 图层</span><b>＋</b></div><div class="layer-list">' + rows.join('') + '</div>';
+        leftContent.querySelectorAll('[data-layer]').forEach(button => {
+          button.addEventListener('click', event => {
+            setSelection(button.dataset.layer, event.shiftKey);
+            renderAll();
+          });
+          button.addEventListener('contextmenu', event => openElementContext(event, button.dataset.layer));
+          button.addEventListener('dblclick', () => beginRename(button));
+        });
+      }
+
+      function beginRename(row) {
+        const id = row.dataset.layer;
+        const item = getEntity(id);
+        const label = row.querySelector('.layer-name');
+        if (!item || !label) return;
+        const previous = item.name;
+        label.innerHTML = '<input class="rename-input" value="' + esc(previous) + '" aria-label="图层名称">';
+        const input = label.querySelector('input');
+        input.focus();
+        input.select();
+        let committed = false;
+        const finish = accept => {
+          if (committed) return;
+          committed = true;
+          const next = input.value.trim();
+          if (accept && next) item.name = next;
+          renderAll();
+          if (accept && next && next !== previous) flash('已重命名为 ' + next);
+        };
+        input.addEventListener('pointerdown', event => event.stopPropagation());
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') finish(true);
+          if (event.key === 'Escape') finish(false);
+        });
+        input.addEventListener('blur', () => finish(true));
+      }
+
+      function inspectorSelectionSummary() {
+        const items = selectedVisualItems();
+        const bounds = boundsForItems(items);
+        return '<div class="inspector-head"><div class="inspector-icon">◇</div><div><strong>' + selectedIds.size + ' 个图层</strong><span>MULTI SELECTION</span></div></div><div class="inspector-section"><h3>BOUNDING BOX</h3><div class="fields"><label>X<input value="' + bounds.x + '" disabled></label><label>Y<input value="' + bounds.y + '" disabled></label><label>W<input value="' + bounds.w + '" disabled></label><label>H<input value="' + bounds.h + '" disabled></label></div></div><div class="inspector-section"><h3>STRUCTURE</h3><button class="interaction-button" data-inspector-command="group"><span>⌘ 组合选择</span></button><button class="interaction-button" data-inspector-command="mask" style="margin-top:7px"><span>◐ 创建 Mask</span></button><button class="interaction-button" data-inspector-command="component" style="margin-top:7px"><span>◇ 创建组件</span></button></div>';
+      }
+
+      function renderInspector() {
+        if (currentPage === 'details') {
+          inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">▤</div><div><strong>Details 页面</strong><span>PAGE ATTRIBUTES</span></div></div><div class="inspector-section"><h3>页面</h3><div class="full-field"><span>大小</span><input value="375 × 667" disabled></div><div class="full-field"><span>背景</span><input type="color" value="#f8f9fc"></div></div>';
+          return;
+        }
+
+        if (selectedIds.size > 1) {
+          inspector.innerHTML = inspectorSelectionSummary();
+          inspector.querySelectorAll('[data-inspector-command]').forEach(button => button.addEventListener('click', () => runStructureAction(button.dataset.inspectorCommand)));
+          return;
+        }
+
+        const item = selected();
+        if (!item) {
+          inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">↖</div><div><strong>未选择图层</strong><span>CANVAS SELECTION</span></div></div><div class="component-empty">单击元素进行选择；按住 Shift 可多选。<br><br>在画布或图层上单击右键，打开 Poke Context Menu。</div>';
+          return;
+        }
+
+        const container = getContainer(item.id);
+        if (container) {
+          syncContainer(container);
+          const typeName = {group:'GROUP',mask:'MASK',component:'COMPONENT'}[container.type] || 'CONTAINER';
+          inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(container) + '</div><div><strong>' + esc(container.name) + '</strong><span>' + typeName + ' · ' + esc(container.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-container-prop="x" type="number" value="' + container.x + '"></label><label>Y<input data-container-prop="y" type="number" value="' + container.y + '"></label><label>W<input data-container-prop="w" type="number" value="' + container.w + '"></label><label>H<input data-container-prop="h" type="number" value="' + container.h + '"></label></div></div><div class="inspector-section"><h3>STRUCTURE</h3><div class="full-field"><span>子图层</span><input value="' + container.childIds.length + ' layers" disabled></div><button class="interaction-button" id="enterContainer" style="margin-top:9px"><span>↳ 进入容器编辑</span></button></div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (container.childIds.some(id => eventElementIds.has(id)) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+          inspector.querySelectorAll('[data-container-prop]').forEach(input => input.addEventListener('change', () => updateContainerGeometry(container, input.dataset.containerProp, Number(input.value))));
+          inspector.querySelector('#enterContainer').addEventListener('click', () => {
+            expandedContainerId = container.id;
+            selectedIds = new Set();
+            renderAll();
+            flash('已进入 ' + container.name + ' · Esc 退出');
+          });
+          inspector.querySelector('#openInteraction').addEventListener('click', openInteraction);
+          return;
+        }
+
+        const hasText = Object.prototype.hasOwnProperty.call(item, 'text');
+        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" value="' + item.h + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+        inspector.querySelectorAll('[data-prop]').forEach(input => input.addEventListener('input', () => {
+          const prop = input.dataset.prop;
+          item[prop] = ['x','y','w','h','radius','opacity'].includes(prop) ? Number(input.value) : input.value;
+          if (item.containerId) syncContainer(getContainer(item.containerId));
+          renderCanvas();
+          renderLayers();
+          updateChrome();
+        }));
+        inspector.querySelector('#openInteraction').addEventListener('click', openInteraction);
+      }
+
+      function updateContainerGeometry(container, prop, value) {
+        if (!Number.isFinite(value)) return;
+        const before = containerBounds(container);
+        const members = container.childIds.map(getElement).filter(Boolean);
+        if (prop === 'x' || prop === 'y') {
+          const delta = value - before[prop];
+          members.forEach(item => { item[prop] += delta; });
+        } else if (prop === 'w' && before.w > 0) {
+          const scale = Math.max(1, value) / before.w;
+          members.forEach(item => {
+            item.x = Math.round(before.x + (item.x-before.x)*scale);
+            item.w = Math.max(1, Math.round(item.w*scale));
+          });
+        } else if (prop === 'h' && before.h > 0) {
+          const scale = Math.max(1, value) / before.h;
+          members.forEach(item => {
+            item.y = Math.round(before.y + (item.y-before.y)*scale);
+            item.h = Math.max(1, Math.round(item.h*scale));
+          });
+        }
+        syncContainer(container);
+        renderAll();
+      }
+
+      function syncInspectorValues() {
+        if (selectedIds.size !== 1) return;
+        const item = selected();
+        if (!item || getContainer(item.id)) return;
+        ['x','y'].forEach(prop => {
+          const input = inspector.querySelector('[data-prop="' + prop + '"]');
+          if (input) input.value = item[prop];
+        });
+      }
+
+      function updateChrome() {
+        const rules = selectionRules();
+        document.querySelector('#footerState').textContent = (elements.length + containers.length) + ' ELEMENTS · ' + pages.length + ' PAGES · ' + eventElementIds.size + ' EVENTS';
+        document.querySelector('#componentCommand').disabled = !rules.canComponent;
+        document.querySelector('#maskCommand').disabled = !rules.canMask;
+        document.querySelector('#groupCommand').disabled = !(rules.canGroup || rules.canUngroup);
+        document.querySelector('#groupCommandText').textContent = rules.canUngroup ? '取消组合' : '组合';
+        if (selectedIds.size > 1) {
+          selectionChip.hidden = false;
+          selectionChip.textContent = selectedIds.size + ' LAYERS SELECTED · SHIFT CLICK TO ADJUST';
+        } else if (expandedContainerId) {
+          selectionChip.hidden = false;
+          selectionChip.textContent = 'EDITING CONTAINER · ESC TO EXIT';
+        } else {
+          selectionChip.hidden = true;
+        }
+      }
+
+      function renderAll() {
+        renderCanvas();
+        renderLayers();
+        renderInspector();
+        updateChrome();
+      }
+
+      function selectElement(id, additive) {
+        if (currentPage !== 'home') currentPage = 'home';
+        setSelection(id, Boolean(additive));
+        renderAll();
+      }
+
+      function switchPage(pageId) {
+        if (!pages.some(page => page.id === pageId)) return;
+        closeContextMenu();
+        interactionPanel.classList.remove('open');
+        currentPage = pageId;
+        expandedContainerId = null;
+        if (pageId === 'home') {
+          selectedIds = new Set(Array.from(lastHomeSelection).filter(getEntity));
+          if (!selectedIds.size && getTopEntityIds().length) selectedIds.add(getTopEntityIds().slice(-1)[0]);
+        } else {
+          lastHomeSelection = new Set(selectedIds);
+          selectedIds = new Set();
+        }
+        const page = pages.find(item => item.id === pageId);
+        document.querySelector('#pageName').textContent = page ? page.name : pageId;
+        renderAll();
+        flash('切换到 ' + (page ? page.name : pageId) + ' 页面');
+      }
+
+      function createElement(type) {
+        if (!pages.some(page => page.id === 'home')) {
+          flash('Launch 页面已删除，无法创建图层');
+          return;
+        }
+        currentPage = 'home';
+        const templates = {
+          rect:{name:'Rectangle',w:110,h:66,fill:'#8fa4d7',radius:8},
+          circle:{name:'Circle',w:72,h:72,fill:'#ef8b7e',radius:50},
+          text:{name:'Text',w:150,h:34,fill:'#354052',radius:0,text:'New text layer'},
+          image:{name:'Image Placeholder',w:130,h:92,fill:'#d9dee7',radius:10,text:'IMAGE'},
+          input:{name:'Input Field',w:190,h:38,fill:'#ffffff',radius:8,text:'Input value'},
+          nav:{name:'Navigation',w:280,h:56,fill:'#ffffff',radius:0,text:'Home\nExplore\nProfile'}
+        };
+        const template = templates[type];
+        const index = elements.length;
+        const id = uid(type);
+        const item = {
+          id:id,name:template.name,type:type,
+          x:type === 'nav' ? 0 : 46+(index%3)*12,
+          y:type === 'nav' ? 466 : 330+(index%4)*18,
+          w:template.w,h:template.h,fill:template.fill,radius:template.radius,opacity:100,text:template.text || ''
+        };
+        elements.push(item);
+        selectedIds = new Set([id]);
+        lastHomeSelection = new Set(selectedIds);
+        document.querySelector('#pageName').textContent = 'Launch';
+        document.querySelectorAll('.tool').forEach(tool => tool.classList.toggle('active', tool.dataset.tool === 'select'));
+        document.querySelector('#footerMode').textContent = 'SELECT';
+        renderAll();
+        flash('已创建 ' + template.name);
+      }
+
+      function canWrapSelection(minimum) {
+        const ids = Array.from(selectedIds);
+        return ids.length >= minimum && ids.every(id => {
+          const item = getElement(id);
+          return item && !item.containerId;
+        });
+      }
+
+      function createWrapper(type) {
+        const minimum = type === 'component' ? 1 : 2;
+        if (!canWrapSelection(minimum)) {
+          flash(type === 'component' ? '请选择根级图层创建组件' : '请选择至少两个同级图层');
+          return null;
+        }
+        const childIds = Array.from(selectedIds);
+        const container = {
+          id:uid(type),
+          name:type === 'group' ? 'Group ' + (containers.filter(item => item.type === 'group').length+1) : (type === 'mask' ? 'Mask ' + (containers.filter(item => item.type === 'mask').length+1) : 'Component ' + (components.length+1)),
+          type:type,
+          childIds:childIds
+        };
+        childIds.forEach(id => {
+          const item = getElement(id);
+          if (item) item.containerId = container.id;
+        });
+        syncContainer(container);
+        containers.push(container);
+        selectedIds = new Set([container.id]);
+        lastHomeSelection = new Set(selectedIds);
+        if (type === 'component') registerComponent(container);
+        renderAll();
+        flash(type === 'group' ? '组创建成功' : (type === 'mask' ? 'Mask 创建成功' : '组件创建成功'));
+        return container;
+      }
+
+      function registerComponent(container) {
+        const component = {
+          id:uid('symbol'),
+          name:container.name,
+          items:clone(container.childIds.map(getElement).filter(Boolean).map(item => {
+            const copy = clone(item);
+            delete copy.containerId;
+            copy.x -= container.x;
+            copy.y -= container.y;
+            return copy;
+          })),
+          width:container.w,
+          height:container.h
+        };
+        container.symbolId = component.id;
+        components.push(component);
+      }
+
+      function createComponentFromSelection() {
+        const rules = selectionRules();
+        if (rules.onlyContainer && rules.onlyContainer.type !== 'component') {
+          const container = rules.onlyContainer;
+          container.type = 'component';
+          container.name = 'Component ' + (components.length+1);
+          registerComponent(container);
+          renderAll();
+          flash('组件创建成功');
+          return;
+        }
+        createWrapper('component');
+      }
+
+      function ungroupSelection() {
+        const rules = selectionRules();
+        const container = rules.onlyContainer;
+        if (!container || container.type !== 'group') return;
+        const children = container.childIds.slice();
+        children.forEach(id => {
+          const item = getElement(id);
+          if (item) delete item.containerId;
+        });
+        containers = containers.filter(item => item.id !== container.id);
+        expandedContainerId = null;
+        selectedIds = new Set(children);
+        lastHomeSelection = new Set(selectedIds);
+        renderAll();
+        flash('取消组成功');
+      }
+
+      function runStructureAction(command) {
+        closeContextMenu();
+        if (command === 'group') {
+          if (selectionRules().canUngroup) ungroupSelection();
+          else createWrapper('group');
+        }
+        if (command === 'mask') createWrapper('mask');
+        if (command === 'component') createComponentFromSelection();
+      }
+
+      function serializeSelection() {
+        const records = [];
+        const visited = new Set();
+        selectedIds.forEach(id => {
+          const container = getContainer(id);
+          if (container) {
+            records.push({
+              kind:'container',
+              container:clone(container),
+              items:clone(container.childIds.map(getElement).filter(Boolean))
+            });
+            container.childIds.forEach(childId => visited.add(childId));
+          } else {
+            const item = getElement(id);
+            if (item && !visited.has(item.id)) {
+              const copy = clone(item);
+              delete copy.containerId;
+              records.push({kind:'element',item:copy});
+            }
+          }
+        });
+        return records;
+      }
+
+      function copySelection() {
+        if (!selectedIds.size) return;
+        clipboard = serializeSelection();
+        flash('已复制 ' + selectedIds.size + ' 个选择');
+        updateChrome();
+      }
+
+      function pasteSelection() {
+        if (!clipboard || !clipboard.length) return;
+        if (!pages.some(page => page.id === 'home')) return;
+        currentPage = 'home';
+        document.querySelector('#pageName').textContent = 'Launch';
+        const pastedIds = [];
+        clipboard.forEach(record => {
+          if (record.kind === 'element') {
+            const item = clone(record.item);
+            item.id = uid(item.type);
+            item.name += ' Copy';
+            item.x += 12;
+            item.y += 12;
+            delete item.containerId;
+            elements.push(item);
+            pastedIds.push(item.id);
+          } else {
+            const oldToNew = new Map();
+            const newItems = record.items.map(source => {
+              const item = clone(source);
+              const oldId = item.id;
+              item.id = uid(item.type);
+              oldToNew.set(oldId, item.id);
+              item.x += 12;
+              item.y += 12;
+              return item;
+            });
+            const container = clone(record.container);
+            container.id = uid(container.type);
+            container.name += ' Copy';
+            container.childIds = record.container.childIds.map(id => oldToNew.get(id)).filter(Boolean);
+            if (container.type === 'component') delete container.symbolId;
+            newItems.forEach(item => { item.containerId = container.id; elements.push(item); });
+            syncContainer(container);
+            containers.push(container);
+            if (container.type === 'component') registerComponent(container);
+            pastedIds.push(container.id);
+          }
+        });
+        selectedIds = new Set(pastedIds);
+        lastHomeSelection = new Set(selectedIds);
+        renderAll();
+        flash('已粘贴 ' + pastedIds.length + ' 个选择 · 事件已清除');
+      }
+
+      function deleteSelection() {
+        if (!selectedIds.size) return;
+        const elementIds = new Set();
+        const containerIds = new Set();
+        selectedIds.forEach(id => {
+          const container = getContainer(id);
+          if (container) {
+            containerIds.add(id);
+            container.childIds.forEach(childId => elementIds.add(childId));
+          } else {
+            elementIds.add(id);
+            const item = getElement(id);
+            if (item && item.containerId) {
+              const owner = getContainer(item.containerId);
+              if (owner) {
+                owner.childIds = owner.childIds.filter(childId => childId !== item.id);
+                if (!owner.childIds.length) containerIds.add(owner.id);
+              }
+            }
+          }
+        });
+        eventElementIds = new Set(Array.from(eventElementIds).filter(id => !elementIds.has(id)));
+        elements = elements.filter(item => !elementIds.has(item.id));
+        containers = containers.filter(container => !containerIds.has(container.id));
+        containers.forEach(syncContainer);
+        const fallback = getTopEntityIds().slice(-1)[0];
+        selectedIds = fallback ? new Set([fallback]) : new Set();
+        lastHomeSelection = new Set(selectedIds);
+        expandedContainerId = null;
+        renderAll();
+        flash('已删除选择');
+      }
+
+      function insertComponent(componentId) {
+        const component = components.find(item => item.id === componentId);
+        if (!component || !pages.some(page => page.id === 'home')) return;
+        currentPage = 'home';
+        document.querySelector('#pageName').textContent = 'Launch';
+        const offset = 24 + (containers.length % 4) * 14;
+        const container = {id:uid('component'),name:component.name + ' Instance',type:'component',symbolId:component.id,childIds:[]};
+        component.items.forEach(source => {
+          const item = clone(source);
+          item.id = uid(item.type);
+          item.x = Math.min(250-item.w, offset + source.x);
+          item.y = Math.min(490-item.h, 320 + source.y);
+          item.containerId = container.id;
+          container.childIds.push(item.id);
+          elements.push(item);
+        });
+        syncContainer(container);
+        containers.push(container);
+        selectedIds = new Set([container.id]);
+        lastHomeSelection = new Set(selectedIds);
+        activePanel = 'layers';
+        syncTabs();
+        renderAll();
+        flash('已创建 ' + component.name + ' 实例');
+      }
+
+      function openInteraction() {
+        closeContextMenu();
+        const target = selectedVisualItems()[0];
+        if (!target) {
+          flash('请先选择一个图层');
+          return;
+        }
+        interactionPanel.dataset.targetId = target.id;
+        document.querySelector('#interactionTitle').textContent = target.name + ' · 交互事件';
+        interactionPanel.classList.add('open');
+        flash('进入交互编排');
+      }
+
+      function showMenuAt(x, y, title, items, context) {
+        closeContextMenu();
+        menuContext = context || null;
+        contextMenu.innerHTML = '<div class="context-title">' + esc(title) + '</div>' + (items.length ? items.map(item => {
+          if (item.separator) return '<div class="context-separator" role="separator"></div>';
+          return '<button class="context-item" role="menuitem" data-menu-action="' + esc(item.action) + '"' + (item.disabled ? ' disabled aria-disabled="true"' : '') + '><span class="menu-icon">' + (item.icon || '·') + '</span><span>' + esc(item.label) + '</span><kbd>' + esc(item.shortcut || '') + '</kbd></button>';
+        }).join('') : '<div class="context-love">我们&nbsp; ❤️ &nbsp;你</div>');
+        contextMenu.hidden = false;
+        contextMenu.classList.add('opening');
+        contextMenu.style.visibility = 'hidden';
+        contextMenu.style.left = '0px';
+        contextMenu.style.top = '0px';
+        const rect = contextMenu.getBoundingClientRect();
+        const left = Math.max(8, Math.min(x + 2, window.innerWidth - rect.width - 8));
+        const top = Math.max(8, Math.min(y - 4, window.innerHeight - rect.height - 8));
+        contextMenu.style.left = left + 'px';
+        contextMenu.style.top = top + 'px';
+        contextMenu.style.visibility = 'visible';
+        requestAnimationFrame(() => {
+          contextMenu.classList.remove('opening');
+          const first = contextMenu.querySelector('.context-item:not(:disabled)');
+          if (first) first.focus({preventScroll:true});
+        });
+        contextMenu.querySelectorAll('[data-menu-action]').forEach(button => button.addEventListener('click', () => handleMenuAction(button.dataset.menuAction)));
+      }
+
+      function closeContextMenu() {
+        if (contextMenu.hidden) return;
+        contextMenu.hidden = true;
+        contextMenu.classList.remove('opening');
+        contextMenu.innerHTML = '';
+        menuContext = null;
+      }
+
+      function selectionMenuItems() {
+        const rules = selectionRules();
+        const structureLabel = rules.canUngroup ? '取消组合' : '组合';
+        const structureAction = rules.canUngroup ? 'ungroup' : 'group';
+        return [
+          {label:'复制',action:'copy',icon:'⧉',shortcut:'⌘C',disabled:!rules.canCopy},
+          {label:'粘贴',action:'paste',icon:'▣',shortcut:'⌘V',disabled:!clipboard},
+          {label:'删除',action:'delete',icon:'⌫',shortcut:'⌫',disabled:!rules.canDelete},
+          {separator:true},
+          {label:structureLabel,action:structureAction,icon:'⌘',disabled:!(rules.canGroup || rules.canUngroup)},
+          {label:'创建组件',action:'component',icon:'◇',disabled:!rules.canComponent},
+          {label:'Mask',action:'mask',icon:'◐',disabled:!rules.canMask}
+        ];
+      }
+
+      function openElementContext(event, id) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!getEntity(id)) return;
+        if (!selectedIds.has(id)) selectedIds = new Set([id]);
+        lastHomeSelection = new Set(selectedIds);
+        const title = selectedIds.size > 1 ? selectedIds.size + ' 个图层已选择' : getEntity(id).name;
+        renderAll();
+        showMenuAt(event.clientX, event.clientY, title, selectionMenuItems(), {kind:'selection'});
+      }
+
+      function openPageContext(event, pageId) {
+        event.preventDefault();
+        event.stopPropagation();
+        const page = pages.find(item => item.id === pageId);
+        if (!page) return;
+        showMenuAt(event.clientX, event.clientY, page.name + ' 页面', [{label:'删除页面',action:'delete-page',icon:'⌫',shortcut:'',disabled:pages.length <= 1}], {kind:'page',id:pageId});
+      }
+
+      function openComponentContext(event, componentId) {
+        event.preventDefault();
+        event.stopPropagation();
+        const component = components.find(item => item.id === componentId);
+        if (!component) return;
+        showMenuAt(event.clientX, event.clientY, component.name, [
+          {label:'创建实例',action:'insert-component',icon:'＋'},
+          {separator:true},
+          {label:'删除组件',action:'delete-component',icon:'⌫'}
+        ], {kind:'component',id:componentId});
+      }
+
+      function handleMenuAction(action) {
+        const context = menuContext ? Object.assign({}, menuContext) : null;
+        closeContextMenu();
+        if (action === 'copy') copySelection();
+        if (action === 'paste') pasteSelection();
+        if (action === 'delete') deleteSelection();
+        if (action === 'group') createWrapper('group');
+        if (action === 'ungroup') ungroupSelection();
+        if (action === 'mask') createWrapper('mask');
+        if (action === 'component') createComponentFromSelection();
+        if (action === 'insert-component' && context) insertComponent(context.id);
+        if (action === 'delete-component' && context) requestDeleteComponent(context.id);
+        if (action === 'delete-page' && context) requestDeletePage(context.id);
+      }
+
+      function openConfirm(title, message, action) {
+        closeContextMenu();
+        confirmAction = action;
+        document.querySelector('#confirmTitle').textContent = title;
+        document.querySelector('#confirmMessage').textContent = message;
+        confirmLayer.hidden = false;
+        document.querySelector('#confirmCancel').focus();
+      }
+
+      function closeConfirm() {
+        confirmLayer.hidden = true;
+        confirmAction = null;
+      }
+
+      function requestDeletePage(pageId) {
+        const page = pages.find(item => item.id === pageId);
+        if (!page) return;
+        if (pages.length <= 1) {
+          flash('当前仅有一个页面');
+          return;
+        }
+        openConfirm('确认删除页面？', '“' + page.name + '” 删除后无法恢复；关联到该页面的演示事件也会被清理。', () => {
+          pages = pages.filter(item => item.id !== pageId);
+          if (pageId === 'details') eventElementIds = new Set();
+          if (currentPage === pageId) switchPage(pages[0].id);
+          else renderAll();
+          flash('已删除 ' + page.name + ' 页面');
+        });
+      }
+
+      function requestDeleteComponent(componentId) {
+        const component = components.find(item => item.id === componentId);
+        if (!component) return;
+        openConfirm('确认删除组件？', '组件库中的“' + component.name + '”将被移除；画布上的实例会保留并转为普通组合。', () => {
+          components = components.filter(item => item.id !== componentId);
+          containers.filter(item => item.symbolId === componentId).forEach(item => {
+            item.type = 'group';
+            item.name = item.name.replace(' Instance', ' Group');
+            delete item.symbolId;
+          });
+          renderAll();
+          flash('已删除组件，实例已转为普通组合');
+        });
+      }
+
+      function selectAll() {
+        if (currentPage !== 'home') return;
+        selectedIds = new Set(getTopEntityIds());
+        lastHomeSelection = new Set(selectedIds);
+        renderAll();
+        flash('已选择全部根级图层');
+      }
+
+      function nudgeSelection(dx, dy) {
+        const items = selectedVisualItems();
+        if (!items.length) return;
+        items.forEach(item => {
+          item.x += dx;
+          item.y += dy;
+        });
+        containers.forEach(syncContainer);
+        renderAll();
+      }
+
+      function syncTabs() {
+        document.querySelectorAll('#leftTabs button').forEach(tab => tab.classList.toggle('active', tab.dataset.panel === activePanel));
+      }
+
+      contextMenu.addEventListener('pointerdown', event => event.stopPropagation());
+      contextMenu.addEventListener('keydown', event => {
+        const items = Array.from(contextMenu.querySelectorAll('.context-item:not(:disabled)'));
+        if (!items.length) {
+          if (event.key === 'Escape') closeContextMenu();
+          return;
+        }
+        const index = items.indexOf(document.activeElement);
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault();
+          const delta = event.key === 'ArrowDown' ? 1 : -1;
+          items[(index + delta + items.length) % items.length].focus();
+        }
+        if (event.key === 'Home') { event.preventDefault(); items[0].focus(); }
+        if (event.key === 'End') { event.preventDefault(); items[items.length-1].focus(); }
+        if (event.key === 'Escape' || event.key === 'Tab') closeContextMenu();
+      });
+
+      document.addEventListener('pointerdown', event => {
+        if (!contextMenu.hidden && !contextMenu.contains(event.target)) closeContextMenu();
+      }, true);
+      window.addEventListener('wheel', closeContextMenu, {capture:true,passive:true});
+      window.addEventListener('resize', closeContextMenu);
+      window.addEventListener('blur', closeContextMenu);
+
+      stage.addEventListener('contextmenu', event => {
+        if (event.defaultPrevented) return;
+        event.preventDefault();
+        selectedIds = new Set();
+        expandedContainerId = null;
+        renderAll();
+        showMenuAt(event.clientX, event.clientY, '画布', [], {kind:'canvas'});
+      });
+
+      artboard.addEventListener('pointerdown', event => {
+        if (event.target !== artboard && !event.target.classList.contains('details-canvas')) return;
+        if (event.button !== 0) return;
+        closeContextMenu();
+        selectedIds = new Set();
+        expandedContainerId = null;
+        renderAll();
+      });
+
+      document.querySelectorAll('[data-tool]').forEach(button => button.addEventListener('click', () => {
+        closeContextMenu();
+        document.querySelectorAll('.tool').forEach(tool => tool.classList.remove('active'));
+        button.classList.add('active');
+        const tool = button.dataset.tool;
+        document.querySelector('#footerMode').textContent = tool.toUpperCase();
+        if (tool !== 'select') createElement(tool);
+      }));
+
+      document.querySelectorAll('#leftTabs button').forEach(button => button.addEventListener('click', () => {
+        closeContextMenu();
+        activePanel = button.dataset.panel;
+        syncTabs();
+        renderLayers();
+      }));
+
+      document.querySelectorAll('[data-command]').forEach(button => button.addEventListener('click', () => {
+        const command = button.dataset.command;
+        if (command === 'group' || command === 'mask' || command === 'component') runStructureAction(command);
+        if (command === 'save') flash('已保存到本地演示状态');
+        if (command === 'export') flash('已生成本地预览包');
+      }));
+
+      document.querySelector('#closeInteraction').addEventListener('click', () => interactionPanel.classList.remove('open'));
+      document.querySelectorAll('.event-types button').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('.event-types button').forEach(item => item.classList.toggle('active', item === button));
+        flash('已选择' + button.textContent + '事件');
+      }));
+      document.querySelector('#saveInteraction').addEventListener('click', () => {
+        const targetId = interactionPanel.dataset.targetId;
+        if (targetId && getElement(targetId)) eventElementIds.add(targetId);
+        interactionPanel.classList.remove('open');
+        renderInspector();
+        updateChrome();
+        flash('点击事件已保存 · ' + (getElement(targetId) ? getElement(targetId).name : '图层') + ' → Details');
+      });
+
+      document.querySelector('#preview').addEventListener('click', openPreview);
+      document.querySelector('#closePreview').addEventListener('click', closePreview);
+      document.querySelector('#previewCta').addEventListener('click', () => {
+        if (!eventElementIds.has('cta')) {
+          flash('尚未为 CTA 配置页面跳转');
+          return;
+        }
+        if (!pages.some(page => page.id === 'details')) {
+          flash('目标 Details 页面已不存在');
+          return;
+        }
+        document.querySelector('#previewPhone').classList.add('show-details');
+        flash('事件执行 · Push Left → Details');
+      });
+      document.querySelector('#previewBack').addEventListener('click', () => document.querySelector('#previewPhone').classList.remove('show-details'));
+      previewModal.addEventListener('click', event => { if (event.target === previewModal) closePreview(); });
+
+      function openPreview() {
+        closeContextMenu();
+        document.querySelector('#previewPhone').classList.remove('show-details');
+        previewModal.classList.add('open');
+      }
+
+      function closePreview() {
+        previewModal.classList.remove('open');
+      }
+
+      document.querySelector('#confirmCancel').addEventListener('click', closeConfirm);
+      document.querySelector('#confirmOk').addEventListener('click', () => {
+        const action = confirmAction;
+        closeConfirm();
+        if (action) action();
+      });
+      confirmLayer.addEventListener('pointerdown', event => {
+        if (event.target === confirmLayer) closeConfirm();
+      });
+
+      document.querySelector('#backToProjects').addEventListener('click', () => flash('项目库 · Synthetic Mobile Prototype'));
+      document.querySelector('#zoom').addEventListener('click', () => flash('画布比例 100%'));
+      document.querySelector('#toggleLayers').addEventListener('click', () => {
+        activePanel = 'layers';
+        syncTabs();
+        renderLayers();
+      });
+
+      document.addEventListener('keydown', event => {
+        const editable = event.target.matches('input, textarea, select, [contenteditable="true"]');
+        if (!confirmLayer.hidden) {
+          if (event.key === 'Escape') closeConfirm();
+          return;
+        }
+        if (!contextMenu.hidden) return;
+        if (editable) return;
+        const commandHeld = event.metaKey || event.ctrlKey;
+        if (commandHeld && event.key.toLowerCase() === 'c') { event.preventDefault(); copySelection(); }
+        if (commandHeld && event.key.toLowerCase() === 'v') { event.preventDefault(); pasteSelection(); }
+        if (commandHeld && event.key.toLowerCase() === 'a') { event.preventDefault(); selectAll(); }
+        if (!commandHeld && (event.key === 'Delete' || event.key === 'Backspace')) { event.preventDefault(); deleteSelection(); }
+        if (!commandHeld && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) {
+          event.preventDefault();
+          const amount = event.shiftKey ? 10 : 1;
+          nudgeSelection(event.key === 'ArrowLeft' ? -amount : (event.key === 'ArrowRight' ? amount : 0), event.key === 'ArrowUp' ? -amount : (event.key === 'ArrowDown' ? amount : 0));
+        }
+        if (event.key === 'Escape') {
+          if (previewModal.classList.contains('open')) closePreview();
+          else if (interactionPanel.classList.contains('open')) interactionPanel.classList.remove('open');
+          else if (expandedContainerId) {
+            selectedIds = new Set([expandedContainerId]);
+            expandedContainerId = null;
+            renderAll();
+            flash('已退出容器编辑');
+          } else {
+            selectedIds = new Set();
+            renderAll();
+          }
+        }
+        if (!commandHeld && !event.altKey) {
+          const toolMap = {r:'rect',o:'circle',t:'text',m:'image',p:'input',v:'select'};
+          const tool = toolMap[event.key.toLowerCase()];
+          if (tool) {
+            event.preventDefault();
+            const button = document.querySelector('[data-tool="' + tool + '"]');
+            if (button) button.click();
+          }
+        }
+      });
+
+      async function runReplay() {
+        if (replaying) return;
+        replaying = true;
+        closePreview();
+        closeContextMenu();
+        interactionPanel.classList.remove('open');
+        elements = clone(originalElements);
+        containers = [];
+        components = [];
+        pages = [{id:'home',name:'Launch'},{id:'details',name:'Details'}];
+        eventElementIds = new Set();
+        selectedIds = new Set(['cta']);
+        lastHomeSelection = new Set(selectedIds);
+        expandedContainerId = null;
+        currentPage = 'home';
+        activePanel = 'layers';
+        document.querySelector('#pageName').textContent = 'Launch';
+        syncTabs();
+        const progress = document.querySelector('#replayProgress');
+        const status = document.querySelector('#replayStatus');
+        progress.classList.add('running');
+        const step = async (label, action) => {
+          status.textContent = label;
+          action();
+          await delay(720);
+        };
+        await step('01 / 05 · 选择按钮图层', () => selectElement('cta'));
+        await step('02 / 05 · 调整填充颜色', () => {
+          getElement('cta').fill = '#2e67dd';
+          renderAll();
+          const fill = inspector.querySelector('[data-prop="fill"]');
+          if (fill) fill.classList.add('pulse');
+        });
+        await step('03 / 05 · 设置圆角 16', () => {
+          getElement('cta').radius = 16;
+          renderAll();
+        });
+        await step('04 / 05 · 编排页面跳转', openInteraction);
+        await step('05 / 05 · 保存并实时预览', () => {
+          eventElementIds.add('cta');
+          interactionPanel.classList.remove('open');
+          renderInspector();
+          updateChrome();
+          openPreview();
+        });
+        status.textContent = 'DONE · CTA → DETAILS';
+        progress.classList.remove('running');
+        replaying = false;
+      }
+
+      document.querySelector('#replay').addEventListener('click', runReplay);
+      renderAll();
+    }());
+  </script>
+</body>
+</html>

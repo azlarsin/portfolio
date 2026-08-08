@@ -12,6 +12,7 @@ import {
   type ResolvedRoute,
   resolveRoute,
 } from "../router/routes";
+import DemoBusinessSurface from "../agent/DemoBusinessSurface";
 
 type PresenterStyle = CSSProperties & {
   "--stack-index": number;
@@ -151,6 +152,7 @@ export default function Presenter({
   };
 
   const label = `presenter-${index + 1}`;
+  const displayTitle = route?.title || label;
   const currentSearch = new URL(currentUrl, "http://localhost")
     .searchParams;
   const isManualPayDetail =
@@ -200,6 +202,7 @@ export default function Presenter({
       data-d3-mode={inspectionMode}
       data-leaving={leaving}
       data-reconstructible={reconstructible}
+      data-surface-id={surfaceId}
       data-selectable="true"
       style={style}
       aria-hidden={!d3 && !isTop}
@@ -228,7 +231,7 @@ export default function Presenter({
       <div className="surface-content surface-content-minimal">
         <p className="eyebrow">Presenter</p>
         <div className="presenter-title-row">
-          <h1>{label}</h1>
+          <h1>{displayTitle}</h1>
           <button
             type="button"
             className="presenter-push-button"
@@ -240,6 +243,9 @@ export default function Presenter({
             presenter.push()
           </button>
         </div>
+        {route ? (
+          <DemoBusinessSurface route={route} currentUrl={currentUrl} />
+        ) : null}
         {(reconstructible ||
           isManualPayDetail ||
           hasRestoredManualPay) && (

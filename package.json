@@ -11,6 +11,13 @@
     "dev:portfolio": "pnpm --filter @portfolio/web dev",
     "dev:layered-route-lab": "pnpm --filter layered-route-lab dev",
     "build": "pnpm --recursive --if-present run build",
-    "check": "pnpm --recursive --if-present run check"
+    "build:local": "ALLOW_LOCAL_DEMO_URL=1 NEXT_PUBLIC_SITE_URL=http://localhost:3000 VITE_LAYERED_ROUTE_LAB_URL=http://localhost:3000 pnpm build",
+    "check": "pnpm --recursive --if-present run check",
+    "test": "pnpm --filter layered-route-lab test",
+    "verify:local": "pnpm check && pnpm build:local && pnpm --filter layered-route-lab test:built",
+    "start": "pnpm --recursive --parallel --stream --if-present run start",
+    "start:local": "ALLOW_LOCAL_DEMO_URL=1 NEXT_PUBLIC_SITE_URL=http://localhost:3000 pnpm start",
+    "start:portfolio": "pnpm --filter @portfolio/web start",
+    "start:demo": "pnpm --filter layered-route-lab start"
   }
 }
