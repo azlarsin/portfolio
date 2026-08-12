@@ -967,6 +967,9 @@
 }
 
 .evidence-frame-actions a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   color: var(--accent);
   font-weight: 650;
 }

@@ -577,6 +577,8 @@
 
 .archive-back-link {
   display: inline-flex;
+  min-height: 44px;
+  align-items: center;
   margin-top: 56px;
   color: var(--accent);
   font-weight: 650;
@@ -707,7 +709,7 @@
 
 .timeline-case-link {
   display: inline-flex;
-  min-height: 42px;
+  min-height: 44px;
   align-items: center;
   gap: 7px;
   margin-top: 15px;
@@ -1118,8 +1120,10 @@
   }
 
   .case-toc-mobile a {
-    min-height: 40px;
-    padding-block: 10px;
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    padding-block: 9px;
   }
 
 }
@@ -1288,7 +1292,7 @@
   }
 
   .home-hero h1 {
-    font-size: clamp(2.45rem, 10.8vw, 2.7rem);
+    font-size: 2.3rem;
   }
 
   .hero-actions .button {

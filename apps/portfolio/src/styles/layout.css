@@ -289,6 +289,10 @@
   }
 
   .mobile-wordmark {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
     justify-self: start;
     font-size: 1rem;
     font-weight: 730;
