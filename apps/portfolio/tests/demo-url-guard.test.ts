@@ -3,6 +3,7 @@ import {
   assertProductionDemoUrl,
   isLocalDemoHostname,
 } from '../src/app/demoUrlGuard'
+import { createLayeredRouteLabUrl } from '../src/app/layeredRouteLabUrl'
 
 describe('production Demo URL guard', () => {
   it('12. accepts public HTTP(S) URLs and rejects local production targets', () => {
@@ -47,5 +48,32 @@ describe('production Demo URL guard', () => {
         allowLocal: true,
       }).hostname,
     ).toBe('localhost')
+  })
+
+  it('builds path routes for a root app and query routes for a static subpath app', () => {
+    expect(
+      createLayeredRouteLabUrl('http://localhost:3000', '/products', {
+        agent_demo: '1',
+      }),
+    ).toBe('http://localhost:3000/products?agent_demo=1')
+
+    expect(
+      createLayeredRouteLabUrl(
+        'https://me.azlar.cc/demos/layered-route-lab',
+        '/products',
+        { agent_demo: '1' },
+      ),
+    ).toBe(
+      'https://me.azlar.cc/demos/layered-route-lab/?route=/products&agent_demo=1',
+    )
+
+    expect(
+      createLayeredRouteLabUrl(
+        'https://me.azlar.cc/demos/layered-route-lab/',
+        '/product/1/orders/paid/order/1',
+      ),
+    ).toBe(
+      'https://me.azlar.cc/demos/layered-route-lab/?route=/product/1/orders/paid/order/1',
+    )
   })
 })

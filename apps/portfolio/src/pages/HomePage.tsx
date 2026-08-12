@@ -12,9 +12,9 @@ export function HomePage() {
         <div className="section-heading section-heading--split">
           <div>
             <p className="eyebrow">SELECTED WORK</p>
-            <h2 id="selected-work-title">生产系统与公开研究案例</h2>
+            <h2 id="selected-work-title">存量系统演进与公开研究案例</h2>
           </div>
-          <p>企业后台案例来自真实生产项目；Agent 案例基于公开代码与合成数据。个人产品和早期作品收录于个人项目集。</p>
+          <p>企业后台与百家号编辑器来自真实生产项目；Agent 案例基于公开代码与合成数据。跨端钱包、个人产品和早期作品收录于个人项目集。</p>
         </div>
         <div className="featured-work-list">
           {featuredProjects.map((project, index) => (

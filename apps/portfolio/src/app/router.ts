@@ -16,9 +16,9 @@ export const ROUTES = {
     id: 'home',
     path: '/',
     meta: {
-      title: '陈成｜前端技术负责人 · 复杂系统与产品工程',
+      title: '陈成｜前端技术负责人 · 全栈与复杂系统工程',
       description:
-        '陈成，拥有 10+ 年前端与全栈经验，长期带领前端团队（4-8 人）。项目覆盖大型企业后台、业务 SDK、跨端应用、Agent 研究与个人产品。',
+        '陈成，拥有 10+ 年前端与全栈经验。职业前期覆盖客户端、PHP / Python 服务、数据库与部署；近年聚焦复杂前端系统、业务 SDK、跨端应用与团队管理。',
     },
   },
   MEICAN_PLATFORM: {
@@ -27,6 +27,14 @@ export const ROUTES = {
     meta: {
       title: '企业后台架构改造｜陈成作品集',
       description: '大型企业后台的公共宿主、独立业务应用、嵌入页面与业务 SDK 架构。',
+    },
+  },
+  BAIJIAHAO_EDITOR: {
+    id: 'baijiahao-editor',
+    path: '/work/baijiahao-editor',
+    meta: {
+      title: '百家号编辑器演进｜陈成作品集',
+      description: '从 UEditor 深度定制、业务插件迭代到内部复用包的存量编辑器演进实践。',
     },
   },
   LAYERED_AGENT: {
@@ -50,7 +58,7 @@ export const ROUTES = {
     path: '/experience',
     meta: {
       title: '职业经历｜陈成作品集',
-      description: '陈成从 2012 年至今的工作经历、带团队经验和主要项目。',
+      description: '陈成从前后端完整交付到复杂前端架构与团队管理的职业经历。',
     },
   },
   ARCHIVE: {
@@ -59,6 +67,14 @@ export const ROUTES = {
     meta: {
       title: '个人项目集｜陈成作品集',
       description: '独立产品、产品编辑器、数据可视化、动效实验与可复用交互组件。',
+    },
+  },
+  ARCHIVE_COCO_WALLET: {
+    id: 'archive-coco-wallet',
+    path: '/archive/coco-wallet',
+    meta: {
+      title: 'Coco Wallet 跨平台钱包｜项目档案',
+      description: 'React Native 多链钱包、交易授权状态流与 DApp WebView 容器的团队交付记录。',
     },
   },
   ARCHIVE_POKE_PROTOTYPE_EDITOR: {
@@ -98,7 +114,7 @@ export const ROUTES = {
     path: '/resume',
     meta: {
       title: '个人简历｜陈成',
-      description: '陈成的工作经历、核心能力、技术栈与公开版简历。',
+      description: '陈成的前端技术负责人、全栈交付经历、核心能力与公开版简历。',
     },
   },
   NOT_FOUND: {

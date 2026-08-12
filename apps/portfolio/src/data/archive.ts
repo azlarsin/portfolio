@@ -4,11 +4,12 @@ import pokeEditorArchitecture from '../assets/poke-editor-architecture.html?url'
 import pokeEditorDemo from '../assets/poke-editor-demo.html?url'
 import turntableMotionLab from '../assets/turntable-motion-lab.html?url'
 import type { PortfolioProject } from './types'
+import { cocoWalletProject } from './cocoWallet'
 import { elpisProject } from './featured/elpis'
 
 const pokeProject = {
   slug: 'poke-prototype-editor',
-  order: 10,
+  order: 11,
   tier: 'archive',
   provenance: 'personal-product',
   title: 'Poke：高保真移动原型编辑器',
@@ -118,7 +119,7 @@ const pokeProject = {
 
 const dataViewProject = {
   slug: 'dataview-observatory',
-  order: 11,
+  order: 12,
   tier: 'archive',
   provenance: 'production',
   title: '32:9 实时数据大屏',
@@ -202,7 +203,7 @@ const dataViewProject = {
 
 const turntableProject = {
   slug: 'turntable-motion-lab',
-  order: 12,
+  order: 13,
   tier: 'archive',
   provenance: 'experiment',
   title: 'Turntable Motion Lab',
@@ -267,7 +268,7 @@ const turntableProject = {
 
 const bezierProject = {
   slug: 'bezier-easing-picker',
-  order: 13,
+  order: 14,
   tier: 'archive',
   provenance: 'experiment',
   title: 'Bezier Easing Picker',
@@ -333,6 +334,7 @@ const bezierProject = {
 
 export const archiveProjects: PortfolioProject[] = [
   elpisProject,
+  cocoWalletProject,
   pokeProject,
   dataViewProject,
   turntableProject,

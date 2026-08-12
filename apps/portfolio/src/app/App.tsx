@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { AppShell } from '../components/layout/AppShell'
 import {
+  baijiahaoEditorProject,
+  cocoWalletProject,
   elpisProject,
   layeredAgentProject,
   meicanPlatformProject,
@@ -27,6 +29,8 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
       return <HomePage />
     case ROUTES.MEICAN_PLATFORM.id:
       return <CaseStudyPage project={meicanPlatformProject} pathname={route.pathname} />
+    case ROUTES.BAIJIAHAO_EDITOR.id:
+      return <CaseStudyPage project={baijiahaoEditorProject} pathname={route.pathname} />
     case ROUTES.LAYERED_AGENT.id:
       return <CaseStudyPage project={layeredAgentProject} pathname={route.pathname} />
     case ROUTES.ELPIS.id:
@@ -35,6 +39,8 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
       return <ExperiencePage />
     case ROUTES.ARCHIVE.id:
       return <ArchivePage />
+    case ROUTES.ARCHIVE_COCO_WALLET.id:
+      return <CaseStudyPage project={cocoWalletProject} pathname={route.pathname} />
     case ROUTES.RESUME.id:
       return <ResumePage />
     case ROUTES.ARCHIVE_POKE_PROTOTYPE_EDITOR.id:

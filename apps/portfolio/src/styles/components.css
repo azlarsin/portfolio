@@ -153,8 +153,10 @@
 
 /* System evolution — HTML/CSS only, deliberately schematic. */
 .system-evolution-visual,
+.editor-evolution-visual,
 .agent-pipeline-visual,
-.elpis-flow-visual {
+.elpis-flow-visual,
+.wallet-architecture-visual {
   margin: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -163,8 +165,10 @@
 }
 
 .system-evolution-visual figcaption,
+.editor-evolution-visual figcaption,
 .agent-pipeline-visual figcaption,
-.elpis-flow-visual figcaption {
+.elpis-flow-visual figcaption,
+.wallet-architecture-visual figcaption {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -178,7 +182,9 @@
 }
 
 .system-evolution-visual figcaption span,
-.elpis-flow-visual figcaption span {
+.editor-evolution-visual figcaption span,
+.elpis-flow-visual figcaption span,
+.wallet-architecture-visual figcaption span {
   color: var(--text);
   font-weight: 720;
 }
@@ -246,6 +252,117 @@
 
 .system-evolution-visual.is-compact li:nth-child(n + 4) {
   display: none;
+}
+
+.editor-evolution-phases {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 24px 24px 16px;
+  list-style: none;
+}
+
+.editor-evolution-phases li {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 120px;
+  flex-direction: column;
+  padding: 17px 20px;
+  border: 1px solid var(--line);
+  border-right: 0;
+  background: var(--surface-subtle);
+}
+
+.editor-evolution-phases li:first-child {
+  border-radius: 10px 0 0 10px;
+}
+
+.editor-evolution-phases li:last-child {
+  border-right: 1px solid var(--line);
+  border-radius: 0 10px 10px 0;
+  background: var(--accent-soft);
+}
+
+.editor-evolution-phases li:not(:last-child)::after {
+  position: absolute;
+  z-index: 1;
+  top: 55px;
+  right: -5px;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid var(--accent);
+  border-right: 1px solid var(--accent);
+  background: var(--surface-subtle);
+  content: '';
+  transform: rotate(45deg);
+}
+
+.editor-evolution-phases li > span {
+  margin-bottom: auto;
+  color: var(--accent);
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.editor-evolution-phases strong {
+  margin: 16px 0 4px;
+  font-size: 0.86rem;
+}
+
+.editor-evolution-phases small {
+  color: var(--text-tertiary);
+  font-size: 0.66rem;
+  line-height: 1.5;
+}
+
+.editor-contracts {
+  margin: 0 24px 24px;
+  padding: 17px 18px;
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  border-radius: 10px;
+}
+
+.editor-contracts > small {
+  display: block;
+  margin-bottom: 11px;
+  color: var(--accent);
+  font-size: 0.61rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+}
+
+.editor-contracts > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.editor-contracts span {
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+}
+
+.editor-evolution-visual.is-compact figcaption small,
+.editor-evolution-visual.is-compact .editor-contracts,
+.editor-evolution-visual.is-compact .editor-evolution-phases li:nth-child(2) {
+  display: none;
+}
+
+.editor-evolution-visual.is-compact .editor-evolution-phases {
+  grid-template-columns: repeat(2, 1fr);
+  padding: 16px;
+}
+
+.editor-evolution-visual.is-compact .editor-evolution-phases li:first-child {
+  border-radius: 8px 0 0 8px;
+}
+
+.editor-evolution-visual.is-compact .editor-evolution-phases li:last-child {
+  border-radius: 0 8px 8px 0;
 }
 
 .agent-pipeline-visual {
@@ -461,6 +578,124 @@
 .elpis-flow-visual.is-compact .elpis-phones {
   grid-template-columns: minmax(130px, 210px);
   justify-content: center;
+}
+
+.wallet-architecture-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.65fr);
+  gap: 18px;
+  padding: 28px;
+}
+
+.wallet-device {
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: var(--surface-subtle);
+}
+
+.wallet-device-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 17px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wallet-device-bar span {
+  font-size: 0.74rem;
+  font-weight: 720;
+}
+
+.wallet-device-bar small {
+  color: var(--text-tertiary);
+  font-size: 0.6rem;
+}
+
+.wallet-device ol {
+  display: grid;
+  margin: 0;
+  padding: 16px;
+  list-style: none;
+}
+
+.wallet-device li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 4px;
+  padding: 13px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wallet-device li:last-child {
+  border-bottom: 0;
+}
+
+.wallet-device li > span {
+  color: var(--accent);
+  font-size: 0.61rem;
+}
+
+.wallet-device li div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wallet-device li strong {
+  font-size: 0.8rem;
+}
+
+.wallet-device li small {
+  color: var(--text-tertiary);
+  font-size: 0.65rem;
+  line-height: 1.45;
+}
+
+.wallet-network-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px;
+  border: 1px solid color-mix(in srgb, var(--accent) 42%, var(--line));
+  border-radius: 12px;
+  background: var(--accent-soft);
+}
+
+.wallet-network-column > small {
+  margin-bottom: 14px;
+  color: var(--accent);
+  font-size: 0.59rem;
+  font-weight: 760;
+  letter-spacing: 0.11em;
+}
+
+.wallet-network-column > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.wallet-network-column span {
+  padding: 9px 5px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.64rem;
+  font-weight: 720;
+  text-align: center;
+}
+
+.wallet-network-column p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.67rem;
+  line-height: 1.6;
 }
 
 /* Poster-first demo frame. */
@@ -773,10 +1008,63 @@
 
   .agent-pipeline-visual figcaption,
   .system-evolution-visual figcaption,
+  .editor-evolution-visual figcaption,
+  .wallet-architecture-visual figcaption,
   .elpis-flow-visual figcaption {
     align-items: flex-start;
     flex-direction: column;
     gap: 2px;
+  }
+
+  .editor-evolution-phases,
+  .editor-evolution-visual.is-compact .editor-evolution-phases {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .editor-evolution-visual.is-compact .editor-evolution-phases li:nth-child(2) {
+    display: flex;
+  }
+
+  .editor-evolution-phases li,
+  .editor-evolution-visual.is-compact .editor-evolution-phases li:first-child,
+  .editor-evolution-visual.is-compact .editor-evolution-phases li:last-child {
+    min-height: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: 0;
+  }
+
+  .editor-evolution-phases li:first-child,
+  .editor-evolution-visual.is-compact .editor-evolution-phases li:first-child {
+    border-radius: 9px 9px 0 0;
+  }
+
+  .editor-evolution-phases li:last-child,
+  .editor-evolution-visual.is-compact .editor-evolution-phases li:last-child {
+    border-bottom: 1px solid var(--line);
+    border-radius: 0 0 9px 9px;
+  }
+
+  .editor-evolution-phases li:not(:last-child)::after {
+    display: none;
+  }
+
+  .editor-evolution-phases li > span {
+    margin-bottom: 4px;
+  }
+
+  .editor-evolution-phases strong {
+    margin-top: 0;
+  }
+
+  .wallet-architecture-body {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .wallet-network-column {
+    padding: 20px;
   }
 
   .agent-pipeline-visual ol,
@@ -845,7 +1133,9 @@
 
 @media (max-width: 480px) {
   .system-evolution-visual figcaption,
+  .editor-evolution-visual figcaption,
   .agent-pipeline-visual figcaption,
+  .wallet-architecture-visual figcaption,
   .elpis-flow-visual figcaption,
   .demo-frame-heading,
   .demo-frame-footer,
@@ -864,6 +1154,16 @@
   .elpis-flow-visual ol {
     grid-template-columns: repeat(2, 1fr);
     padding-inline: 16px;
+  }
+
+  .editor-contracts {
+    margin-inline: 16px;
+  }
+
+  .wallet-device-bar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
   }
 
   .poster-content {

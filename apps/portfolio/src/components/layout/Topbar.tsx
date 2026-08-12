@@ -5,10 +5,12 @@ import { AppLink } from '../common/AppLink'
 const routeLabels: Record<string, string> = {
   home: 'Overview',
   'meican-platform': 'Selected Work · 01',
-  'layered-agent': 'Selected Work · 02',
+  'baijiahao-editor': 'Selected Work · 02',
+  'layered-agent': 'Selected Work · 03',
   elpis: 'Personal Projects · Elpis',
   experience: 'Experience',
   archive: 'Personal Projects',
+  'archive-coco-wallet': 'Personal Projects · Coco Wallet',
   'archive-poke-prototype-editor': 'Personal Projects · Poke',
   'archive-dataview-observatory': 'Personal Projects · DataView',
   'archive-turntable-motion-lab': 'Personal Projects · Turntable',

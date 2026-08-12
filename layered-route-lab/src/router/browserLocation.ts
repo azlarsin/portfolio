@@ -23,6 +23,10 @@ function normalizeRoutePath(pathname: string) {
   return resolveRoute(pathname)?.path || normalizePath(DEFAULT_DEMO_ROUTE_PATH);
 }
 
+function encodeReadableRoutePath(routePath: string) {
+  return encodeURIComponent(routePath).replace(/%2F/gi, "/");
+}
+
 export function getRoutePathFromBrowserUrl(url = currentUrl()) {
   const requestedPath = isStaticDemoBuild()
     ? url.searchParams.get(STATIC_ROUTE_QUERY_PARAM) || DEFAULT_DEMO_ROUTE_PATH
@@ -58,11 +62,10 @@ export function createBrowserLocation(target: string) {
   const browserUrl = currentUrl();
   browserUrl.hash = "";
   browserUrl.search = "";
-  browserUrl.searchParams.set(STATIC_ROUTE_QUERY_PARAM, routePath);
-  targetParams.forEach((value, key) => {
-    if (key !== STATIC_ROUTE_QUERY_PARAM) {
-      browserUrl.searchParams.append(key, value);
-    }
-  });
+  targetParams.delete(STATIC_ROUTE_QUERY_PARAM);
+  const search = targetParams.toString();
+  browserUrl.search = `?${STATIC_ROUTE_QUERY_PARAM}=${encodeReadableRoutePath(routePath)}${
+    search ? `&${search}` : ""
+  }`;
   return `${browserUrl.pathname}${browserUrl.search}`;
 }

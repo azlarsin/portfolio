@@ -6,7 +6,8 @@ import { ThemeToggle } from '../common/ThemeToggle'
 
 const selectedWork = [
   { to: '/work/meican-platform', index: '01', label: '企业后台架构改造' },
-  { to: '/work/layered-agent', index: '02', label: 'Layered Route × Agent' },
+  { to: '/work/baijiahao-editor', index: '02', label: '百家号编辑器演进' },
+  { to: '/work/layered-agent', index: '03', label: 'Layered Route × Agent' },
 ]
 
 function isCurrent(route: ResolvedRoute, to: string) {
@@ -37,8 +38,8 @@ export function Sidebar({
       <div className="sidebar-identity">
         <AppLink to="/" onClick={onNavigate} ref={firstLinkRef}>
           <strong>{profile.name}</strong>
-          <span>前端技术负责人</span>
-          <small>复杂系统与产品工程</small>
+          <span>前端技术负责人 · 全栈</span>
+          <small>复杂系统架构与交付</small>
         </AppLink>
       </div>
 

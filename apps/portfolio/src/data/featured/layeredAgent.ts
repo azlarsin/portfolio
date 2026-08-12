@@ -1,13 +1,18 @@
 import { behaviorManifest } from '../../../../../layered-route-lab/src/agent/generated/behaviorManifest'
 import operationsAgentGraph from '../../assets/operations-agent-actiongraph.html?url'
 import operationsAgentArchitecture from '../../assets/operations-agent-architecture.html?url'
+import { createLayeredRouteLabUrl } from '../../app/layeredRouteLabUrl'
 import type { PortfolioProject } from '../types'
 
 const layeredRouteLabUrl = (
   import.meta.env.VITE_LAYERED_ROUTE_LAB_URL || 'http://localhost:3000'
 ).replace(/\/$/, '')
 
-const operationsAgentDemoUrl = `${layeredRouteLabUrl}/products?agent_demo=1`
+const operationsAgentDemoUrl = createLayeredRouteLabUrl(
+  layeredRouteLabUrl,
+  '/products',
+  { agent_demo: '1' },
+)
 
 export const layeredAgentManifestStats = {
   routeSchemas: behaviorManifest.routeSchemas.length,
@@ -29,7 +34,7 @@ const manifestSummary = [
 
 export const layeredAgentProject = {
   slug: 'layered-agent',
-  order: 2,
+  order: 3,
   tier: 'featured',
   provenance: 'public-reconstruction',
   title: 'Layered Route × Agent：基于页面行为约束的任务执行',

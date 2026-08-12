@@ -12,8 +12,9 @@
 主站按阅读目的分成五层：
 
 1. **Overview**：个人定位、能力范围和两个精选案例的入口。
-2. **Selected Work**：两个不同证据边界的完整案例。
+2. **Selected Work**：三个不同问题类型与证据边界的完整案例。
    - 企业后台平台化：公开脱敏后的生产系统经历。
+   - 百家号编辑器：从 UEditor 深度定制到内部复用包的生产系统演进。
    - Layered Route × Agent：公开重建与个人技术研究。
 3. **Experience**：由统一 profile 数据生成、按最近经历优先展示的职业时间线。
 4. **Personal Projects**：Elpis、Poke、DataView、Turntable 和 Bezier 等个人产品、独立交付与实验。
@@ -29,10 +30,12 @@
 | --- | --- | --- |
 | `/` | Overview | `pages/HomePage.tsx`、`data/index.ts` |
 | `/work/meican-platform` | 企业后台平台化 | `data/featured/meicanPlatform.ts` |
+| `/work/baijiahao-editor` | 百家号编辑器演进 | `data/featured/baijiahaoEditor.ts` |
 | `/work/layered-agent` | Layered Route × Agent | `data/featured/layeredAgent.ts` |
 | `/experience` | 职业经历 | `pages/ExperiencePage.tsx`、`data/profile.json` |
 | `/archive` | 个人项目集 | `pages/ArchivePage.tsx`、`data/archive.ts` |
 | `/archive/elpis` | Elpis | `data/featured/elpis.ts` |
+| `/archive/coco-wallet` | Coco Wallet | `data/cocoWallet.ts` |
 | `/archive/poke-prototype-editor` | Poke 项目档案 | `data/archive.ts` |
 | `/archive/dataview-observatory` | DataView 项目档案 | `data/archive.ts` |
 | `/archive/turntable-motion-lab` | Turntable 项目档案 | `data/archive.ts` |
@@ -85,7 +88,7 @@
 
 1. 在 `apps/portfolio/src/data/featured/` 新建 `<slug>.ts`，使用 `satisfies PortfolioProject` 并设置 `tier: 'featured'`。
 2. 使用唯一、稳定的 `slug` 和 `order`，补齐 `provenance`、结果、范围、章节和公开边界。
-3. 在 `data/index.ts` 导入并加入 `featuredProjects`；当前数组显式声明为两个元素的 tuple，增减项目时也要同步调整该类型。在 `data/navigation.ts` 加入精选案例顺序。
+3. 在 `data/index.ts` 导入并加入 `featuredProjects`；当前数组显式声明为三个元素的 tuple，增减项目时也要同步调整该类型。在 `data/navigation.ts` 加入精选案例顺序。
 4. 在 `app/router.ts` 添加 `/work/<slug>` 的路由和页面 metadata，并在主应用的路由渲染映射中接入该项目。
 5. 在 `components/layout/Sidebar.tsx` 更新 Selected Work；在 `components/case-study/NextCase.tsx` 更新案例阅读顺序。
 6. 为首页卡片提供明确视觉，并在 `components/home/FeaturedCase.tsx` 中按 slug 映射。不要让未知 slug 误用其他项目的视觉。
@@ -201,16 +204,24 @@ pnpm dev:layered-route-lab
 
 ## `VITE_LAYERED_ROUTE_LAB_URL`
 
-`VITE_LAYERED_ROUTE_LAB_URL` 是 Portfolio 的构建时变量，用于生成 Layered Route Lab 和 Agent Demo 的公开链接：
+`VITE_LAYERED_ROUTE_LAB_URL` 是 Portfolio 的构建时变量，用于生成 Layered Route Lab 和 Agent Demo 的公开链接。
+
+Lab 独立运行在域名根路径时，使用普通路径路由：
 
 ```text
 ${VITE_LAYERED_ROUTE_LAB_URL}/products?agent_demo=1
 ```
 
+Lab 发布在静态子目录时，入口固定为目录下的 `index.html`，业务路由写入 `route` 查询参数：
+
+```text
+${VITE_LAYERED_ROUTE_LAB_URL}/?route=/products&agent_demo=1
+```
+
 - 正式构建必须提供绝对 `http://` 或 `https://` 地址。
 - 正式构建默认拒绝 `localhost`、`127.0.0.1` 和 `::1`。
 - 值会写入静态产物；部署后修改 Server 环境变量不会改变已经构建的链接，换域名必须重新构建。
-- GitHub Pages 部署使用同域静态路径：`https://me.azlar.cc/demos/layered-route-lab`，且不要保留结尾 `/`。
+- GitHub Pages 部署使用同域静态路径：`https://me.azlar.cc/demos/layered-route-lab`。构建会自动补齐目录结尾 `/`，并生成 `?route=/products&agent_demo=1`。
 - 该目录发布物只有一个 `index.html` 入口和相对资源。Demo 路由显示在浏览器地址栏的 `route` 查询参数中，例如 `?route=/product/1/order/2/edit`；刷新、分享和浏览器前进/后退都据此重建 Presenter 父链，因此不依赖服务器的路由重写。
 - 如迁移到其他静态托管，只需整体复制 `layered-route-lab/dist-static/` 到目标目录；入口仍为该目录下的 `index.html`。
 - `ALLOW_LOCAL_DEMO_URL=1` 只供 `build:local` 和本地测试使用，生产环境禁止设置。

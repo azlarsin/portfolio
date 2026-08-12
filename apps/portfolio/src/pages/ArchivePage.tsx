@@ -1,5 +1,6 @@
 import { archiveProjects } from '../data'
 import { AppLink } from '../components/common/AppLink'
+import { DemoDirectory } from '../components/common/DemoDirectory'
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge'
 import { TagList } from '../components/common/TagList'
 
@@ -10,9 +11,15 @@ export function ArchivePage() {
         <p className="eyebrow">PERSONAL PROJECTS</p>
         <h1>个人项目集</h1>
         <p className="page-lead">
-          收录个人产品、独立交付与早期技术实验。每个项目均说明项目背景、本人职责、实现范围与公开内容边界。
+          收录个人产品、团队兼职交付与早期技术实验。每个项目均说明项目背景、本人职责、实现范围与公开内容边界。
         </p>
       </header>
+
+      <DemoDirectory
+        projects={archiveProjects}
+        title="个人项目交互 Demo"
+        description="以下 Demo 均可直接打开。公开版本使用合成数据或离线重建，不连接历史服务与真实业务数据。"
+      />
 
       <div className="archive-list">
         {archiveProjects.map((project) => (

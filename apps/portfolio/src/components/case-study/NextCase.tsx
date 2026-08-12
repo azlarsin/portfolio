@@ -13,8 +13,10 @@ export function NextCase({ project }: { project: PortfolioProject }) {
 
   const next =
     project.slug === 'meican-platform'
-      ? { path: '/work/layered-agent', label: 'Layered Route × Agent' }
-      : { path: '/experience', label: '职业经历' }
+      ? { path: '/work/baijiahao-editor', label: '百家号编辑器演进' }
+      : project.slug === 'baijiahao-editor'
+        ? { path: '/work/layered-agent', label: 'Layered Route × Agent' }
+        : { path: '/experience', label: '职业经历' }
 
   return (
     <footer className="next-case">

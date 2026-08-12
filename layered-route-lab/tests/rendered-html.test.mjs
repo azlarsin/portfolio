@@ -75,6 +75,18 @@ test("metadata stays static and resolves social images from the configured site 
   assert.match(layout, /url: "\/og\.png"/);
 });
 
+test("portable static entry includes the shared global styles", async () => {
+  const [staticEntry, globals] = await Promise.all([
+    readFile(new URL("../static/main.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(staticEntry, /import "\.\.\/app\/globals\.css"/);
+  assert.match(globals, /\* \{[\s\S]*?box-sizing: border-box/);
+  assert.match(globals, /html,[\s\S]*?body \{[\s\S]*?margin: 0/);
+  assert.match(globals, /button,[\s\S]*?input,[\s\S]*?textarea \{[\s\S]*?font: inherit/);
+});
+
 test("programmatic history updates notify the current URL store", async () => {
   const app = await readFile(
     new URL("../src/App.tsx", import.meta.url),
@@ -263,7 +275,11 @@ test("deepest route pushes route-less presenters on the same URL", async () => {
   assert.match(app, /layeredPresenterDepth: nextPresenters\.length/);
   assert.match(
     app,
-    /window\.history\.pushState\([\s\S]*?window\.location\.pathname/,
+    /function currentBrowserLocation\(\) \{[\s\S]*?window\.location\.pathname[\s\S]*?window\.location\.search/,
+  );
+  assert.match(
+    app,
+    /window\.history\.pushState\([\s\S]*?currentBrowserLocation\(\)/,
   );
   assert.match(
     app,

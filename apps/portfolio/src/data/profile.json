@@ -1,17 +1,17 @@
 {
   "name": "陈成",
-  "headline": "前端技术负责人｜复杂系统与产品工程",
-  "headlineEn": "Senior Frontend Engineer / Tech Lead",
+  "headline": "前端技术负责人｜复杂系统与全栈交付",
+  "headlineEn": "Frontend Tech Lead / Full Stack Engineer",
   "summary": [
-    "拥有 10+ 年前端与全栈经验，长期带领前端团队（4-8 人）。项目范围包括大型运营后台、业务 SDK、跨端应用与内部平台；工作内容涵盖核心开发、需求拆解、技术方案、Code Review 和线上疑难问题处理。",
-    "以 React 技术栈为主，具备 Node.js、Python、Go、PHP、数据库、容器与部署经验，可完成从前端到服务端及上线维护的全流程开发。"
+    "拥有 10+ 年前端与全栈经验，长期带领前端团队（4-8 人）。职业前期担任研发负责人及前后端主程，覆盖客户端、服务端、数据库与部署；近年负责大型运营后台、业务 SDK、跨端应用和内部平台的架构与核心开发。",
+    "以 React 为主要技术栈，具有 Node.js、Python、PHP、Go、数据库、容器和部署实践，可承担接口设计、数据处理、服务部署与前后端联调。"
   ],
-  "availability": "目前考虑前端负责人、高级前端与 Full Stack 相关机会。",
+  "availability": "目前考虑前端技术负责人、Full Stack Engineer 与高级前端相关机会。",
   "strengths": [
     "大型 B 端系统的接手、问题分析、渐进迁移与架构改造。",
+    "职业前期具备前后端完整交付经验，覆盖 React / H5、PHP / Python、MySQL / Redis、接口设计及服务器部署维护。",
     "React、微前端、组件与业务 SDK 的设计和开发。",
-    "长期带领前端团队（4-8 人），负责需求拆解、技术方案、Code Review 与团队协作。",
-    "具备 Node.js、Python、Go、PHP、数据库、容器和部署维护经验。"
+    "长期带领前端团队（4-8 人），负责需求拆解、技术方案、Code Review 与团队协作。"
   ],
   "experience": [
     {
@@ -56,15 +56,20 @@
       "start": "2017.11",
       "end": "2019.11",
       "period": "2017.11—2019.11",
-      "overview": "在百度带领 5 名前端工程师。",
+      "overview": "在百度带领 5 名前端工程师，项目覆盖地图数据作业、空间统计与百家号图文编辑器，并参与 PHP / Python 数据服务与批处理交付。",
       "highlights": [
         {
-          "title": "",
+          "title": "百家号编辑器",
           "bullets": [
-            "开发地图数据采集和核验工具，外部协作者可在 Web 地图上核对属性并回传任务。",
-            "参与空间数据平台，处理数据汇总、轨迹渲染、指标统计和图形展示。",
-            "开发内容编辑器，并参与内部开源方案设计。",
-            "用 React Native 做跨平台应用原型，负责程序结构和主要逻辑。"
+            "参与百家号图文编辑器长期演进，在 UEditor 1.4.3 基础上开发业务插件，并处理选区、粘贴、工具栏状态与多实例等富文本边界问题。",
+            "推动将多年累积的 UEditor 魔改代码梳理为内部复用包；完成内核模块化、依赖与插件边界整理，支持 React 与浏览器脚本两种接入方式。"
+          ]
+        },
+        {
+          "title": "地图数据与空间统计",
+          "bullets": [
+            "主导众源空间数据统计服务，建设 PHP / Yii2 指标 API 与 Python 批处理脚本；接入 Elasticsearch count / search / scroll 查询并关联 MySQL 业务数据，统计采集至质检的链路耗时。",
+            "基于 Python 与 PostgreSQL 扩展地图数据作业及异步批量质检流程，覆盖回调防重、错误去重、返工 / 验收状态与 JSONB 例外分析；开发多维筛选、统计和导出页面。"
           ]
         }
       ]
@@ -75,7 +80,7 @@
       "start": "2017.03",
       "end": "2017.11",
       "period": "2017.03—2017.11",
-      "overview": "公司主要产品为高保真原型工具，支持 PC 端编辑与移动端预览。",
+      "overview": "担任桌面 App / 前后端主程，负责高保真原型编辑器、移动端预览、服务端交互及官网商业化功能。",
       "highlights": [
         {
           "title": "",
@@ -93,14 +98,13 @@
       "start": "2015.08",
       "end": "2017.03",
       "period": "2015.08—2017.03",
-      "overview": "本地达人服务、游客服务和景区产品购买平台。",
+      "overview": "担任研发负责人，负责 React H5、Yii2 服务端、MySQL / Redis 及服务器部署维护。",
       "highlights": [
         {
           "title": "",
           "bullets": [
             "用 React、Webpack 开发 H5 用户端，同时设计前后端接口。",
-            "用 Yii2、MySQL、Redis 搭建服务端。",
-            "完成产品、订单、导游、广告、购物车、用户、权限和报表导出等模块。",
+            "用 Yii2、MySQL、Redis 搭建服务端，完成产品、订单、导游、购物车、用户、权限和报表导出等模块。",
             "搭建服务器，并负责部署和日常维护。"
           ]
         }
@@ -112,7 +116,7 @@
       "start": "2012.09",
       "end": "2015.08",
       "period": "2012.09—2015.08",
-      "overview": "国内限时特价旅游产品平台。",
+      "overview": "负责海外供应商后台、航班基础数据库及站内数据系统开发。",
       "highlights": [
         {
           "title": "",
@@ -147,30 +151,28 @@
       ]
     },
     {
-      "label": "全栈与跨端",
+      "label": "服务端与数据",
       "items": [
         "Node.js",
         "Python",
         "PHP",
         "Go",
-        "Electron",
-        "React Native",
-        "Flutter",
-        "Tauri"
-      ]
-    },
-    {
-      "label": "服务端与部署",
-      "items": [
         "MySQL",
         "PostgreSQL",
         "Redis",
-        "MongoDB",
-        "Kafka",
-        "Git",
+        "MongoDB"
+      ]
+    },
+    {
+      "label": "跨端与工程",
+      "items": [
+        "Electron",
+        "React Native",
         "Docker",
         "Linux",
-        "Nginx"
+        "Nginx",
+        "Elasticsearch（项目使用经验）",
+        "Kafka（项目使用经验）"
       ]
     }
   ],
@@ -185,9 +187,9 @@
     "phone": "+86 176 1171 2655"
   },
   "document": {
-    "title": "陈成 - 前端技术负责人 - 公开版简历",
+    "title": "陈成 - 前端技术负责人 / Full Stack - 公开版简历",
     "author": "陈成",
-    "subject": "前端技术负责人 / Senior Frontend Engineer / Tech Lead",
+    "subject": "前端技术负责人 / Full Stack Engineer / Tech Lead",
     "footer": "公开版简历 - 项目名称与内部细节已脱敏"
   }
 }

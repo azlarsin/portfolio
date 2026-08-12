@@ -2,14 +2,17 @@ import type { PortfolioProject } from '../../data'
 import { AppLink } from '../common/AppLink'
 import { ProvenanceBadge } from '../common/ProvenanceBadge'
 import { TagList } from '../common/TagList'
+import { BaijiahaoEditorVisual } from './BaijiahaoEditorVisual'
 import { ElpisFlowVisual } from './ElpisFlowVisual'
 import { LayeredAgentVisual } from './LayeredAgentVisual'
 import { MeicanEvolutionVisual } from './MeicanEvolutionVisual'
 
 function CaseVisual({ slug, compact }: { slug: string; compact: boolean }) {
   if (slug === 'meican-platform') return <MeicanEvolutionVisual compact={compact} />
+  if (slug === 'baijiahao-editor') return <BaijiahaoEditorVisual compact={compact} />
   if (slug === 'layered-agent') return <LayeredAgentVisual compact={compact} />
-  return <ElpisFlowVisual compact={compact} />
+  if (slug === 'elpis') return <ElpisFlowVisual compact={compact} />
+  return null
 }
 
 export function FeaturedCase({
