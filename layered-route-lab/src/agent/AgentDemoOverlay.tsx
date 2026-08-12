@@ -15,6 +15,11 @@ import {
   type AgentPlanStep,
 } from "./staticRuntime";
 import { buildRouteStack } from "../router/routes";
+import {
+  createBrowserLocation,
+  getRouteLocationFromBrowserUrl,
+  getRoutePathFromBrowserUrl,
+} from "../router/browserLocation";
 import { sendLabAppCommand } from "./appBridge";
 import "./agent-demo.css";
 
@@ -46,8 +51,8 @@ function readRuntimeSnapshot() {
     presenter.classList.contains("presenter-top"),
   );
   return {
-    location: `${window.location.pathname}${window.location.search}`,
-    path: window.location.pathname,
+    location: getRouteLocationFromBrowserUrl(),
+    path: getRoutePathFromBrowserUrl(),
     topSurface: topPresenter?.dataset.surfaceId || null,
     topEntered: topPresenter?.dataset.entered === "true",
     routeDepth: routePresenters.length,
@@ -193,9 +198,11 @@ async function copyText(value: string) {
 }
 
 function getShareUrl(command: string) {
-  const url = new URL("/products", window.location.origin);
-  url.searchParams.set("agent_cmd", command.slice(0, 240));
-  return url.href;
+  const params = new URLSearchParams({ agent_cmd: command.slice(0, 240) });
+  return new URL(
+    createBrowserLocation(`/products?${params}`),
+    window.location.origin,
+  ).href;
 }
 
 function getExpectedRouteDepth(targetPath: string) {
@@ -435,6 +442,7 @@ export default function AgentDemoOverlay() {
 
   useEffect(() => {
     if (!open || tab !== "run" || running) return;
+    if (new URLSearchParams(window.location.search).get("agent_demo") === "1") return;
     const timer = window.setTimeout(
       () => commandInputRef.current?.focus({ preventScroll: true }),
       60,

@@ -41,4 +41,9 @@ Thumbs.db
 # local tooling output
 work/
 outputs/
+tmp/
 *.tsbuildinfo
+
+# generated static Demo release staged into the portfolio build
+layered-route-lab/dist-static/
+apps/portfolio/public/demos/layered-route-lab/

@@ -1,0 +1,56 @@
+@media print {
+  :root,
+  :root[data-theme='dark'] {
+    color-scheme: light;
+    --bg: #fff;
+    --surface: #fff;
+    --surface-subtle: #fff;
+    --text: #111;
+    --text-secondary: #333;
+    --text-tertiary: #666;
+    --line: #ddd;
+    --line-strong: #aaa;
+    --accent: #173eab;
+    --accent-soft: #eef2ff;
+  }
+
+  .site-sidebar,
+  .mobile-topbar,
+  .drawer-backdrop,
+  .case-toc,
+  .case-toc-mobile,
+  .hero-actions,
+  .resume-actions,
+  .demo-frame,
+  .evidence-frame,
+  .next-case,
+  .archive-back-link,
+  .site-footer {
+    display: none !important;
+  }
+
+  .site-main {
+    margin: 0;
+    padding: 0;
+  }
+
+  .page {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+  }
+
+  .case-body-layout {
+    display: block;
+  }
+
+  .case-chapter,
+  .career-timeline article,
+  .resume-html article {
+    break-inside: avoid;
+  }
+
+  a {
+    color: inherit;
+  }
+}

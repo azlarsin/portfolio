@@ -3,9 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="陈成的个人简历、作品与项目描述。" />
-    <meta name="theme-color" content="#f6f7f9" />
-    <title>陈成 · Portfolio</title>
+    <meta
+      name="description"
+      content="陈成，10+ 年前端与全栈经验，曾负责 6 人前端团队。作品涵盖复杂企业后台、平台与 SDK、跨端基础设施、交互系统、AI Agent 与独立产品。"
+    />
+    <meta name="theme-color" content="#f5f6f8" />
+    <title>陈成｜前端技术负责人 · 复杂系统与产品工程</title>
+    <script>
+      ;(() => {
+        try {
+          const preference = localStorage.getItem('portfolio-theme')
+          const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          document.documentElement.dataset.theme =
+            preference === 'dark' || (preference !== 'light' && dark) ? 'dark' : 'light'
+          document.documentElement.dataset.themePreference =
+            preference === 'dark' || preference === 'light' ? preference : 'system'
+          document.querySelector('meta[name="theme-color"]').content =
+            document.documentElement.dataset.theme === 'dark' ? '#111318' : '#f5f6f8'
+        } catch {
+          document.documentElement.dataset.theme = 'light'
+          document.documentElement.dataset.themePreference = 'system'
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

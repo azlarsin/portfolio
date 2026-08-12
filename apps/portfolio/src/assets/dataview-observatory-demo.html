@@ -486,7 +486,11 @@ networkRequests: 0</code></div>
       let liveTimer = null;
       let tourTimer = null;
       let flowTimer = null;
+      let clockTimer = null;
       let toastTimer = null;
+      let tourIndex = 0;
+      let flowPlaying = false;
+      const tourViews = ['overview','map','profile','flow'];
 
       function fmt(value) {
         if (typeof value !== 'number') return value;
@@ -610,51 +614,101 @@ networkRequests: 0</code></div>
       }
       function resetLiveTimer() {
         clearInterval(liveTimer);
-        if (state.live) liveTimer = setInterval(function(){tickData(false);},6000);
+        liveTimer = null;
+        if (state.live && !document.hidden) {
+          liveTimer = setInterval(function(){tickData(false);},6000);
+        }
+      }
+      function finishTour() {
+        clearInterval(tourTimer);
+        tourTimer = null;
+        state.touring = false;
+        document.querySelector('#runTour').classList.remove('active');
+        document.querySelector('#runTour').textContent = '完整巡演';
+        renderAll();
+        flash('四个纯前端场景巡演完成');
+      }
+      function advanceTour() {
+        tourIndex += 1;
+        if (tourIndex >= tourViews.length) {
+          finishTour();
+          return;
+        }
+        if (tourViews[tourIndex]==='profile') state.profile='beta';
+        if (tourViews[tourIndex]==='flow') state.flowStep=3;
+        setView(tourViews[tourIndex]);
+        document.querySelector('#runTour').textContent = '巡演中 '+(tourIndex+1)+' / 4';
+        renderAll();
+      }
+      function resetTourTimer() {
+        clearInterval(tourTimer);
+        tourTimer = null;
+        if (state.touring && !document.hidden) {
+          tourTimer = setInterval(advanceTour,1500);
+        }
       }
       function runTour() {
         if (state.touring) return;
         state.touring = true;
-        const views = ['overview','map','profile','flow'];
-        let index = 0;
-        setView(views[index]);
+        tourIndex = 0;
+        setView(tourViews[tourIndex]);
         document.querySelector('#runTour').classList.add('active');
         document.querySelector('#runTour').textContent = '巡演中 1 / 4';
         renderAll();
-        clearInterval(tourTimer);
-        tourTimer = setInterval(function(){
-          index += 1;
-          if (index >= views.length) {
-            clearInterval(tourTimer);
-            state.touring = false;
-            document.querySelector('#runTour').classList.remove('active');
-            document.querySelector('#runTour').textContent = '完整巡演';
-            renderAll();
-            flash('四个纯前端场景巡演完成');
-            return;
-          }
-          if (views[index]==='profile') state.profile='beta';
-          if (views[index]==='flow') state.flowStep=3;
-          setView(views[index]);
-          document.querySelector('#runTour').textContent = '巡演中 '+(index+1)+' / 4';
-          renderAll();
-        },1500);
+        resetTourTimer();
+      }
+      function advanceFlow() {
+        state.flowStep += 1;
+        if (state.flowStep > 3) {
+          clearInterval(flowTimer);
+          flowTimer = null;
+          flowPlaying = false;
+          state.flowStep = 3;
+          document.querySelector('#playFlow').textContent = '↻ 再次播放';
+          flash('协作流已在本地状态中收敛');
+        }
+        renderFlow();
+      }
+      function resetFlowTimer() {
+        clearInterval(flowTimer);
+        flowTimer = null;
+        if (flowPlaying && !document.hidden) {
+          flowTimer = setInterval(advanceFlow,850);
+        }
       }
       function playFlow() {
-        clearInterval(flowTimer);
+        flowPlaying = true;
         state.flowStep = 0;
         renderFlow();
         document.querySelector('#playFlow').textContent = '播放中';
-        flowTimer = setInterval(function(){
-          state.flowStep += 1;
-          if (state.flowStep > 3) {
-            clearInterval(flowTimer);
-            state.flowStep = 3;
-            document.querySelector('#playFlow').textContent = '↻ 再次播放';
-            flash('协作流已在本地状态中收敛');
-          }
-          renderFlow();
-        },850);
+        resetFlowTimer();
+      }
+      function updateClock() {
+        document.querySelector('#clock').textContent = new Date().toLocaleTimeString('zh-CN',{hour12:false});
+      }
+      function resetClockTimer() {
+        clearInterval(clockTimer);
+        clockTimer = null;
+        updateClock();
+        if (!document.hidden) {
+          clockTimer = setInterval(updateClock,1000);
+        }
+      }
+      function pauseIntervals() {
+        clearInterval(liveTimer);
+        clearInterval(tourTimer);
+        clearInterval(flowTimer);
+        clearInterval(clockTimer);
+        liveTimer = null;
+        tourTimer = null;
+        flowTimer = null;
+        clockTimer = null;
+      }
+      function resumeIntervals() {
+        resetLiveTimer();
+        resetTourTimer();
+        resetFlowTimer();
+        resetClockTimer();
       }
       function flash(message) {
         const toast = document.querySelector('#toast');
@@ -675,8 +729,11 @@ networkRequests: 0</code></div>
       document.querySelector('#refreshData').addEventListener('click',function(){tickData(true);});
       document.querySelector('#toggleLive').addEventListener('click',function(){state.live=!state.live;document.querySelector('#toggleLive').textContent=state.live?'暂停':'继续';document.querySelector('#liveLabel').textContent=state.live?'AUTO TICK':'PAUSED';resetLiveTimer();flash(state.live?'自动数据推进已恢复':'已暂停自动数据推进');});
       document.querySelector('#runTour').addEventListener('click',runTour);
-      setInterval(function(){document.querySelector('#clock').textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});},1000);
-      resetLiveTimer();
+      document.addEventListener('visibilitychange',function(){
+        if (document.hidden) pauseIntervals();
+        else resumeIntervals();
+      });
+      resumeIntervals();
       renderAll();
     }());
   </script>

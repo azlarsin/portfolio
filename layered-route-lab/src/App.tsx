@@ -32,6 +32,11 @@ import {
   normalizePath,
   resolveRoute,
 } from "./router/routes";
+import {
+  createBrowserLocation,
+  getRouteLocationFromBrowserUrl,
+  getRoutePathFromBrowserUrl,
+} from "./router/browserLocation";
 import "./layered-route-lab.css";
 
 const modalPresets = [
@@ -123,7 +128,7 @@ function resolveInitialPathname(pathname: string) {
     normalizePath(DEFAULT_DEMO_ROUTE_PATH);
 }
 
-function currentPathWithSearch() {
+function currentBrowserLocation() {
   return `${window.location.pathname}${window.location.search}`;
 }
 
@@ -163,7 +168,9 @@ function appendCachedRouteQuery(
 export default function App({
   initialPathname = DEFAULT_DEMO_ROUTE_PATH,
 }: AppProps) {
-  const initialPath = resolveInitialPathname(initialPathname);
+  const initialPath = typeof window === "undefined"
+    ? resolveInitialPathname(initialPathname)
+    : getRoutePathFromBrowserUrl();
   const [pathname, setPathname] = useState(initialPath);
   const currentUrl = useSyncExternalStore(
     subscribeToLocationChange,
@@ -251,7 +258,9 @@ export default function App({
       const route = resolveRoute(target);
       if (!route) return;
       const targetUrl = new URL(target, window.location.href);
-      const targetLocation = `${route.path}${targetUrl.search}`;
+      const targetLocation = createBrowserLocation(
+        `${route.path}${targetUrl.search}`,
+      );
       const nextHistoryState = {
         ...window.history.state,
         layeredPresenterDepth: 0,
@@ -363,7 +372,7 @@ export default function App({
         layeredPresenterDepth: nextPresenters.length,
       },
       "",
-      currentPathWithSearch(),
+      currentBrowserLocation(),
     );
     presentersRef.current = nextPresenters;
     setPresenters(nextPresenters);
@@ -475,7 +484,7 @@ export default function App({
     window.history.pushState(
       { ...window.history.state, layeredModalDepth: nextDepth },
       "",
-      currentPathWithSearch(),
+      currentBrowserLocation(),
     );
     modalsRef.current = nextModals;
     setModals(nextModals);
@@ -651,15 +660,10 @@ export default function App({
   }, [commitNavigation, cycleInspectionMode, openModal, pushNext]);
 
   useEffect(() => {
-    const requestedPath =
-      window.location.pathname === "/"
-        ? DEFAULT_DEMO_ROUTE_PATH
-        : window.location.pathname;
-    const initialRoute = resolveRoute(requestedPath);
-    const initialPath = initialRoute
-      ? initialRoute.path
-      : normalizePath(DEFAULT_DEMO_ROUTE_PATH);
-    const initialLocation = `${initialPath}${window.location.search}`;
+    const initialPath = getRoutePathFromBrowserUrl();
+    const initialLocation = createBrowserLocation(
+      getRouteLocationFromBrowserUrl(),
+    );
 
     window.history.replaceState(
       {
@@ -676,9 +680,8 @@ export default function App({
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      const nextPath =
-        resolveRoute(window.location.pathname)?.path || "/products";
-      const nextLocation = `${nextPath}${window.location.search}`;
+      const nextPath = getRoutePathFromBrowserUrl();
+      const nextLocation = getRouteLocationFromBrowserUrl();
       const presenterDepth = Number(
         event.state?.layeredPresenterDepth || 0,
       );
