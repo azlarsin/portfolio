@@ -229,6 +229,11 @@
   background: var(--success);
 }
 
+.sidebar-preferences {
+  display: grid;
+  gap: 8px;
+}
+
 .mobile-topbar,
 .drawer-backdrop {
   display: none;

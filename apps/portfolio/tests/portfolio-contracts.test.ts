@@ -23,6 +23,13 @@ import {
   projectNavigation,
 } from '../src/data'
 import { profile } from '../src/data/profile'
+import {
+  getLocalizedProfile,
+  getLocalizedProjects,
+} from '../src/data/localized'
+import { resolvePreferredLanguage } from '../src/i18n/LanguageContext'
+import { siteCopy } from '../src/i18n/copy'
+import { getLocalizedRouteMeta } from '../src/i18n/routeMeta'
 
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -355,13 +362,18 @@ describe('portfolio acceptance contracts', () => {
       'utf8',
     )
 
-    expect(homeHero).toContain('复杂系统的前端架构')
-    expect(homeHero).toContain('与全栈交付')
-    expect(homeHero).not.toMatch(/真正|做出来|怎么/)
+    expect(siteCopy.zh.home.titleLines).toEqual([
+      '复杂系统的前端架构',
+      '与全栈交付',
+    ])
+    expect(homeHero).toContain('copy.home.titleLines')
+    expect(JSON.stringify(siteCopy.zh.home)).not.toMatch(/真正|做出来|怎么/)
     expect(homeHero).not.toMatch(/Elasticsearch|Kafka/)
-    expect(capabilityList).toContain('存量系统改造')
-    expect(capabilityList).toContain('前后端完整交付')
-    expect(capabilityList).not.toMatch(/怎么|真正/)
+    expect(siteCopy.zh.home.capabilities.map(([title]) => title)).toEqual(
+      expect.arrayContaining(['存量系统改造', '前后端完整交付']),
+    )
+    expect(capabilityList).toContain('copy.home.capabilities')
+    expect(JSON.stringify(siteCopy.zh.home.capabilities)).not.toMatch(/怎么|真正/)
   })
 
   it('keeps prominent Demo entrances at the top of Overview and Personal Projects', () => {
@@ -375,9 +387,9 @@ describe('portfolio acceptance contracts', () => {
       'utf8',
     )
 
-    expect(homeHero).toContain('打开 Agent Demo')
-    expect(homeHero.indexOf('打开 Agent Demo')).toBeLessThan(
-      homeHero.indexOf('查看精选案例'),
+    expect(homeHero).toContain('copy.home.openAgentDemo')
+    expect(homeHero.indexOf('copy.home.openAgentDemo')).toBeLessThan(
+      homeHero.indexOf('copy.home.viewSelectedCase'),
     )
     expect(archivePage).toContain('<DemoDirectory')
     expect(archivePage.indexOf('<DemoDirectory')).toBeLessThan(
@@ -387,6 +399,42 @@ describe('portfolio acceptance contracts', () => {
 
   it('keeps the public phone number in the shared contact profile', () => {
     expect(profile.contact.phone).toBe('+86 176 1171 2655')
+  })
+
+  it('supports complete English content and a persistent language preference', () => {
+    expect(
+      resolvePreferredLanguage({ stored: 'en', browserLanguages: ['zh-CN'] }),
+    ).toBe('en')
+    expect(
+      resolvePreferredLanguage({ stored: null, browserLanguages: ['zh-CN', 'en'] }),
+    ).toBe('zh')
+    expect(
+      resolvePreferredLanguage({ stored: null, browserLanguages: ['en-US'] }),
+    ).toBe('en')
+
+    const englishProjects = getLocalizedProjects(portfolioProjects, 'en')
+    const englishProfile = getLocalizedProfile('en')
+
+    expect(englishProjects.map((project) => project.slug)).toEqual(
+      portfolioProjects.map((project) => project.slug),
+    )
+    for (const [index, project] of englishProjects.entries()) {
+      expect(project.chapters.map((chapter) => chapter.id), project.slug).toEqual(
+        portfolioProjects[index].chapters.map((chapter) => chapter.id),
+      )
+      expect(JSON.stringify(project), project.slug).not.toMatch(/[\p{Script=Han}]/u)
+    }
+    expect(JSON.stringify(englishProfile)).not.toMatch(/[\p{Script=Han}]/u)
+    expect(siteCopy.en.home.titleLines).toEqual([
+      'Frontend architecture',
+      'and full-stack delivery',
+    ])
+
+    const englishHomeMeta = getLocalizedRouteMeta(resolveRoute('/'), 'en')
+    expect(englishHomeMeta.title).toBe(
+      'Chen Cheng | Frontend Tech Lead · Full-Stack & Complex Systems',
+    )
+    expect(englishHomeMeta.description).not.toHaveLength(0)
   })
 
   it('10. keeps present-tense employment wording out of the public profile', () => {

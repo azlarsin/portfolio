@@ -3,26 +3,29 @@ import { AppLink } from '../components/common/AppLink'
 import { DemoDirectory } from '../components/common/DemoDirectory'
 import { ProvenanceBadge } from '../components/common/ProvenanceBadge'
 import { TagList } from '../components/common/TagList'
+import { getLocalizedProjects } from '../data/localized'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export function ArchivePage() {
+  const { language, copy } = useLanguage()
+  const projects = getLocalizedProjects(archiveProjects, language)
+
   return (
     <main className="page page-standard archive-page">
       <header className="page-intro">
-        <p className="eyebrow">PERSONAL PROJECTS</p>
-        <h1>个人项目集</h1>
-        <p className="page-lead">
-          收录个人产品、团队兼职交付与早期技术实验。每个项目均说明项目背景、本人职责、实现范围与公开内容边界。
-        </p>
+        <p className="eyebrow">{copy.archive.eyebrow}</p>
+        <h1>{copy.archive.title}</h1>
+        <p className="page-lead">{copy.archive.lead}</p>
       </header>
 
       <DemoDirectory
-        projects={archiveProjects}
-        title="个人项目交互 Demo"
-        description="以下 Demo 均可直接打开。公开版本使用合成数据或离线重建，不连接历史服务与真实业务数据。"
+        projects={projects}
+        title={copy.archive.demoTitle}
+        description={copy.archive.demoDescription}
       />
 
       <div className="archive-list">
-        {archiveProjects.map((project) => (
+        {projects.map((project) => (
           <article key={project.slug}>
             <div className="archive-year">{project.period.split('·')[0].trim()}</div>
             <div className="archive-copy">
@@ -32,7 +35,7 @@ export function ArchivePage() {
               <TagList tags={(project.technologies || []).slice(0, 5)} />
               <div className="archive-actions">
                 <AppLink className="text-link" to={`/archive/${project.slug}`}>
-                  查看项目 <span aria-hidden="true">→</span>
+                  {copy.archive.viewProject} <span aria-hidden="true">→</span>
                 </AppLink>
                 {project.demo ? <span className="demo-state">{project.demo.statusLabel}</span> : null}
               </div>

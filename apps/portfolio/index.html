@@ -12,6 +12,22 @@
     <script>
       ;(() => {
         try {
+          const savedLanguage = localStorage.getItem('portfolio-language')
+          const browserLanguages = navigator.languages || [navigator.language]
+          const language =
+            savedLanguage === 'zh' || savedLanguage === 'en'
+              ? savedLanguage
+              : browserLanguages.some((value) => value.toLowerCase().startsWith('zh'))
+                ? 'zh'
+                : 'en'
+          document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en'
+          document.documentElement.dataset.language = language
+          if (language === 'en') {
+            document.title = 'Chen Cheng | Frontend Tech Lead · Full-Stack & Complex Systems'
+            document.querySelector('meta[name="description"]').content =
+              'Chen Cheng is a frontend and full-stack engineer with 10+ years of experience across complex systems, business SDKs, cross-platform applications, and team leadership.'
+          }
+
           const preference = localStorage.getItem('portfolio-theme')
           const dark = window.matchMedia('(prefers-color-scheme: dark)').matches
           document.documentElement.dataset.theme =
@@ -21,6 +37,8 @@
           document.querySelector('meta[name="theme-color"]').content =
             document.documentElement.dataset.theme === 'dark' ? '#111318' : '#f5f6f8'
         } catch {
+          document.documentElement.lang = 'zh-CN'
+          document.documentElement.dataset.language = 'zh'
           document.documentElement.dataset.theme = 'light'
           document.documentElement.dataset.themePreference = 'system'
         }

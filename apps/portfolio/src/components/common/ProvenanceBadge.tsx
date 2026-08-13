@@ -1,25 +1,14 @@
 import type { ProjectProvenance } from '../../data'
+import { useLanguage } from '../../i18n/LanguageContext'
 
-const provenanceCopy: Record<
-  ProjectProvenance,
-  { label: string; description: string }
-> = {
-  production: {
-    label: 'PRODUCTION SYSTEM',
-    description: '来自真实生产项目，内容已脱敏',
-  },
-  'public-reconstruction': {
-    label: 'PUBLIC RECONSTRUCTION / RESEARCH',
-    description: '基于公开代码重建的个人研究',
-  },
-  'personal-product': {
-    label: 'PERSONAL PRODUCT',
-    description: '独立设计与开发的个人产品',
-  },
-  experiment: {
-    label: 'EXPERIMENT / ARCHIVE',
-    description: '个人实验或早期作品',
-  },
+function useProvenanceCopy() {
+  const { copy } = useLanguage()
+  return {
+    production: { label: copy.provenance.production[0], description: copy.provenance.production[1] },
+    'public-reconstruction': { label: copy.provenance.publicReconstruction[0], description: copy.provenance.publicReconstruction[1] },
+    'personal-product': { label: copy.provenance.personalProduct[0], description: copy.provenance.personalProduct[1] },
+    experiment: { label: copy.provenance.experiment[0], description: copy.provenance.experiment[1] },
+  } satisfies Record<ProjectProvenance, { label: string; description: string }>
 }
 
 export function ProvenanceBadge({
@@ -29,6 +18,7 @@ export function ProvenanceBadge({
   provenance: ProjectProvenance
   showDescription?: boolean
 }) {
+  const provenanceCopy = useProvenanceCopy()
   const copy = provenanceCopy[provenance]
   return (
     <span className={`provenance provenance--${provenance}`}>
@@ -38,6 +28,7 @@ export function ProvenanceBadge({
   )
 }
 
-export function getProvenanceDescription(provenance: ProjectProvenance) {
+export function useProvenanceDescription(provenance: ProjectProvenance) {
+  const provenanceCopy = useProvenanceCopy()
   return provenanceCopy[provenance].description
 }

@@ -84,6 +84,12 @@ export interface PortfolioProject {
   provenanceNote?: string
 }
 
+/** Localized project copy keeps stable identifiers, URLs, and assets from the base record. */
+export type PortfolioProjectTranslation = Omit<
+  PortfolioProject,
+  'slug' | 'order' | 'tier' | 'provenance'
+>
+
 export interface ProjectNavigationItem {
   slug: string
   label: string

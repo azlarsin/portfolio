@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { ResolvedRoute } from '../../app/router'
 import { useMediaQuery } from '../common/useMediaQuery'
+import { useLanguage } from '../../i18n/LanguageContext'
 import { Sidebar } from './Sidebar'
 import { SiteFooter } from './SiteFooter'
 import { Topbar } from './Topbar'
 
 export function AppShell({ route, children }: { route: ResolvedRoute; children: ReactNode }) {
+  const { copy } = useLanguage()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 900px)')
   const firstLinkRef = useRef<HTMLAnchorElement>(null)
@@ -49,7 +51,7 @@ export function AppShell({ route, children }: { route: ResolvedRoute; children: 
       <button
         type="button"
         className={`drawer-backdrop ${drawerOpen ? 'is-visible' : ''}`}
-        aria-label="关闭导航"
+        aria-label={copy.shell.closeNavigation}
         tabIndex={drawerOpen ? 0 : -1}
         onClick={() => setDrawerOpen(false)}
       />

@@ -34,7 +34,16 @@ export interface Profile {
   contact: { github: string; email: string; phone: string }
 }
 
+export type ProfileTranslation = Omit<Profile, 'contact'>
+
 export const profile = profileData as Profile
+
+export function mergeProfileTranslation(
+  base: Profile,
+  translation: ProfileTranslation,
+): Profile {
+  return { ...translation, contact: base.contact }
+}
 
 export function flattenExperienceHighlights(experience: ProfileExperience) {
   return experience.highlights.flatMap((group) => group.bullets)

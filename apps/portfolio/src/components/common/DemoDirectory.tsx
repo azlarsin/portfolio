@@ -1,5 +1,6 @@
 import type { PortfolioProject } from '../../data'
 import { AppLink } from './AppLink'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 function projectPath(project: PortfolioProject) {
   return project.tier === 'featured'
@@ -16,6 +17,7 @@ export function DemoDirectory({
   title: string
   description: string
 }) {
+  const { copy } = useLanguage()
   const demoProjects = projects.filter(
     (project): project is PortfolioProject & { demo: NonNullable<PortfolioProject['demo']> } =>
       Boolean(project.demo),
@@ -49,10 +51,10 @@ export function DemoDirectory({
                 target="_blank"
                 rel="noreferrer"
               >
-                打开 Demo <span aria-hidden="true">↗</span>
+                {copy.demo.openDemo} <span aria-hidden="true">↗</span>
               </a>
               <AppLink className="text-link" to={projectPath(project)}>
-                查看项目说明 <span aria-hidden="true">→</span>
+                {copy.demo.viewDescription} <span aria-hidden="true">→</span>
               </AppLink>
             </div>
           </article>

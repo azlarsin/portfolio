@@ -2,10 +2,12 @@ import { useEffect, useState, type CSSProperties } from 'react'
 import type { DemoSpec, VisualSpec } from '../../data'
 import { DemoPoster, EvidencePoster } from './DemoPoster'
 import { useMediaQuery } from './useMediaQuery'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 type FrameStyle = CSSProperties & { '--frame-height': string }
 
 function InteractiveFrame({ demo }: { demo: DemoSpec }) {
+  const { copy } = useLanguage()
   const isMobile = useMediaQuery('(max-width: 760px)')
   const [shouldLoad, setShouldLoad] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -62,11 +64,11 @@ function InteractiveFrame({ demo }: { demo: DemoSpec }) {
 
         {shouldLoad && !loaded && !isMobile ? (
           <div className={`frame-status ${timedOut ? 'is-error' : ''}`} aria-live="polite">
-            <strong>{timedOut ? 'Demo 加载失败或响应时间过长' : '正在加载交互 Demo…'}</strong>
-            {timedOut ? <span>可以重新加载，或直接在新窗口中打开。</span> : null}
+            <strong>{timedOut ? copy.demo.loadFailed : copy.demo.loading}</strong>
+            {timedOut ? <span>{copy.demo.loadFailedHint}</span> : null}
             {timedOut ? (
               <button type="button" className="button button-secondary" onClick={load}>
-                重新加载
+                {copy.demo.reload}
               </button>
             ) : null}
           </div>
@@ -78,11 +80,11 @@ function InteractiveFrame({ demo }: { demo: DemoSpec }) {
         <div>
           {!isMobile ? (
             <button type="button" className="button button-primary" onClick={load}>
-              {shouldLoad ? '重新加载 Demo' : demo.ctaLabel || 'Load interactive demo'}
+              {shouldLoad ? copy.demo.reloadDemo : demo.ctaLabel || copy.demo.loadDemo}
             </button>
           ) : null}
           <a className="button button-secondary" href={demo.source} target="_blank" rel="noreferrer">
-            在新窗口打开 Demo
+            {copy.demo.openWindow}
           </a>
         </div>
       </footer>
@@ -91,6 +93,7 @@ function InteractiveFrame({ demo }: { demo: DemoSpec }) {
 }
 
 function VisualFrame({ visual }: { visual: VisualSpec }) {
+  const { copy } = useLanguage()
   const isMobile = useMediaQuery('(max-width: 760px)')
   const [shouldLoad, setShouldLoad] = useState(false)
   const [loaded, setLoaded] = useState(false)
@@ -139,10 +142,10 @@ function VisualFrame({ visual }: { visual: VisualSpec }) {
         )}
         {shouldLoad && !loaded && !isMobile ? (
           <div className={`frame-status ${timedOut ? 'is-error' : ''}`} aria-live="polite">
-            <strong>{timedOut ? '架构图加载失败' : '正在加载架构图…'}</strong>
+            <strong>{timedOut ? copy.demo.architectureFailed : copy.demo.architectureLoading}</strong>
             {timedOut ? (
               <button type="button" className="button button-secondary" onClick={load}>
-                重新加载
+                {copy.demo.reload}
               </button>
             ) : null}
           </div>
@@ -151,11 +154,11 @@ function VisualFrame({ visual }: { visual: VisualSpec }) {
       <div className="evidence-frame-actions">
         {!isMobile && !shouldLoad ? (
           <button type="button" className="button button-secondary" onClick={load}>
-            加载架构图
+            {copy.demo.loadArchitecture}
           </button>
         ) : null}
         <a href={visual.source} target="_blank" rel="noreferrer">
-          新窗口查看
+          {copy.demo.viewWindow}
         </a>
       </div>
     </figure>

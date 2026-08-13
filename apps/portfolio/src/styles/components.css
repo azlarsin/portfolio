@@ -125,9 +125,9 @@
   line-height: 1.25;
 }
 
-.theme-toggle {
+.theme-toggle,
+.language-toggle {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 2px;
   padding: 3px;
   border: 1px solid var(--line);
@@ -135,7 +135,16 @@
   background: var(--surface-subtle);
 }
 
-.theme-toggle button {
+.theme-toggle {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.language-toggle {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.theme-toggle button,
+.language-toggle button {
   min-height: 30px;
   padding: 4px 5px;
   border-radius: 6px;
@@ -145,7 +154,8 @@
   cursor: pointer;
 }
 
-.theme-toggle button[aria-pressed='true'] {
+.theme-toggle button[aria-pressed='true'],
+.language-toggle button[aria-pressed='true'] {
   background: var(--surface);
   color: var(--text);
   box-shadow: 0 1px 5px rgb(16 24 40 / 8%);

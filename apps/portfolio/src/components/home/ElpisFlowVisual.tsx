@@ -1,13 +1,16 @@
 const flow = ['Capture', 'Tell the story', 'Organize', 'Enhance', 'Compare', 'Sync / Export']
+import { useLanguage } from '../../i18n/LanguageContext'
 
 export function ElpisFlowVisual({ compact = false }: { compact?: boolean }) {
+  const { copy } = useLanguage()
+
   return (
     <figure className={`elpis-flow-visual ${compact ? 'is-compact' : ''}`}>
       <figcaption>
-        <span>产品功能流程示意</span>
-        <small>Product flow illustration · 非实际 App 截图</small>
+        <span>{copy.visuals.elpis.title}</span>
+        <small>{copy.visuals.elpis.note}</small>
       </figcaption>
-      <div className="elpis-phones" aria-label="Elpis 抽象功能界面">
+      <div className="elpis-phones" aria-label={copy.visuals.elpis.interfaceLabel}>
         <div className="phone-frame phone-timeline">
           <span>Timeline</span>
           <i />
@@ -17,15 +20,15 @@ export function ElpisFlowVisual({ compact = false }: { compact?: boolean }) {
         <div className="phone-frame phone-detail">
           <span>Artwork Detail</span>
           <div className="artwork-shape" aria-hidden="true" />
-          <small>Story · Date · Child</small>
+          <small>{copy.visuals.elpis.story}</small>
         </div>
         <div className="phone-frame phone-compare">
           <span>Before / After</span>
           <div><i /><i /></div>
-          <small>Original stays intact</small>
+          <small>{copy.visuals.elpis.original}</small>
         </div>
       </div>
-      <ol aria-label="Elpis 产品流程">
+      <ol aria-label={copy.visuals.elpis.flowLabel}>
         {flow.map((step, index) => (
           <li key={step}>
             <span>{index + 1}</span>

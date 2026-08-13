@@ -1,14 +1,10 @@
 import type { RefObject } from 'react'
 import type { ResolvedRoute } from '../../app/router'
-import { profile } from '../../data/profile'
+import { getLocalizedProfile } from '../../data/localized'
 import { AppLink } from '../common/AppLink'
+import { LanguageToggle } from '../common/LanguageToggle'
 import { ThemeToggle } from '../common/ThemeToggle'
-
-const selectedWork = [
-  { to: '/work/meican-platform', index: '01', label: '企业后台架构改造' },
-  { to: '/work/baijiahao-editor', index: '02', label: '百家号编辑器演进' },
-  { to: '/work/layered-agent', index: '03', label: 'Layered Route × Agent' },
-]
+import { useLanguage } from '../../i18n/LanguageContext'
 
 function isCurrent(route: ResolvedRoute, to: string) {
   if (to === '/archive') return route.pathname.startsWith('/archive')
@@ -28,6 +24,14 @@ export function Sidebar({
   firstLinkRef: RefObject<HTMLAnchorElement | null>
   onNavigate: () => void
 }) {
+  const { copy, language } = useLanguage()
+  const localizedProfile = getLocalizedProfile(language)
+  const selectedWork = [
+    { to: '/work/meican-platform', index: '01', label: copy.navigation.selectedCases[0] },
+    { to: '/work/baijiahao-editor', index: '02', label: copy.navigation.selectedCases[1] },
+    { to: '/work/layered-agent', index: '03', label: copy.navigation.selectedCases[2] },
+  ]
+
   return (
     <aside
       id="site-navigation"
@@ -37,24 +41,24 @@ export function Sidebar({
     >
       <div className="sidebar-identity">
         <AppLink to="/" onClick={onNavigate} ref={firstLinkRef}>
-          <strong>{profile.name}</strong>
-          <span>前端技术负责人 · 全栈</span>
-          <small>复杂系统架构与交付</small>
+          <strong>{localizedProfile.name}</strong>
+          <span>{copy.navigation.role}</span>
+          <small>{copy.navigation.tagline}</small>
         </AppLink>
       </div>
 
-      <nav className="site-nav" aria-label="主导航">
+      <nav className="site-nav" aria-label={copy.navigation.label}>
         <AppLink
           to="/"
           onClick={onNavigate}
           aria-current={isCurrent(route, '/') ? 'page' : undefined}
           className="nav-primary"
         >
-          Overview
+          {copy.navigation.overview}
         </AppLink>
 
         <div className="nav-cluster">
-          <span>Selected Work</span>
+          <span>{copy.navigation.selectedWork}</span>
           {selectedWork.map((item) => (
             <AppLink
               key={item.to}
@@ -75,7 +79,7 @@ export function Sidebar({
           aria-current={isCurrent(route, '/experience') ? 'page' : undefined}
           className="nav-primary"
         >
-          Experience
+          {copy.navigation.experience}
         </AppLink>
         <AppLink
           to="/archive"
@@ -83,7 +87,7 @@ export function Sidebar({
           aria-current={isCurrent(route, '/archive') ? 'page' : undefined}
           className="nav-primary"
         >
-          Personal Projects
+          {copy.navigation.projects}
         </AppLink>
         <AppLink
           to="/resume"
@@ -91,16 +95,19 @@ export function Sidebar({
           aria-current={isCurrent(route, '/resume') ? 'page' : undefined}
           className="nav-primary"
         >
-          Resume
+          {copy.navigation.resume}
         </AppLink>
       </nav>
 
       <footer className="sidebar-footer">
         <p>
           <span aria-hidden="true" />
-          开放工作机会与项目交流
+          {copy.navigation.availability}
         </p>
-        <ThemeToggle />
+        <div className="sidebar-preferences">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </footer>
     </aside>
   )

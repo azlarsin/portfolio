@@ -1,8 +1,12 @@
 import type { PortfolioProject } from '../../data'
-import { ProvenanceBadge, getProvenanceDescription } from '../common/ProvenanceBadge'
+import { ProvenanceBadge, useProvenanceDescription } from '../common/ProvenanceBadge'
 import { TagList } from '../common/TagList'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 export function CaseHero({ project, compact = false }: { project: PortfolioProject; compact?: boolean }) {
+  const { copy } = useLanguage()
+  const provenanceDescription = useProvenanceDescription(project.provenance)
+
   return (
     <header className={`case-hero ${compact ? 'case-hero--compact' : ''}`}>
       <ProvenanceBadge provenance={project.provenance} showDescription />
@@ -11,20 +15,20 @@ export function CaseHero({ project, compact = false }: { project: PortfolioProje
       <p className="case-thesis">{project.thesis}</p>
       <dl className="case-meta">
         <div>
-          <dt>时间</dt>
+          <dt>{copy.caseStudy.time}</dt>
           <dd>{project.period}</dd>
         </div>
         <div>
-          <dt>职责</dt>
+          <dt>{copy.caseStudy.role}</dt>
           <dd>{project.role}</dd>
         </div>
         <div>
-          <dt>状态</dt>
+          <dt>{copy.caseStudy.status}</dt>
           <dd>{project.status}</dd>
         </div>
         <div>
-          <dt>来源</dt>
-          <dd>{getProvenanceDescription(project.provenance)}</dd>
+          <dt>{copy.caseStudy.source}</dt>
+          <dd>{provenanceDescription}</dd>
         </div>
       </dl>
       {project.technologies?.length ? <TagList tags={project.technologies} /> : null}

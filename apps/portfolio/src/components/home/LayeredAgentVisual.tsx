@@ -1,4 +1,5 @@
 import { layeredAgentManifestStats } from '../../data'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 const pipeline = [
   'Candidate Retrieval',
@@ -9,13 +10,15 @@ const pipeline = [
 ]
 
 export function LayeredAgentVisual({ compact = false }: { compact?: boolean }) {
+  const { copy } = useLanguage()
+
   return (
     <figure className={`agent-pipeline-visual ${compact ? 'is-compact' : ''}`}>
       <figcaption>
         <span>PUBLIC RESEARCH ARCHITECTURE</span>
-        <small>行为知识来自源码分析或运行态探索，执行结果由宿主状态验证</small>
+        <small>{copy.visuals.agent.note}</small>
       </figcaption>
-      <div className="agent-inputs" aria-label="Behavior Manifest 输入来源">
+      <div className="agent-inputs" aria-label={copy.visuals.agent.inputsLabel}>
         <span>Static Source Analysis</span>
         <span>Runtime Exploration</span>
       </div>
@@ -28,7 +31,7 @@ export function LayeredAgentVisual({ compact = false }: { compact?: boolean }) {
           {layeredAgentManifestStats.actions} actions
         </span>
       </div>
-      <ol aria-label="Agent 执行与验证流程">
+      <ol aria-label={copy.visuals.agent.pipelineLabel}>
         {pipeline.map((step, index) => (
           <li key={step}>
             <span>{String(index + 1).padStart(2, '0')}</span>

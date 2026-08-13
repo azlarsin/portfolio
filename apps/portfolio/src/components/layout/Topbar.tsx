@@ -1,23 +1,8 @@
 import type { RefObject } from 'react'
 import type { ResolvedRoute } from '../../app/router'
 import { AppLink } from '../common/AppLink'
-
-const routeLabels: Record<string, string> = {
-  home: 'Overview',
-  'meican-platform': 'Selected Work · 01',
-  'baijiahao-editor': 'Selected Work · 02',
-  'layered-agent': 'Selected Work · 03',
-  elpis: 'Personal Projects · Elpis',
-  experience: 'Experience',
-  archive: 'Personal Projects',
-  'archive-coco-wallet': 'Personal Projects · Coco Wallet',
-  'archive-poke-prototype-editor': 'Personal Projects · Poke',
-  'archive-dataview-observatory': 'Personal Projects · DataView',
-  'archive-turntable-motion-lab': 'Personal Projects · Turntable',
-  'archive-bezier-easing-picker': 'Personal Projects · Bezier',
-  resume: 'Resume',
-  'not-found': 'Not Found',
-}
+import { useLanguage } from '../../i18n/LanguageContext'
+import { getLocalizedProfile } from '../../data/localized'
 
 export function Topbar({
   route,
@@ -30,17 +15,36 @@ export function Topbar({
   expanded: boolean
   onOpen: () => void
 }) {
+  const { copy, language } = useLanguage()
+  const profile = getLocalizedProfile(language)
+  const routeLabels: Record<string, string> = {
+    home: copy.navigation.overview,
+    'meican-platform': `${copy.navigation.selectedWork} · 01`,
+    'baijiahao-editor': `${copy.navigation.selectedWork} · 02`,
+    'layered-agent': `${copy.navigation.selectedWork} · 03`,
+    elpis: `${copy.navigation.projects} · Elpis`,
+    experience: copy.navigation.experience,
+    archive: copy.navigation.projects,
+    'archive-coco-wallet': `${copy.navigation.projects} · Coco Wallet`,
+    'archive-poke-prototype-editor': `${copy.navigation.projects} · Poke`,
+    'archive-dataview-observatory': `${copy.navigation.projects} · DataView`,
+    'archive-turntable-motion-lab': `${copy.navigation.projects} · Turntable`,
+    'archive-bezier-easing-picker': `${copy.navigation.projects} · Bezier`,
+    resume: copy.navigation.resume,
+    'not-found': 'Not Found',
+  }
+
   return (
     <header className="mobile-topbar" inert={expanded ? true : undefined}>
-      <AppLink to="/" className="mobile-wordmark" aria-label="返回首页">
-        陈成
+      <AppLink to="/" className="mobile-wordmark" aria-label={copy.shell.home}>
+        {profile.name}
       </AppLink>
       <span>{routeLabels[route.id] || 'Portfolio'}</span>
       <button
         ref={menuButtonRef}
         type="button"
         className="menu-trigger"
-        aria-label="打开导航"
+        aria-label={copy.shell.openNavigation}
         aria-controls="site-navigation"
         aria-expanded={expanded}
         onClick={onOpen}

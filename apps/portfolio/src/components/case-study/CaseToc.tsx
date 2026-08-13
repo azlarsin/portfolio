@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { CaseChapter } from '../../data'
 import { AppLink } from '../common/AppLink'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 export function CaseToc({ pathname, chapters }: { pathname: string; chapters: CaseChapter[] }) {
+  const { copy } = useLanguage()
   const [activeId, setActiveId] = useState(chapters[0]?.id || '')
 
   useEffect(() => {
@@ -40,12 +42,12 @@ export function CaseToc({ pathname, chapters }: { pathname: string; chapters: Ca
 
   return (
     <>
-      <aside className="case-toc" aria-label="本页目录">
+      <aside className="case-toc" aria-label={copy.caseStudy.onThisPage}>
         <span>ON THIS PAGE</span>
         <ol>{links}</ol>
       </aside>
       <details className="case-toc-mobile">
-        <summary>本页目录</summary>
+        <summary>{copy.caseStudy.onThisPage}</summary>
         <ol>{links}</ol>
       </details>
     </>

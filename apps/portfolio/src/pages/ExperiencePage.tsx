@@ -1,52 +1,37 @@
-import { flattenExperienceHighlights, profile } from '../data/profile'
+import { flattenExperienceHighlights } from '../data/profile'
 import { AppLink } from '../components/common/AppLink'
-
-const growthTrack = [
-  {
-    period: '2012—2017',
-    title: '前后端完整交付',
-    text: '供应商后台、React H5、Yii2 / PHP 服务、MySQL / Redis 与服务器部署。',
-  },
-  {
-    period: '2017—2019',
-    title: '客户端与数据服务',
-    text: '桌面编辑器、PHP 指标 API、Python 批处理、空间数据工具与 UEditor 演进。',
-  },
-  {
-    period: '2019—2026',
-    title: '复杂前端与团队管理',
-    text: '企业后台、业务 SDK、跨端应用，以及 4-8 人前端团队管理。',
-  },
-]
+import { getLocalizedProfile } from '../data/localized'
+import { useLanguage } from '../i18n/LanguageContext'
 
 export function ExperiencePage() {
+  const { language, copy } = useLanguage()
+  const profile = getLocalizedProfile(language)
+
   return (
     <main className="page page-standard experience-page">
       <header className="page-intro">
-        <p className="eyebrow">EXPERIENCE</p>
-        <h1>职业经历</h1>
-        <p className="page-lead">
-          在 2019 年进入美餐前，已经连续承担供应商后台与数据、旅游电商前后端、桌面应用服务端，以及百度空间数据 API 与批处理。后续以复杂前端和团队负责人为主，同时保留从接口、数据库到部署排查的完整交付能力。
-        </p>
+        <p className="eyebrow">{copy.experience.eyebrow}</p>
+        <h1>{copy.experience.title}</h1>
+        <p className="page-lead">{copy.experience.lead}</p>
       </header>
 
-      <ol className="growth-track" aria-label="职业成长主线">
-        {growthTrack.map((step) => (
-          <li key={step.period}>
-            <span>{step.period}</span>
-            <strong>{step.title}</strong>
-            <p>{step.text}</p>
+      <ol className="growth-track" aria-label={copy.experience.growthLabel}>
+        {copy.experience.growth.map(([period, title, text]) => (
+          <li key={period}>
+            <span>{period}</span>
+            <strong>{title}</strong>
+            <p>{text}</p>
           </li>
         ))}
       </ol>
 
-      <section className="career-timeline" aria-label="工作经历时间线">
-        {profile.experience.map((experience) => {
+      <section className="career-timeline" aria-label={copy.experience.timelineLabel}>
+        {profile.experience.map((experience, index) => {
           const highlights = flattenExperienceHighlights(experience).slice(
             0,
-            experience.company === '美餐网'
+            index === 0
               ? 6
-              : experience.company === '百度'
+              : index === 1
                 ? 4
                 : 3,
           )
@@ -67,9 +52,9 @@ export function ExperiencePage() {
                     <li key={highlight}>{highlight}</li>
                   ))}
                 </ul>
-                {experience.company === '百度' ? (
+                {index === 1 ? (
                   <AppLink className="timeline-case-link" to="/work/baijiahao-editor">
-                    查看百家号编辑器案例 <span aria-hidden="true">→</span>
+                    {copy.experience.viewEditorCase} <span aria-hidden="true">→</span>
                   </AppLink>
                 ) : null}
               </div>

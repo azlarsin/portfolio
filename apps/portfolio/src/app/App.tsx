@@ -22,52 +22,59 @@ import {
   useCurrentRoute,
 } from './router'
 import { useDocumentMeta } from './useDocumentMeta'
+import { useLanguage } from '../i18n/LanguageContext'
+import { getLocalizedRouteMeta } from '../i18n/routeMeta'
+import { getLocalizedProject } from '../data/localized'
 
 function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
+  const { language } = useLanguage()
+  const localized = (project: Parameters<typeof getLocalizedProject>[0]) =>
+    getLocalizedProject(project, language)
+
   switch (route.id) {
     case ROUTES.HOME.id:
       return <HomePage />
     case ROUTES.MEICAN_PLATFORM.id:
-      return <CaseStudyPage project={meicanPlatformProject} pathname={route.pathname} />
+      return <CaseStudyPage project={localized(meicanPlatformProject)} pathname={route.pathname} />
     case ROUTES.BAIJIAHAO_EDITOR.id:
-      return <CaseStudyPage project={baijiahaoEditorProject} pathname={route.pathname} />
+      return <CaseStudyPage project={localized(baijiahaoEditorProject)} pathname={route.pathname} />
     case ROUTES.LAYERED_AGENT.id:
-      return <CaseStudyPage project={layeredAgentProject} pathname={route.pathname} />
+      return <CaseStudyPage project={localized(layeredAgentProject)} pathname={route.pathname} />
     case ROUTES.ELPIS.id:
-      return <CaseStudyPage project={elpisProject} pathname={route.pathname} />
+      return <CaseStudyPage project={localized(elpisProject)} pathname={route.pathname} />
     case ROUTES.EXPERIENCE.id:
       return <ExperiencePage />
     case ROUTES.ARCHIVE.id:
       return <ArchivePage />
     case ROUTES.ARCHIVE_COCO_WALLET.id:
-      return <CaseStudyPage project={cocoWalletProject} pathname={route.pathname} />
+      return <CaseStudyPage project={localized(cocoWalletProject)} pathname={route.pathname} />
     case ROUTES.RESUME.id:
       return <ResumePage />
     case ROUTES.ARCHIVE_POKE_PROTOTYPE_EDITOR.id:
       return (
         <CaseStudyPage
-          project={portfolioProjectBySlug.get('poke-prototype-editor')!}
+          project={localized(portfolioProjectBySlug.get('poke-prototype-editor')!)}
           pathname={route.pathname}
         />
       )
     case ROUTES.ARCHIVE_DATAVIEW_OBSERVATORY.id:
       return (
         <CaseStudyPage
-          project={portfolioProjectBySlug.get('dataview-observatory')!}
+          project={localized(portfolioProjectBySlug.get('dataview-observatory')!)}
           pathname={route.pathname}
         />
       )
     case ROUTES.ARCHIVE_TURNTABLE_MOTION_LAB.id:
       return (
         <CaseStudyPage
-          project={portfolioProjectBySlug.get('turntable-motion-lab')!}
+          project={localized(portfolioProjectBySlug.get('turntable-motion-lab')!)}
           pathname={route.pathname}
         />
       )
     case ROUTES.ARCHIVE_BEZIER_EASING_PICKER.id:
       return (
         <CaseStudyPage
-          project={portfolioProjectBySlug.get('bezier-easing-picker')!}
+          project={localized(portfolioProjectBySlug.get('bezier-easing-picker')!)}
           pathname={route.pathname}
         />
       )
@@ -78,7 +85,8 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
 
 export function App() {
   const route = useCurrentRoute()
-  useDocumentMeta(route)
+  const { language } = useLanguage()
+  useDocumentMeta(getLocalizedRouteMeta(route, language))
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual'

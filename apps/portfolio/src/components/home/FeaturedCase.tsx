@@ -6,6 +6,7 @@ import { BaijiahaoEditorVisual } from './BaijiahaoEditorVisual'
 import { ElpisFlowVisual } from './ElpisFlowVisual'
 import { LayeredAgentVisual } from './LayeredAgentVisual'
 import { MeicanEvolutionVisual } from './MeicanEvolutionVisual'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 function CaseVisual({ slug, compact }: { slug: string; compact: boolean }) {
   if (slug === 'meican-platform') return <MeicanEvolutionVisual compact={compact} />
@@ -24,6 +25,8 @@ export function FeaturedCase({
   index: number
   primary?: boolean
 }) {
+  const { copy } = useLanguage()
+
   return (
     <article className={`featured-case ${primary ? 'featured-case--primary' : ''}`}>
       <div className="featured-case-copy">
@@ -40,7 +43,7 @@ export function FeaturedCase({
         </ul>
         <TagList tags={(project.technologies || []).slice(0, primary ? 7 : 5)} />
         <AppLink className="text-link" to={`/work/${project.slug}`}>
-          查看完整案例 <span aria-hidden="true">→</span>
+          {copy.home.viewCase} <span aria-hidden="true">→</span>
         </AppLink>
       </div>
       <CaseVisual slug={project.slug} compact={!primary} />

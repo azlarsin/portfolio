@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../../i18n/LanguageContext'
 
 type ThemePreference = 'system' | 'light' | 'dark'
 
 const storageKey = 'portfolio-theme'
-const labels: Record<ThemePreference, string> = {
-  system: 'System',
-  light: 'Light',
-  dark: 'Dark',
-}
-
 function readPreference(): ThemePreference {
   const stored = window.localStorage.getItem(storageKey)
   return stored === 'light' || stored === 'dark' ? stored : 'system'
@@ -28,6 +23,7 @@ function applyTheme(preference: ThemePreference) {
 }
 
 export function ThemeToggle() {
+  const { copy } = useLanguage()
   const [preference, setPreference] = useState<ThemePreference>(readPreference)
 
   useEffect(() => {
@@ -45,15 +41,15 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="theme-toggle" aria-label="颜色主题">
-      {(Object.keys(labels) as ThemePreference[]).map((theme) => (
+    <div className="theme-toggle" aria-label={copy.theme.label}>
+      {(['system', 'light', 'dark'] as ThemePreference[]).map((theme) => (
         <button
           key={theme}
           type="button"
           aria-pressed={preference === theme}
           onClick={() => setTheme(theme)}
         >
-          {labels[theme]}
+          {copy.theme[theme]}
         </button>
       ))}
     </div>
