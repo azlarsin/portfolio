@@ -14,6 +14,7 @@ import {
 import {
   archiveProjects,
   baijiahaoEditorProject,
+  baiduMapWorkbenchProject,
   cocoWalletProject,
   featuredProjects,
   layeredAgentProject,
@@ -43,6 +44,7 @@ describe('portfolio acceptance contracts', () => {
     const expectedTitles = new Map([
       ['/', '陈成｜前端技术负责人 · 全栈与复杂系统工程'],
       ['/work/meican-platform', '企业后台架构改造｜陈成作品集'],
+      ['/work/baidu-map-workbench', '百度地图数据作业｜陈成作品集'],
       ['/work/baijiahao-editor', '百家号编辑器演进｜陈成作品集'],
       ['/work/layered-agent', 'Layered Route × Verified Agent｜陈成作品集'],
       ['/archive/elpis', 'Elpis 独立产品｜个人项目集'],
@@ -69,7 +71,7 @@ describe('portfolio acceptance contracts', () => {
     }
 
     expect(ROUTES.HOME.meta.description).toBe(
-      '陈成，拥有 10+ 年前端与全栈经验。职业前期覆盖客户端、PHP / Python 服务、数据库与部署；近年聚焦复杂前端系统、业务 SDK、跨端应用与团队管理。',
+      '陈成，拥有 10+ 年前端与全栈经验，覆盖复杂前端架构、百度地图数据作业、PHP / Python 服务、业务 SDK、跨端应用与团队管理。',
     )
 
     const anchored = resolveRoute('/work/layered-agent?from=home#demo')
@@ -136,9 +138,10 @@ describe('portfolio acceptance contracts', () => {
     }
   })
 
-  it('5. keeps the three selected projects in the intended order', () => {
+  it('5. keeps the four selected projects in the intended order', () => {
     expect(featuredProjects.map((project) => project.slug)).toEqual([
       'meican-platform',
+      'baidu-map-workbench',
       'baijiahao-editor',
       'layered-agent',
     ])
@@ -287,7 +290,7 @@ describe('portfolio acceptance contracts', () => {
     )
 
     expect(baiduExperience?.overview).toBe(
-      '在百度带领 5 名前端工程师，项目覆盖地图数据作业、空间统计与百家号图文编辑器，并参与 PHP / Python 数据服务与批处理交付。',
+      '在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器，并直接参与 PHP / Python 数据服务与批处理交付。',
     )
   })
 
@@ -297,11 +300,31 @@ describe('portfolio acceptance contracts', () => {
     )
     const baiduText = JSON.stringify(baiduExperience)
 
-    expect(baiduText).toContain('PHP / Yii2 指标 API')
+    expect(baiduText).toContain('PHP / Yii2 众源统计服务及指标 API')
     expect(baiduText).toContain('Elasticsearch count / search / scroll')
     expect(baiduText).toContain('PostgreSQL')
     expect(baiduText).toContain('JSONB 例外分析')
     expect(baiduText).not.toMatch(/Elasticsearch 集群|Kafka 平台|消息队列建设/)
+  })
+
+  it('keeps the Baidu Maps case split between rendering and backend leadership', () => {
+    const mapText = JSON.stringify(baiduMapWorkbenchProject)
+
+    expect(baiduMapWorkbenchProject.tier).toBe('featured')
+    expect(baiduMapWorkbenchProject.provenance).toBe('production')
+    expect(mapText).toContain('Map、Layer、Feature、Element')
+    expect(mapText).toContain('RBush')
+    expect(mapText).toContain('Python / Tornado')
+    expect(mapText).toContain('PostgreSQL / JSONB')
+    expect(mapText).toContain('PHP / Yii2')
+    expect(mapText).toContain('Elasticsearch count / search / scroll')
+    expect(mapText).toContain('带领 5 名前端工程师')
+    expect(baiduMapWorkbenchProject.provenanceNote).toContain(
+      '不把缺少完整历史归属的内部地图底层整体视为个人独立成果',
+    )
+    expect(mapText).not.toMatch(
+      /WebGL 地图引擎|Elasticsearch 集群建设|Kafka 平台建设|独立完成整套地图系统/,
+    )
   })
 
   it('positions full-stack delivery as an evidenced career stage', () => {
@@ -370,10 +393,24 @@ describe('portfolio acceptance contracts', () => {
     expect(JSON.stringify(siteCopy.zh.home)).not.toMatch(/真正|做出来|怎么/)
     expect(homeHero).not.toMatch(/Elasticsearch|Kafka/)
     expect(siteCopy.zh.home.capabilities.map(([title]) => title)).toEqual(
-      expect.arrayContaining(['存量系统改造', '前后端完整交付']),
+      expect.arrayContaining(['存量系统改造', '跨栈学习与完整交付']),
     )
     expect(capabilityList).toContain('copy.home.capabilities')
     expect(JSON.stringify(siteCopy.zh.home.capabilities)).not.toMatch(/怎么|真正/)
+  })
+
+  it('positions opportunity preference and learning history without overstating depth', () => {
+    const learningText = `${profile.strengths.join('')} ${JSON.stringify(siteCopy.zh.experience.growth)}`
+
+    expect(profile.availability).toBe(
+      '目前考虑 AI Agent 相关研发、Full Stack Engineer 与前端相关机会。',
+    )
+    expect(learningText).toContain('兼职旅游项目')
+    expect(learningText).toContain('前端工具创业团队')
+    expect(learningText).toContain('React Native')
+    expect(learningText).toContain('PHP / Python')
+    expect(learningText).toContain('空间统计')
+    expect(learningText).not.toMatch(/精通 React Native|精通统计计算|从零掌握/)
   })
 
   it('keeps prominent Demo entrances at the top of Overview and Personal Projects', () => {

@@ -28,8 +28,9 @@ export function Sidebar({
   const localizedProfile = getLocalizedProfile(language)
   const selectedWork = [
     { to: '/work/meican-platform', index: '01', label: copy.navigation.selectedCases[0] },
-    { to: '/work/baijiahao-editor', index: '02', label: copy.navigation.selectedCases[1] },
-    { to: '/work/layered-agent', index: '03', label: copy.navigation.selectedCases[2] },
+    { to: '/work/baidu-map-workbench', index: '02', label: copy.navigation.selectedCases[1] },
+    { to: '/work/baijiahao-editor', index: '03', label: copy.navigation.selectedCases[2] },
+    { to: '/work/layered-agent', index: '04', label: copy.navigation.selectedCases[3] },
   ]
 
   return (

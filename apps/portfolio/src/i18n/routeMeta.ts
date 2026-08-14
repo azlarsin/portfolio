@@ -5,12 +5,17 @@ const englishRouteMeta: Record<RouteId, RouteMeta> = {
   home: {
     title: 'Chen Cheng | Frontend Tech Lead · Full-Stack & Complex Systems',
     description:
-      'Chen Cheng is a frontend and full-stack engineer with 10+ years of experience, spanning complex frontend systems, business SDKs, cross-platform applications, backend services, databases, deployment, and team leadership.',
+      'Chen Cheng is a frontend and full-stack engineer with 10+ years of experience across complex frontend systems, Baidu Maps data operations, backend services, business SDKs, cross-platform applications, and team leadership.',
   },
   'meican-platform': {
     title: 'Enterprise Console Architecture | Chen Cheng Portfolio',
     description:
       'A production architecture case covering a common console host, independent business apps, embedded pages, and business SDKs.',
+  },
+  'baidu-map-workbench': {
+    title: 'Baidu Maps Data Workbench | Chen Cheng Portfolio',
+    description:
+      'Complex SVG map operations, Python and PHP data services, and delivery leadership for a five-person frontend team.',
   },
   'baijiahao-editor': {
     title: 'Baijiahao Editor Evolution | Chen Cheng Portfolio',

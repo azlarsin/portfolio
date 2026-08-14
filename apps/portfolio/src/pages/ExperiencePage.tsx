@@ -53,9 +53,14 @@ export function ExperiencePage() {
                   ))}
                 </ul>
                 {index === 1 ? (
-                  <AppLink className="timeline-case-link" to="/work/baijiahao-editor">
-                    {copy.experience.viewEditorCase} <span aria-hidden="true">→</span>
-                  </AppLink>
+                  <div className="timeline-case-links">
+                    <AppLink className="timeline-case-link" to="/work/baidu-map-workbench">
+                      {copy.experience.viewMapCase} <span aria-hidden="true">→</span>
+                    </AppLink>
+                    <AppLink className="timeline-case-link" to="/work/baijiahao-editor">
+                      {copy.experience.viewEditorCase} <span aria-hidden="true">→</span>
+                    </AppLink>
+                  </div>
                 ) : null}
               </div>
             </article>

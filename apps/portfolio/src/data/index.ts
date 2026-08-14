@@ -1,5 +1,6 @@
 import { archiveProjects } from './archive'
 import { baijiahaoEditorProject } from './featured/baijiahaoEditor'
+import { baiduMapWorkbenchProject } from './featured/baiduMapWorkbench'
 import { elpisProject } from './featured/elpis'
 import { layeredAgentProject } from './featured/layeredAgent'
 import { meicanPlatformProject } from './featured/meicanPlatform'
@@ -9,7 +10,13 @@ export const featuredProjects: readonly [
   PortfolioProject,
   PortfolioProject,
   PortfolioProject,
-] = [meicanPlatformProject, baijiahaoEditorProject, layeredAgentProject]
+  PortfolioProject,
+] = [
+  meicanPlatformProject,
+  baiduMapWorkbenchProject,
+  baijiahaoEditorProject,
+  layeredAgentProject,
+]
 
 export const portfolioProjects: PortfolioProject[] = [
   ...featuredProjects,
@@ -23,6 +30,7 @@ export const portfolioProjectBySlug = new Map(
 export { archiveProjects }
 export { cocoWalletProject } from './cocoWallet'
 export { baijiahaoEditorProject } from './featured/baijiahaoEditor'
+export { baiduMapWorkbenchProject } from './featured/baiduMapWorkbench'
 export { elpisProject } from './featured/elpis'
 export {
   layeredAgentManifestStats,

@@ -9,10 +9,10 @@ export const profileEn: ProfileTranslation = {
     'React is my primary stack, complemented by hands-on Node.js, Python, PHP, Go, database, container, and deployment experience. I can own API design, data processing, service deployment, and frontend–backend integration.',
   ],
   availability:
-    'Currently considering Frontend Tech Lead, Full Stack Engineer, and senior frontend opportunities.',
+    'Currently considering AI Agent engineering, Full Stack Engineer, and frontend opportunities.',
   strengths: [
     'Taking over, analyzing, incrementally migrating, and modernizing large B2B systems.',
-    'End-to-end delivery experience spanning React / H5, PHP / Python, MySQL / Redis, API design, and server deployment and maintenance.',
+    'Able to expand into adjacent technologies as product needs change: React work in a part-time travel project in 2015, a frontend-tool startup in 2017, then React Native, PHP / Python services, and spatial statistics during the Baidu period and concurrent team projects.',
     'Design and development of React systems, micro-frontends, reusable components, and business SDKs.',
     'Long-term leadership of frontend teams of 4–8, including requirements breakdown, technical design, code review, and cross-team collaboration.',
   ],
@@ -60,20 +60,20 @@ export const profileEn: ProfileTranslation = {
       end: '2019.11',
       period: '2017.11—2019.11',
       overview:
-        'Led five frontend engineers across map-data operations, spatial statistics, and the Baijiahao article editor, while also contributing PHP / Python data services and batch-processing delivery.',
+        'Led five frontend engineers across complex SVG map-data operations, spatial statistics, and the Baijiahao article editor, while directly contributing PHP / Python data services and batch-processing delivery.',
       highlights: [
+        {
+          title: 'Map operations, backend services, and spatial statistics',
+          bullets: [
+            'Contributed core work to complex map operations, delivering layered loading, spatial search, and editing for roads, tracks, GPS, and business annotations on an existing internal SVG map system.',
+            'Led PHP / Yii2 crowdsourced-statistics services, metrics APIs, and Python batch jobs, and extended asynchronous QA, callback deduplication, and JSONB exception analysis in Python / PostgreSQL; correlated Elasticsearch count / search / scroll results with MySQL business data.',
+          ],
+        },
         {
           title: 'Baijiahao editor',
           bullets: [
             'Contributed to the long-term evolution of Baijiahao’s article editor, building business plugins on UEditor 1.4.3 and addressing selection, paste, toolbar-state, and multi-instance rich-text edge cases.',
             'Helped turn years of customized UEditor code into an internal reusable package by modularizing the core, cleaning dependencies and plugin boundaries, and supporting both React imports and browser-script integration.',
-          ],
-        },
-        {
-          title: 'Map data and spatial statistics',
-          bullets: [
-            'Led a crowdsourced spatial-data statistics service, building PHP / Yii2 metrics APIs and Python batch jobs; combined Elasticsearch count / search / scroll queries with MySQL business data to measure the collection-to-QA pipeline.',
-            'Extended map-data operations and asynchronous batch QA with Python and PostgreSQL, covering callback deduplication, error deduplication, rework / acceptance state, JSONB exception analysis, multidimensional filtering, statistics, and exports.',
           ],
         },
       ],

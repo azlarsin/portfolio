@@ -28,6 +28,7 @@ export function HomePage() {
               project={project}
               index={index + 1}
               primary={index === 0}
+              spotlight={project.slug === 'baidu-map-workbench'}
             />
           ))}
         </div>

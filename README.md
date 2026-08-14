@@ -11,9 +11,10 @@
 
 主站按阅读目的分成五层：
 
-1. **Overview**：个人定位、能力范围和两个精选案例的入口。
-2. **Selected Work**：三个不同问题类型与证据边界的完整案例。
+1. **Overview**：个人定位、能力范围和四个精选案例的入口。
+2. **Selected Work**：四个不同问题类型与证据边界的完整案例。
    - 企业后台平台化：公开脱敏后的生产系统经历。
+   - 百度地图数据作业：复杂 SVG 地图渲染、数据服务与团队交付。
    - 百家号编辑器：从 UEditor 深度定制到内部复用包的生产系统演进。
    - Layered Route × Agent：公开重建与个人技术研究。
 3. **Experience**：由统一 profile 数据生成、按最近经历优先展示的职业时间线。
@@ -30,6 +31,7 @@
 | --- | --- | --- |
 | `/` | Overview | `pages/HomePage.tsx`、`data/index.ts` |
 | `/work/meican-platform` | 企业后台平台化 | `data/featured/meicanPlatform.ts` |
+| `/work/baidu-map-workbench` | 百度地图数据作业 | `data/featured/baiduMapWorkbench.ts` |
 | `/work/baijiahao-editor` | 百家号编辑器演进 | `data/featured/baijiahaoEditor.ts` |
 | `/work/layered-agent` | Layered Route × Agent | `data/featured/layeredAgent.ts` |
 | `/experience` | 职业经历 | `pages/ExperiencePage.tsx`、`data/profile.json` |
@@ -88,7 +90,7 @@
 
 1. 在 `apps/portfolio/src/data/featured/` 新建 `<slug>.ts`，使用 `satisfies PortfolioProject` 并设置 `tier: 'featured'`。
 2. 使用唯一、稳定的 `slug` 和 `order`，补齐 `provenance`、结果、范围、章节和公开边界。
-3. 在 `data/index.ts` 导入并加入 `featuredProjects`；当前数组显式声明为三个元素的 tuple，增减项目时也要同步调整该类型。在 `data/navigation.ts` 加入精选案例顺序。
+3. 在 `data/index.ts` 导入并加入 `featuredProjects`；当前数组显式声明为四个元素的 tuple，增减项目时也要同步调整该类型。在 `data/navigation.ts` 加入精选案例顺序。
 4. 在 `app/router.ts` 添加 `/work/<slug>` 的路由和页面 metadata，并在主应用的路由渲染映射中接入该项目。
 5. 在 `components/layout/Sidebar.tsx` 更新 Selected Work；在 `components/case-study/NextCase.tsx` 更新案例阅读顺序。
 6. 为首页卡片提供明确视觉，并在 `components/home/FeaturedCase.tsx` 中按 slug 映射。不要让未知 slug 误用其他项目的视觉。

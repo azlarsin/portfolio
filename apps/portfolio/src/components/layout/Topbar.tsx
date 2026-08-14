@@ -20,8 +20,9 @@ export function Topbar({
   const routeLabels: Record<string, string> = {
     home: copy.navigation.overview,
     'meican-platform': `${copy.navigation.selectedWork} · 01`,
-    'baijiahao-editor': `${copy.navigation.selectedWork} · 02`,
-    'layered-agent': `${copy.navigation.selectedWork} · 03`,
+    'baidu-map-workbench': `${copy.navigation.selectedWork} · 02`,
+    'baijiahao-editor': `${copy.navigation.selectedWork} · 03`,
+    'layered-agent': `${copy.navigation.selectedWork} · 04`,
     elpis: `${copy.navigation.projects} · Elpis`,
     experience: copy.navigation.experience,
     archive: copy.navigation.projects,

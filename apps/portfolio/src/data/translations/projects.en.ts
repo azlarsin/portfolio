@@ -162,6 +162,142 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     provenanceNote:
       'This case comes from internal Meican production projects in which I participated. The public version retains only work that can be described and includes no internal screens, data, or business metrics.',
   },
+  'baidu-map-workbench': {
+    title: 'Baidu Maps Data Operations: Complex Map Rendering and Data Services',
+    shortTitle: 'Baidu Maps Data Operations',
+    eyebrow: 'MAP DATA WORKBENCH · PRODUCTION SYSTEM',
+    thesis:
+      'While leading five frontend engineers at Baidu, I contributed to and owned core delivery for map-data operations. On the frontend, I organized roads, tracks, GPS, and business annotations on top of an existing internal SVG map system, handling layered loading, spatial search, and complex editing. On the backend, I led a crowdsourced spatial-statistics service and continued extending Python and PostgreSQL operations and batch-QA flows.',
+    period: '2017.11—2019.11 · Baidu production work',
+    role: 'Map rendering and operations · Data-service design · Frontend leadership',
+    status: 'Internal production systems · Public details sanitized',
+    technologies: [
+      'Vue 2',
+      'JavaScript',
+      'SVG',
+      'RBush',
+      'Python / Tornado',
+      'PostgreSQL / JSONB',
+      'PHP / Yii2',
+      'MySQL',
+      'Elasticsearch',
+    ],
+    impact: [
+      'Contributed core work to a complex map-operations frontend, organizing roads, tracks, GPS, and business annotations through Map, Layer, Feature, and Element boundaries in the internal SVG map system.',
+      'Handled tile-difference loading, spatial indexing, geometric filtering, and selection, editing, association, highlighting, measurement, and dynamic labels; verifiable personal commits also cover bidirectional road-attribute conversion between backend specifications and frontend visual models.',
+      'Led PHP / Yii2 spatial-statistics services and Python batch jobs while extending asynchronous QA, callback deduplication, rework / acceptance state, and JSONB exception analysis in the Python / PostgreSQL operations backend.',
+      'Used Elasticsearch count / search / scroll and MySQL business records to derive stage timings across collection, matching, command, recycling, and QA.',
+      'Led five frontend engineers delivering map operations, statistics consoles, and related tools, including task breakdown, technical design, difficult issues, and code review.',
+    ],
+    scope: [
+      'Layered SVG map rendering and multi-layer loading',
+      'Tile-difference loading, viewport culling, spatial indexing, and geometry',
+      'Road, track, GPS, lane, and traffic-facility features',
+      'Selection, editing, association, highlighting, measurement, and dynamic labels',
+      'Python / Tornado and PostgreSQL / JSONB operations flows',
+      'PHP / Yii2 metrics APIs, Python batch jobs, and Elasticsearch / MySQL queries',
+      'Task breakdown, technical review, and code review for a five-person frontend team',
+    ],
+    facts: [
+      { label: 'System', value: 'Internal Baidu Maps data-collection and operations platform' },
+      { label: 'Two tracks', value: 'Complex SVG map rendering · Backend and team delivery' },
+      { label: 'Role', value: 'Core development · Data-service design · Lead for five frontend engineers' },
+      { label: 'Period', value: '2017.11—2019.11 · Baidu' },
+    ],
+    chapters: [
+      {
+        id: 'context',
+        title: 'Scope: internal map-data operations, not the consumer map',
+        paragraphs: [
+          'This work supported internal data collection, annotation, QA, and spatial statistics for Baidu Maps rather than the consumer-facing map. Roads, tracks, GPS, imagery, and many business annotations had to share one operations context while task state and metrics connected to backend workflows.',
+          'My work followed two explicit tracks: contributing core frontend implementation and leading frontend delivery for complex map operations, while leading the spatial-statistics service and extending batch QA and data flows in an existing Python and PostgreSQL operations platform.',
+        ],
+        phase: 'Baidu production work',
+      },
+      {
+        id: 'rendering-architecture',
+        title: 'Complex map rendering: layered spatial features',
+        summary: 'An existing internal SVG map system separated map state, layers, domain semantics, and graphic elements through Map, Layer, Feature, and Element boundaries.',
+        paragraphs: [
+          'This was not a conventional console with a few markers over a basemap. Recovered source shows Map, Layer, Feature, and Element boundaries: Map handled view and coordinates; Layer owned loading and visibility; Feature represented roads, tracks, lanes, and traffic facilities; Element rendered SVG polylines, polygons, text, and icons.',
+          'Within that existing system, I contributed core operations capabilities and helped organize reference roads, public tracks, GPS, mesh cells, annotations, and QA information as composable layers. The claim is complex map-application engineering, not sole authorship of the underlying map engine.',
+        ],
+        bullets: [
+          'Rendering structure: Map → Layer → Feature → Element',
+          'Spatial features: roads · tracks · GPS · lanes · speed limits · traffic facilities · QA marks',
+          'Graphics: SVG Polyline · Polygon · Text · Icon elements',
+        ],
+        phase: 'Core frontend work / team collaboration',
+      },
+      {
+        id: 'viewport-and-space',
+        title: 'Viewport loading, spatial indexing, and geometry',
+        paragraphs: [
+          'Panning and zooming continuously changed the visible dataset. Layers computed tile differences, requested only newly visible ranges, canceled stale requests, and adjusted grid and track rendering by zoom instead of rebuilding all content for every view change.',
+          'Spatial search first narrowed candidates through an R-tree bounding-box index, then applied geometry for point-to-line relationships, intersections, distances, and rectangle queries. This supported hit testing, nearby-road search, track association, measurement, and highlighting.',
+        ],
+        bullets: [
+          'Tile differences: request entering ranges · remove leaving ranges · cancel stale requests',
+          'Spatial search: RBush bounding boxes · precise geometric filtering',
+          'Zoom strategy: adjust layers, feature density, and visual parameters',
+        ],
+        phase: 'Rendering and performance boundaries',
+      },
+      {
+        id: 'workbench-interactions',
+        title: 'Operations interaction across maps, imagery, and task state',
+        paragraphs: [
+          'Operators compared plan views with photos, panoramas, or top-view imagery and selected, edited, and associated road names, lanes, speed limits, turns, and traffic facilities. The map also coordinated reference data, active annotations, differences, and QA findings.',
+          'Directly attributable commits also cover road-attribute adaptation: bidirectional conversion of time conditions, vehicle-type bitmasks, and lane composition between backend TTFA rules and frontend visual models, including compatibility across specification revisions.',
+          'Layer visibility, selection, history, tools, and task state jointly drove the frontend. Highlighting, measurement, dynamic labels, and reference tracks were operational aids for decisions and edits in dense spatial context, not isolated visual effects.',
+        ],
+        phase: 'Map-data operations workbench',
+      },
+      {
+        id: 'backend-workflow',
+        title: 'Backend design: task state and asynchronous batch QA',
+        paragraphs: [
+          'In the Python / Tornado and PostgreSQL operations platform, I extended submission, batch QA, rework, and acceptance. External QA jobs connected through create requests and success or failure callbacks; the business layer validated callback data, blocked duplicate handling, deduplicated error items, and wrote results back into task state.',
+          'PostgreSQL JSONB supported filtering, pagination, metrics, and reason updates for exception records. State transitions used row locking and QA logs to reduce conflicts between asynchronous callbacks and manual operations. My scope was business workflow and querying rather than authorship of the existing database connection layer.',
+        ],
+        bullets: [
+          'State flow: work submission · batch QA · rework · repair · acceptance',
+          'Async safety: callback validation · duplicate-callback protection · error-item deduplication',
+          'Data handling: PostgreSQL row locks · JSONB exception records and analysis',
+        ],
+        phase: 'Python / PostgreSQL production flow',
+      },
+      {
+        id: 'statistics-pipeline',
+        title: 'Statistics service: connecting business records and search logs',
+        paragraphs: [
+          'I led development of the crowdsourced spatial-data statistics service. PHP / Yii2 APIs covered batches, tasks, devices, tracks, road segments, time, and mileage, while Python jobs scheduled statistics at batch, daily, hourly, and fifteen-minute intervals and extracted and classified geographic data.',
+          'Pipeline timing used Elasticsearch count / search / scroll over state logs and joined the results to MySQL business records to derive collection, matching, command, recycling, and QA durations. This was query integration and data correlation, not Elasticsearch cluster setup, operations, or low-level optimization.',
+        ],
+        phase: 'PHP / Yii2 · Python · Elasticsearch / MySQL',
+      },
+      {
+        id: 'team-delivery',
+        title: 'Team delivery: five frontend engineers and cross-stack work',
+        paragraphs: [
+          'At Baidu I led five frontend engineers across map-data operations, statistics consoles, and the Baijiahao editor. I combined task breakdown, technical design, and code review with direct work on critical map interactions and difficult implementation issues.',
+          'On the backend, I directly led the statistics service and continued contributing Python and PostgreSQL business capabilities to the existing operations platform. This case separates personal code, team delivery, and pre-existing infrastructure instead of treating leadership as proof of authorship.',
+        ],
+        phase: 'Frontend lead · Cross-stack delivery',
+      },
+      {
+        id: 'boundaries',
+        title: 'Evidence and technology boundaries',
+        paragraphs: [
+          'This public case is based on my work history, retained source, and verifiable commit history and includes no internal screens, real map data, or unauthorized screenshots. The rendering source establishes the system architecture and interaction complexity but lacks complete original history, so I do not claim sole authorship of the map engine.',
+          'Backend commits support the PHP / Yii2, Python / Tornado, PostgreSQL / JSONB, MySQL, and Elasticsearch query work. Kafka was project-level usage experience and is not presented as a design or platform-building outcome; Elasticsearch usage is likewise not described as cluster engineering.',
+        ],
+        phase: 'Public disclosure boundary',
+      },
+    ],
+    provenanceNote:
+      'This case is based on my Baidu work history, retained source, and verifiable commits. The rendering section describes the operations frontend scope in which I participated and held responsibility without treating an internally shared map foundation with incomplete history as my sole work; backend and team claims are attributed separately to commits and résumé evidence.',
+  },
   'baijiahao-editor': {
     title: 'Baijiahao Editor: From Deep UEditor Customization to an Internal Reusable Package',
     shortTitle: 'Baijiahao Editor Evolution',

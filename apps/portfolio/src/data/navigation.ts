@@ -1,5 +1,6 @@
 import { archiveProjects } from './archive'
 import { baijiahaoEditorProject } from './featured/baijiahaoEditor'
+import { baiduMapWorkbenchProject } from './featured/baiduMapWorkbench'
 import { layeredAgentProject } from './featured/layeredAgent'
 import { meicanPlatformProject } from './featured/meicanPlatform'
 import type { PortfolioProject, ProjectNavigationGroup } from './types'
@@ -20,9 +21,12 @@ export const projectNavigation: ProjectNavigationGroup[] = [
   {
     id: 'featured',
     label: '精选案例',
-    items: [meicanPlatformProject, baijiahaoEditorProject, layeredAgentProject].map(
-      toNavigationItem,
-    ),
+    items: [
+      meicanPlatformProject,
+      baiduMapWorkbenchProject,
+      baijiahaoEditorProject,
+      layeredAgentProject,
+    ].map(toNavigationItem),
   },
   {
     id: 'archive',

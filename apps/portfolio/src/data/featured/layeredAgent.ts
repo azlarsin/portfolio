@@ -34,7 +34,7 @@ const manifestSummary = [
 
 export const layeredAgentProject = {
   slug: 'layered-agent',
-  order: 3,
+  order: 4,
   tier: 'featured',
   provenance: 'public-reconstruction',
   title: 'Layered Route × Agent：基于页面行为约束的任务执行',

@@ -16,10 +16,12 @@ export function NextCase({ project }: { project: PortfolioProject }) {
 
   const next =
     project.slug === 'meican-platform'
-      ? { path: '/work/baijiahao-editor', label: copy.caseStudy.nextEditor }
-      : project.slug === 'baijiahao-editor'
-        ? { path: '/work/layered-agent', label: copy.caseStudy.nextAgent }
-        : { path: '/experience', label: copy.caseStudy.nextExperience }
+      ? { path: '/work/baidu-map-workbench', label: copy.caseStudy.nextMap }
+      : project.slug === 'baidu-map-workbench'
+        ? { path: '/work/baijiahao-editor', label: copy.caseStudy.nextEditor }
+        : project.slug === 'baijiahao-editor'
+          ? { path: '/work/layered-agent', label: copy.caseStudy.nextAgent }
+          : { path: '/experience', label: copy.caseStudy.nextExperience }
 
   return (
     <footer className="next-case">

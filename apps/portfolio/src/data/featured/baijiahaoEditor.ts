@@ -2,7 +2,7 @@ import type { PortfolioProject } from '../types'
 
 export const baijiahaoEditorProject = {
   slug: 'baijiahao-editor',
-  order: 2,
+  order: 3,
   tier: 'featured',
   provenance: 'production',
   title: '百家号编辑器：从 UEditor 深度定制到内部复用包',

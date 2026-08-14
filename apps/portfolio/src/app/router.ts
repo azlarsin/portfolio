@@ -18,7 +18,7 @@ export const ROUTES = {
     meta: {
       title: '陈成｜前端技术负责人 · 全栈与复杂系统工程',
       description:
-        '陈成，拥有 10+ 年前端与全栈经验。职业前期覆盖客户端、PHP / Python 服务、数据库与部署；近年聚焦复杂前端系统、业务 SDK、跨端应用与团队管理。',
+        '陈成，拥有 10+ 年前端与全栈经验，覆盖复杂前端架构、百度地图数据作业、PHP / Python 服务、业务 SDK、跨端应用与团队管理。',
     },
   },
   MEICAN_PLATFORM: {
@@ -27,6 +27,14 @@ export const ROUTES = {
     meta: {
       title: '企业后台架构改造｜陈成作品集',
       description: '大型企业后台的公共宿主、独立业务应用、嵌入页面与业务 SDK 架构。',
+    },
+  },
+  BAIDU_MAP_WORKBENCH: {
+    id: 'baidu-map-workbench',
+    path: '/work/baidu-map-workbench',
+    meta: {
+      title: '百度地图数据作业｜陈成作品集',
+      description: '复杂 SVG 地图作业、Python / PHP 数据服务与 5 人前端团队交付实践。',
     },
   },
   BAIJIAHAO_EDITOR: {
