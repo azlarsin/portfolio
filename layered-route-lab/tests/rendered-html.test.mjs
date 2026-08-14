@@ -38,8 +38,38 @@ test("server-renders the route lab shell", async () => {
   assert.match(html, /\/products/);
   assert.match(html, /Push page/);
   assert.match(html, /Derive modal/);
+  assert.match(html, /Guide/);
   assert.doesNotMatch(html, /Route reconstruction|Stack debugger/);
   assert.doesNotMatch(html, /react-loading-skeleton|codex-preview/i);
+});
+
+test("the onboarding guide connects route layers to the constrained Agent loop", async () => {
+  const [app, guide, overlay] = await Promise.all([
+    readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/ExperienceGuide.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(app, /GUIDE_SESSION_KEY/);
+  assert.match(app, /params\.get\("agent_demo"\) !== "1"/);
+  assert.match(app, /!params\.has\("agent_cmd"\)/);
+  assert.match(app, /<ExperienceGuide/);
+  assert.match(app, /onPushTemporaryPresenter=\{pushPresenter\}/);
+  assert.match(app, /onOpenAgent=\{openAgentFromGuide\}/);
+
+  assert.match(guide, /先看页面层，再看 Agent/);
+  assert.match(guide, /Route Presenter/);
+  assert.match(guide, /Temp Presenter · Modal/);
+  assert.match(guide, /URL 保持不变/);
+  assert.match(guide, /匹配 Manifest/);
+  assert.match(guide, /本地 planner 与合成数据/);
+  assert.match(guide, /不调用线上模型或业务 API/);
+
+  assert.match(overlay, /把任务变成可验证的宿主动作/);
+  assert.match(overlay, /只调用 Manifest 允许的动作/);
+  assert.match(overlay, /检查 URL、界面层与数据结果/);
+  assert.match(overlay, /openRequest/);
+  assert.match(overlay, /页面层指南/);
 });
 
 test("deep links are served by the frontend catch-all", async () => {

@@ -11,6 +11,7 @@ import {
 } from "react";
 import Modal, { ModalRecord } from "./core/Modal";
 import Presenter from "./core/Presenter";
+import ExperienceGuide from "./ExperienceGuide";
 import AgentDemoOverlay from "./agent/AgentDemoOverlay";
 import {
   APP_INSPECTION_SETTLE_MS,
@@ -105,6 +106,7 @@ type NavigationMode = "push" | "replace" | "pop";
 type InspectionMode = "off" | "stack" | "grid";
 type AgentPlaybackMode = "normal" | "paced";
 const LOCATION_CHANGE_EVENT = "layered-route-lab:location-change";
+const GUIDE_SESSION_KEY = "layered-route-lab:guide-seen:v1";
 
 interface PendingPresenterNavigation {
   path: string;
@@ -183,6 +185,8 @@ export default function App({
     useState<InspectionMode>("off");
   const [agentPlaybackMode, setAgentPlaybackMode] =
     useState<AgentPlaybackMode>("paced");
+  const [guideOpen, setGuideOpen] = useState(false);
+  const [agentOpenRequest, setAgentOpenRequest] = useState(0);
   const [leavingPresenterPath, setLeavingPresenterPath] = useState<
     string | null
   >(null);
@@ -244,6 +248,18 @@ export default function App({
   useEffect(() => {
     pathnameRef.current = pathname;
   }, [pathname]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shouldOpen = params.get("guide") === "1" || (
+      params.get("agent_demo") !== "1" &&
+      !params.has("agent_cmd") &&
+      window.sessionStorage.getItem(GUIDE_SESSION_KEY) !== "seen"
+    );
+    if (!shouldOpen) return;
+    const timer = window.setTimeout(() => setGuideOpen(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     presentersRef.current = presenters;
@@ -578,6 +594,16 @@ export default function App({
     );
   }, []);
 
+  const closeGuide = useCallback(() => {
+    setGuideOpen(false);
+    window.sessionStorage.setItem(GUIDE_SESSION_KEY, "seen");
+  }, []);
+
+  const openAgentFromGuide = useCallback(() => {
+    closeGuide();
+    setAgentOpenRequest((request) => request + 1);
+  }, [closeGuide]);
+
   useEffect(() => {
     const pendingResponses = new Map<number, string>();
 
@@ -851,6 +877,19 @@ export default function App({
               <code>{currentRoute.path}</code>
             </div>
             <div className="bar-actions" aria-label="Layer controls">
+              <button
+                type="button"
+                className={`guide-trigger ${guideOpen ? "active" : ""}`}
+                aria-expanded={guideOpen}
+                aria-controls="experience-guide"
+                onClick={() => {
+                  if (guideOpen) closeGuide();
+                  else setGuideOpen(true);
+                }}
+              >
+                <span>Guide</span>
+                <kbd>2 min</kbd>
+              </button>
               <button type="button" onClick={pushNext}>
                 <span>Push page</span>
                 <kbd>⇧ N</kbd>
@@ -882,6 +921,24 @@ export default function App({
               </button>
             </div>
           </header>
+
+          <ExperienceGuide
+            open={guideOpen}
+            routePath={currentRoute.path}
+            routeDepth={routeStack.length}
+            temporaryPresenterDepth={presenters.length}
+            modalDepth={modals.length}
+            inspectionMode={inspectionMode}
+            canAdvanceRoute={Boolean(currentRoute.nextPath)}
+            onClose={closeGuide}
+            onAdvanceRoute={() => {
+              if (currentRoute.nextPath) navigate(currentRoute.nextPath);
+            }}
+            onPushTemporaryPresenter={pushPresenter}
+            onOpenModal={openModal}
+            onCycleInspection={cycleInspectionMode}
+            onOpenAgent={openAgentFromGuide}
+          />
 
           <div
             className="stage"
@@ -980,7 +1037,10 @@ export default function App({
             </div>
           </div>
         </section>
-        <AgentDemoOverlay />
+        <AgentDemoOverlay
+          openRequest={agentOpenRequest}
+          onOpenGuide={() => setGuideOpen(true)}
+        />
       </main>
     </AppContext.Provider>
   );

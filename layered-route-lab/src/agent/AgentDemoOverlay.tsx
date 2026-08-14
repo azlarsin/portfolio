@@ -25,6 +25,11 @@ import "./agent-demo.css";
 
 type AgentTab = "run" | "knowledge" | "trace";
 
+interface AgentDemoOverlayProps {
+  openRequest?: number;
+  onOpenGuide?: () => void;
+}
+
 const AGENT_STEP_DELAY_MS = 500;
 
 function wait(duration: number) {
@@ -310,7 +315,10 @@ function StepStatus({
   return <span className="agent-step-status">{String(index + 1).padStart(2, "0")}</span>;
 }
 
-export default function AgentDemoOverlay() {
+export default function AgentDemoOverlay({
+  openRequest = 0,
+  onOpenGuide,
+}: AgentDemoOverlayProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<AgentTab>("run");
   const [command, setCommand] = useState("");
@@ -426,6 +434,7 @@ export default function AgentDemoOverlay() {
     const params = new URLSearchParams(window.location.search);
     const sharedCommand = params.get("agent_cmd")?.slice(0, 240);
     const timer = window.setTimeout(() => {
+      if (params.get("guide") === "1") return;
       if (sharedCommand) {
         setSharedTask(true);
         setOpen(true);
@@ -439,6 +448,15 @@ export default function AgentDemoOverlay() {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [preparePlan]);
+
+  useEffect(() => {
+    if (openRequest < 1) return;
+    const timer = window.setTimeout(() => {
+      setOpen(true);
+      setTab("run");
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [openRequest]);
 
   useEffect(() => {
     if (!open || tab !== "run" || running) return;
@@ -526,7 +544,7 @@ export default function AgentDemoOverlay() {
         <span className="agent-logo" aria-hidden="true">A</span>
         <span>
           <strong>Agent Demo</strong>
-          <small>输入自然语言操作 Layered Route Lab</small>
+          <small>自然语言 → 受约束动作 → 结果校验</small>
         </span>
         <kbd>⌘ K</kbd>
       </button>
@@ -556,7 +574,7 @@ export default function AgentDemoOverlay() {
                 <span className="agent-logo" aria-hidden="true">A</span>
                 <div>
                   <strong>LAB AGENT</strong>
-                  <span>ROUTE AST · SOURCE SCAN · PUBLIC DEMO</span>
+                  <span>UNDERSTAND · EXECUTE · VERIFY</span>
                 </div>
               </div>
               <button
@@ -607,6 +625,34 @@ export default function AgentDemoOverlay() {
             <div className="agent-panel-body">
               {tab === "run" ? (
                 <div className="agent-run-view">
+                  <section className="agent-role-guide" aria-labelledby="agent-role-title">
+                    <header>
+                      <span>AGENT ROLE</span>
+                      {onOpenGuide ? (
+                        <button
+                          type="button"
+                          disabled={running}
+                          onClick={() => {
+                            setOpen(false);
+                            onOpenGuide();
+                          }}
+                        >
+                          页面层指南 ↗
+                        </button>
+                      ) : null}
+                    </header>
+                    <h2 id="agent-role-title">把任务变成可验证的宿主动作</h2>
+                    <div className="agent-role-flow">
+                      <div><span>01 · 理解</span><strong>从任务提取路由与实体</strong></div>
+                      <div><span>02 · 执行</span><strong>只调用 Manifest 允许的动作</strong></div>
+                      <div><span>03 · 校验</span><strong>检查 URL、界面层与数据结果</strong></div>
+                    </div>
+                    <p>
+                      它不依赖坐标点击，也不在信息缺失时猜测。公开版使用本地 planner
+                      与合成数据，不调用线上模型或业务 API。
+                    </p>
+                  </section>
+
                   {sharedTask ? (
                     <div className="agent-shared-banner">
                       <strong>来自 agent_cmd 的分享任务</strong>

@@ -293,6 +293,87 @@
   gap: 13px;
 }
 
+.agent-role-guide {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(200, 255, 96, 0.09), rgba(92, 112, 197, 0.08));
+  border: 1px solid rgba(200, 255, 96, 0.24);
+  border-radius: 11px;
+}
+
+.agent-role-guide > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.agent-role-guide > header > span {
+  color: var(--signal);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+}
+
+.agent-role-guide > header button {
+  padding: 4px 7px;
+  color: #aeb6d3;
+  background: rgba(30, 34, 51, 0.8);
+  border: 1px solid #3b4057;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 7px;
+}
+
+.agent-role-guide > header button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.agent-role-guide h2 {
+  margin: 0;
+  font-size: 14px;
+  letter-spacing: -0.025em;
+}
+
+.agent-role-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.agent-role-flow > div {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 5px;
+  padding: 8px;
+  background: rgba(20, 23, 35, 0.76);
+  border: 1px solid #30364a;
+  border-radius: 8px;
+}
+
+.agent-role-flow span {
+  color: #8d96b4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 6px;
+}
+
+.agent-role-flow strong {
+  color: #dce2f1;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.agent-role-guide > p {
+  margin: 0;
+  color: #8d95ad;
+  font-size: 9px;
+  line-height: 1.6;
+}
+
 .agent-shared-banner,
 .agent-clarification {
   padding: 11px 12px;
@@ -947,11 +1028,35 @@
 
   .agent-panel-title span:last-child,
   .agent-status-strip span,
+  .agent-role-guide > header > span,
+  .agent-role-guide > header button,
   .agent-command-form label,
   .agent-suggestions > span,
   .agent-source-list > span,
   .agent-action-list > span {
     font-size: 8px;
+  }
+
+  .agent-role-guide > header button {
+    min-height: 36px;
+    padding-inline: 10px;
+  }
+
+  .agent-role-guide h2 {
+    font-size: 16px;
+  }
+
+  .agent-role-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-role-flow span,
+  .agent-role-guide > p {
+    font-size: 9px;
+  }
+
+  .agent-role-flow strong {
+    font-size: 11px;
   }
 
   .agent-command-form input,
