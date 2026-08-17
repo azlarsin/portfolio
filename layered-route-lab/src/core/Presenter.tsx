@@ -103,6 +103,7 @@ export default function Presenter({
   const d3 = inspectionMode !== "off";
   const pageActive = (isTop || d3) && !leaving;
   const previousPageActiveRef = useRef<boolean | null>(null);
+  const previousInspectionModeRef = useRef(inspectionMode);
   const lifecycleTimerRef = useRef<number | null>(null);
   const [lifecycle] = useState(() =>
     createPresenterLifecycle(
@@ -118,14 +119,20 @@ export default function Presenter({
 
   useEffect(() => {
     const previousPageActive = previousPageActiveRef.current;
+    const inspectionModeChanged =
+      previousInspectionModeRef.current !== inspectionMode;
     previousPageActiveRef.current = pageActive;
+    previousInspectionModeRef.current = inspectionMode;
 
     if (lifecycleTimerRef.current !== null) {
       window.clearTimeout(lifecycleTimerRef.current);
       lifecycleTimerRef.current = null;
     }
 
-    if (pageActive) {
+    if (
+      pageActive &&
+      (previousPageActive !== pageActive || (d3 && inspectionModeChanged))
+    ) {
       lifecycle.emit("willAppear");
       lifecycleTimerRef.current = window.setTimeout(() => {
         lifecycle.emit("didAppear");
@@ -145,7 +152,7 @@ export default function Presenter({
         lifecycleTimerRef.current = null;
       }
     };
-  }, [lifecycle, pageActive]);
+  }, [d3, inspectionMode, lifecycle, pageActive]);
 
   useEffect(() => {
     if (

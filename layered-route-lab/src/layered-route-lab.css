@@ -901,6 +901,8 @@
 }
 
 .stage[data-d3-mode="grid"] .presenter-push-button {
+  top: clamp(12px, 2vw, 24px);
+  right: clamp(12px, 2vw, 24px);
   min-height: 28px;
   padding: 0 9px;
   font-size: 7px;
@@ -984,6 +986,7 @@
 }
 
 .surface-content-minimal {
+  position: relative;
   justify-content: center;
 }
 
@@ -1001,6 +1004,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
+  padding-right: 160px;
 }
 
 .page-flags {
@@ -1039,8 +1043,10 @@
 }
 
 .presenter-push-button {
-  position: relative;
+  position: absolute;
   z-index: 5;
+  top: clamp(28px, 5vw, 72px);
+  right: clamp(28px, 5vw, 72px);
   min-height: 38px;
   padding: 0 14px;
   color: var(--ink);
@@ -1050,6 +1056,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 9px;
   font-weight: 800;
+  white-space: nowrap;
   cursor: pointer;
 }
 
@@ -1505,6 +1512,8 @@
   }
 
   .presenter-push-button {
+    top: 24px;
+    right: 18px;
     min-height: 42px;
     padding-inline: 13px;
     font-size: 11px;
@@ -1560,6 +1569,8 @@
   }
 
   .stage[data-d3-mode="grid"] .presenter-push-button {
+    top: 10px;
+    right: 10px;
     min-height: 32px;
     padding: 0 9px;
     font-size: 10px;

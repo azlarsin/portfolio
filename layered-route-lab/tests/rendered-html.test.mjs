@@ -297,7 +297,7 @@ test("presenter leave keeps the surface mounted until transition completion", as
   );
 });
 
-test("large list pages release tables while loading and remain visible in 3D", async () => {
+test("large list pages reload in 3D without compressing their content", async () => {
   const [productsResponse, ordersResponse, presenter, lifecycle, business, css, data] =
     await Promise.all([
       render("/products"),
@@ -337,12 +337,14 @@ test("large list pages release tables while loading and remain visible in 3D", a
   assert.match(business, /state\.loading \? \(/);
   assert.match(business, /demo-list-spinner/);
   assert.match(presenter, /const pageActive = \(isTop \|\| d3\) && !leaving/);
-  assert.match(css, /\.demo-lifecycle-list\[data-loading="true"\][\s\S]*?min-height/);
-  assert.match(css, /\.stage\[data-d3="true"\] \.demo-business-surface \{[\s\S]*?gap: 10px/);
-  assert.doesNotMatch(
-    css,
-    /\.stage\[data-d3="true"\] \.demo-business-surface \{\s*display: none/,
+  assert.match(presenter, /previousInspectionModeRef/);
+  assert.match(presenter, /d3 && inspectionModeChanged/);
+  assert.match(
+    presenter,
+    /\[d3, inspectionMode, lifecycle, pageActive\]/,
   );
+  assert.match(css, /\.demo-lifecycle-list\[data-loading="true"\][\s\S]*?min-height/);
+  assert.doesNotMatch(css, /\.stage\[data-d3/);
   assert.match(data, /\{ length: 72 \}/);
   assert.match(data, /\{ length: 96 \}/);
 });
@@ -456,6 +458,18 @@ test("3D mode tiles every presenter by its index target", async () => {
   );
   assert.match(presenter, />\s*presenter\.push\(\)\s*</);
   assert.match(presenter, /event\.stopPropagation\(\)/);
+  assert.match(
+    css,
+    /\.surface-content-minimal \{[\s\S]*?position: relative/,
+  );
+  assert.match(
+    css,
+    /\.presenter-title-row \{[\s\S]*?padding-right: 160px/,
+  );
+  assert.match(
+    css,
+    /\.presenter-push-button \{[\s\S]*?position: absolute[\s\S]*?top: clamp\(28px, 5vw, 72px\)[\s\S]*?right: clamp\(28px, 5vw, 72px\)/,
+  );
   assert.match(app, /onPush=\{pushNext\}/);
 });
 

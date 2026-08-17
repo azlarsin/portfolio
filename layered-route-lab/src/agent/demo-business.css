@@ -349,69 +349,6 @@
   font-weight: 800;
 }
 
-.stage[data-d3="true"] .demo-business-surface {
-  gap: 10px;
-  margin-top: 18px;
-}
-
-.stage[data-d3="true"] .demo-kpi-grid {
-  gap: 6px;
-}
-
-.stage[data-d3="true"] .demo-kpi-grid article {
-  padding: 10px;
-}
-
-.stage[data-d3="true"] .demo-kpi-grid strong {
-  margin-top: 5px;
-  font-size: clamp(20px, 3vw, 34px);
-}
-
-.stage[data-d3="true"] .demo-table-shell {
-  max-height: 280px;
-}
-
-.stage[data-d3="true"] .demo-table th,
-.stage[data-d3="true"] .demo-table td {
-  padding: 7px 8px;
-}
-
-.stage[data-d3="true"] .demo-lifecycle-list[data-loading="true"] {
-  min-height: 180px;
-}
-
-.stage[data-d3="true"] .demo-list-spinner span {
-  width: 34px;
-  border-width: 3px;
-}
-
-.stage[data-d3-mode="grid"] .demo-business-surface {
-  gap: 7px;
-  margin-top: 12px;
-}
-
-.stage[data-d3-mode="grid"] .demo-kpi-grid article {
-  padding: 7px;
-}
-
-.stage[data-d3-mode="grid"] .demo-kpi-grid article > span,
-.stage[data-d3-mode="grid"] .demo-kpi-grid p {
-  display: none;
-}
-
-.stage[data-d3-mode="grid"] .demo-table-shell {
-  max-height: 180px;
-}
-
-.stage[data-d3-mode="grid"] .demo-table {
-  font-size: 8px;
-}
-
-.stage[data-d3-mode="grid"] .demo-table th,
-.stage[data-d3-mode="grid"] .demo-table td {
-  padding: 5px 6px;
-}
-
 @media (max-width: 720px) {
   .demo-business-surface {
     gap: 14px;
