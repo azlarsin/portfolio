@@ -69,6 +69,17 @@ export const DEMO_ROUTE_TREE: readonly DemoRouteNode[] = [
           },
         ],
       },
+      {
+        path: "/product/2",
+        children: [
+          {
+            path: "/product/2/orders",
+            children: [
+              { path: "/product/2/order/2" },
+            ],
+          },
+        ],
+      },
     ],
   },
   {

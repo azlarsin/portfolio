@@ -46,9 +46,9 @@ async function loadPlanner() {
 test("static manifest is connected, unique, and parent-complete", () => {
   assert.equal(manifest.analysisMode, "route-ast+source-feature-scan");
   assert.equal(manifest.routeSchemas.length, 12);
-  assert.equal(manifest.routeInstances.length, 13);
+  assert.equal(manifest.routeInstances.length, 16);
   assert.equal(manifest.surfaces.length, 3);
-  assert.equal(manifest.actions.length, 6);
+  assert.equal(manifest.actions.length, 7);
   assert.match(manifest.sourceHash, /^[a-f0-9]{12}$/);
 
   const paths = manifest.routeInstances.map((route) => route.path);
@@ -58,6 +58,23 @@ test("static manifest is connected, unique, and parent-complete", () => {
     if (route.parentPath) assert.ok(pathSet.has(route.parentPath));
     for (const childPath of route.childPaths) assert.ok(pathSet.has(childPath));
   }
+});
+
+test("product 2 demo branch is parent-complete", () => {
+  const productPaths = [
+    "/products",
+    "/product/2",
+    "/product/2/orders",
+    "/product/2/order/2",
+  ];
+  const instances = new Map(
+    manifest.routeInstances.map((route) => [route.path, route]),
+  );
+
+  for (const path of productPaths) assert.ok(instances.has(path));
+  assert.equal(instances.get(productPaths[1]).parentPath, productPaths[0]);
+  assert.equal(instances.get(productPaths[2]).parentPath, productPaths[1]);
+  assert.equal(instances.get(productPaths[3]).parentPath, productPaths[2]);
 });
 
 test("employee lookup branch is a complete four-level route chain", () => {

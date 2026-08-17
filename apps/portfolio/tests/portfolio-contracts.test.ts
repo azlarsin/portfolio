@@ -148,6 +148,20 @@ describe('portfolio acceptance contracts', () => {
     expect(featuredProjects.every((project) => project.tier === 'featured')).toBe(true)
   })
 
+  it('keeps the two dense case diagrams vertically readable', () => {
+    const cssPath = fileURLToPath(new URL('../src/styles/components.css', import.meta.url))
+    const css = readFileSync(cssPath, 'utf8')
+
+    expect(css).toMatch(
+      /\.system-evolution-visual ol \{[\s\S]*?grid-template-columns: 1fr/,
+    )
+    expect(css).toMatch(
+      /\.map-workbench-tracks \{[\s\S]*?grid-template-columns: 1fr/,
+    )
+    expect(css).toMatch(/\.map-rendering-flow \{\s*grid-template-columns: 1fr/)
+    expect(css).toMatch(/\.map-data-flow \{\s*grid-template-columns: 1fr/)
+  })
+
   it('keeps the Meican delivery metric and current platform status explicit', () => {
     expect(meicanPlatformProject.period).toBe('2019.11—2026.06')
     expect(meicanPlatformProject.impact[0]).toBe(

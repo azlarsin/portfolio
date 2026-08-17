@@ -39,6 +39,8 @@ test("server-renders the route lab shell", async () => {
   assert.match(html, /Push page/);
   assert.match(html, /Derive modal/);
   assert.match(html, /Guide/);
+  assert.match(html, /Current stack/);
+  assert.match(html, /Route and Presenter stack/);
   assert.doesNotMatch(html, /Route reconstruction|Stack debugger/);
   assert.doesNotMatch(html, /react-loading-skeleton|codex-preview/i);
 });
@@ -221,6 +223,7 @@ test("route reconstruction uses a branched behavior tree", async () => {
     /path: "\/product\/1\/orders\/paid\/order\/1"/,
   );
   assert.match(routes, /path: "\/employees"/);
+  assert.match(routes, /path: "\/product\/2\/order\/2"/);
   assert.match(routes, /path: "\/employee\/A-17\/order\/1"/);
   assert.match(routes, /function flattenDemoRouteTree/);
   assert.match(presenter, /data-reconstructible=\{reconstructible\}/);
@@ -387,30 +390,50 @@ test("3D mode tiles every presenter by its index target", async () => {
   assert.match(app, /top: stage\.scrollHeight/);
   assert.match(app, /behavior: "auto"/);
 
-  assert.match(app, /const focusRoutePresenter = useCallback/);
-  assert.match(app, /const focusPushedPresenter = useCallback/);
+  assert.match(app, /const closeUntilUid = useCallback/);
+  assert.match(app, /presenter\.id === uid/);
+  assert.match(app, /route\.path === uid/);
+  assert.match(app, /pendingFocusedRouteRef\.current = targetRoute\.path/);
   assert.match(
     app,
     /window\.history\.go\(remaining\.length - historyDepth\)/,
   );
   assert.match(presenter, /onSelect\(\)/);
+  assert.match(presenter, /className="presenter-grid-target"/);
+  assert.match(
+    css,
+    /\.stage\[data-d3-mode="grid"\] \.presenter-grid-target[\s\S]*?position: absolute/,
+  );
   assert.match(presenter, />\s*presenter\.push\(\)\s*</);
   assert.match(presenter, /event\.stopPropagation\(\)/);
   assert.match(app, /onPush=\{pushNext\}/);
 });
 
-test("project controls live in the header without a project sider", async () => {
-  const [app, css] = await Promise.all([
+test("route rail combines route navigation with route-less presenters", async () => {
+  const [app, routeRail, css] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/RouteRail.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/layered-route-lab.css", import.meta.url), "utf8"),
   ]);
 
-  assert.doesNotMatch(app, /<aside|side-panel|demoRouteNodes/);
+  assert.match(app, /<RouteRail/);
+  assert.match(app, /temporaryPresenters=\{temporaryPresenterLayers\}/);
+  assert.match(app, /onCloseUntilUid=\{closeUntilUid\}/);
+  assert.match(routeRail, /<aside className="route-rail"/);
+  assert.match(routeRail, /className="route-composition-path"/);
+  assert.match(routeRail, /className="route-presenter-array"/);
+  assert.match(routeRail, /flattenDemoRouteTree\(\)/);
   assert.match(app, /<header className="workbench-bar">/);
   assert.match(app, /<div className="bar-actions" aria-label="Layer controls">/);
   assert.match(app, /<span>Push page<\/span>[\s\S]*?<kbd>⇧ N<\/kbd>/);
   assert.match(app, /<span>Derive modal<\/span>[\s\S]*?<kbd>⇧ M<\/kbd>/);
-  assert.doesNotMatch(css, /\.side-panel|--sidebar-width/);
+  assert.match(css, /--route-rail-width: 300px/);
+  assert.match(css, /\.route-rail \{/);
+  assert.match(css, /\.lab-route-list \{/);
+  assert.match(
+    css,
+    /\.route-presenter-array \{[\s\S]*?flex-wrap: wrap/,
+  );
 });
 
 test("each modal handle owns lifecycle state and ports source stack math", async () => {

@@ -296,6 +296,11 @@
 }
 
 @media (max-width: 720px) {
+  .demo-business-surface {
+    gap: 14px;
+    margin-top: 24px;
+  }
+
   .demo-kpi-grid,
   .demo-detail-grid,
   .demo-form-grid {
@@ -304,5 +309,87 @@
 
   .demo-section-heading {
     align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .demo-section-heading > div:first-child > span,
+  .demo-kpi-grid article > span,
+  .demo-product-list article > div > span,
+  .demo-table th,
+  .demo-safe-badge,
+  .demo-filter-row span {
+    font-size: 10px;
+  }
+
+  .demo-section-heading h3 {
+    font-size: 22px;
+  }
+
+  .demo-kpi-grid article {
+    padding: 14px;
+  }
+
+  .demo-kpi-grid strong {
+    font-size: 32px;
+  }
+
+  .demo-kpi-grid p,
+  .demo-product-list p {
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .demo-product-list article {
+    align-items: flex-start;
+    padding: 13px;
+  }
+
+  .demo-product-list h3 {
+    font-size: 16px;
+  }
+
+  .demo-table-shell {
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .demo-table {
+    font-size: 12px;
+  }
+
+  .demo-table td:first-child span,
+  .demo-status {
+    font-size: 10px;
+  }
+
+  .demo-detail-grid dl,
+  .demo-order-items,
+  .demo-form-grid,
+  .demo-settings-list {
+    padding: 13px;
+  }
+
+  .demo-detail-grid dt,
+  .demo-form-grid label,
+  .demo-settings-list small,
+  .demo-settings-list > div > span:last-child {
+    font-size: 11px;
+  }
+
+  .demo-detail-grid dd,
+  .demo-order-items span,
+  .demo-order-items strong,
+  .demo-settings-list strong {
+    font-size: 13px;
+  }
+
+  .demo-form-grid input {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .demo-form-grid button {
+    min-height: 44px;
   }
 }

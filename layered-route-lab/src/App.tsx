@@ -12,6 +12,7 @@ import {
 import Modal, { ModalRecord } from "./core/Modal";
 import Presenter from "./core/Presenter";
 import ExperienceGuide from "./ExperienceGuide";
+import RouteRail from "./RouteRail";
 import AgentDemoOverlay from "./agent/AgentDemoOverlay";
 import {
   APP_INSPECTION_SETTLE_MS,
@@ -452,8 +453,8 @@ export default function App({
     }
   }, []);
 
-  const focusRoutePresenter = useCallback(
-    (target: string) => {
+  const closeUntilUid = useCallback(
+    (uid: string) => {
       if (
         leavingPresenterPathRef.current ||
         leavingPushedPresenterIdRef.current ||
@@ -462,24 +463,31 @@ export default function App({
         return;
       }
 
+      const pushedPresenterIndex = presentersRef.current.findIndex(
+        (presenter) => presenter.id === uid,
+      );
+      if (pushedPresenterIndex >= 0) {
+        const targetDepth = pushedPresenterIndex + 1;
+        if (targetDepth < presentersRef.current.length) {
+          startPushedPresenterLeave(targetDepth, false);
+        }
+        return;
+      }
+
+      const targetRoute = buildRouteStack(pathnameRef.current).find(
+        (route) => route.path === uid,
+      );
+      if (!targetRoute) return;
+
       if (presentersRef.current.length) {
-        pendingFocusedRouteRef.current = target;
+        pendingFocusedRouteRef.current = targetRoute.path;
         startPushedPresenterLeave(0, false);
         return;
       }
 
-      navigate(target);
+      navigate(targetRoute.path);
     },
     [navigate, startPushedPresenterLeave],
-  );
-
-  const focusPushedPresenter = useCallback(
-    (index: number) => {
-      const targetDepth = index + 1;
-      if (targetDepth >= presentersRef.current.length) return;
-      startPushedPresenterLeave(targetDepth, false);
-    },
-    [startPushedPresenterLeave],
   );
 
   const openModal = useCallback(() => {
@@ -845,19 +853,21 @@ export default function App({
   }, [inspectionMode, presenterCount]);
 
   const activeSurfaceCount = presenterCount + modals.length;
+  const temporaryPresenterLayers = presenters.map((presenter) => ({
+    uid: presenter.id,
+    label: `presenter-${routeStack.length + presenter.index + 1}`,
+  }));
   const leavingModalIndex =
     leavingModalId === null
       ? undefined
       : modals.findIndex((modal) => modal.id === leavingModalId);
   const lastModal = modals[modals.length - 1];
   const overviewRows = Math.ceil(Math.max(1, presenterCount) / 3);
-  const mobileOverviewRows = Math.ceil(
-    Math.max(1, presenterCount) / 2,
-  );
+  const mobileOverviewRows = Math.max(1, presenterCount);
   const presenterCanvasStyle: PresenterCanvasStyle = {
     "--overview-canvas-height": `${Math.max(1, overviewRows / 3) * 100}%`,
     "--overview-mobile-canvas-height": `${
-      Math.max(1, mobileOverviewRows / 5) * 100
+      Math.max(1, mobileOverviewRows / 2) * 100
     }%`,
   };
   const inspectionLabel =
@@ -870,6 +880,13 @@ export default function App({
   return (
     <AppContext.Provider value={appContext}>
       <main className="workbench" data-agent-playback={agentPlaybackMode}>
+        <RouteRail
+          routeStack={routeStack}
+          temporaryPresenters={temporaryPresenterLayers}
+          activeSurfaceCount={activeSurfaceCount}
+          onNavigateRoute={navigate}
+          onCloseUntilUid={closeUntilUid}
+        />
         <section className="content-shell">
           <header className="workbench-bar">
             <div className="crumb">
@@ -973,7 +990,7 @@ export default function App({
                   inspectionMode={inspectionMode}
                   leaving={leavingPresenterPath === route.path}
                   onDidLeave={finishPresenterLeave}
-                  onSelect={() => focusRoutePresenter(route.path)}
+                  onSelect={() => closeUntilUid(route.path)}
                   onPush={pushNext}
                 />
               ))}
@@ -1000,9 +1017,7 @@ export default function App({
                       presenter.id === leavingPushedPresenterId
                     }
                     onDidLeave={finishPushedPresenterLeave}
-                    onSelect={() =>
-                      focusPushedPresenter(presenter.index)
-                    }
+                    onSelect={() => closeUntilUid(presenter.id)}
                     onPush={pushNext}
                   />
                 );

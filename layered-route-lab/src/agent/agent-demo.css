@@ -1000,6 +1000,243 @@
   letter-spacing: 0.07em;
 }
 
+/* The Agent is a reading surface first; keep its smallest metadata legible. */
+.agent-dock {
+  width: min(440px, calc(100vw - 36px));
+  gap: 12px;
+  padding: 11px 12px;
+}
+
+.agent-logo {
+  width: 38px;
+  height: 38px;
+  font-size: 16px;
+}
+
+.agent-dock strong {
+  font-size: 14px;
+}
+
+.agent-dock small {
+  font-size: 12px;
+}
+
+.agent-dock kbd {
+  font-size: 11px;
+}
+
+.agent-panel {
+  width: min(600px, calc(100vw - 20px));
+}
+
+.agent-panel-header {
+  padding: 18px 18px 13px;
+}
+
+.agent-panel-title strong {
+  font-size: 16px;
+}
+
+.agent-panel-title span:last-child,
+.agent-status-strip span,
+.agent-role-guide > header > span,
+.agent-plan-heading span,
+.agent-summary-result header span,
+.agent-lookup-result header span,
+.agent-knowledge-hero > span,
+.agent-knowledge-stats span,
+.agent-code-flow > div span,
+.agent-code-flow > div small,
+.agent-entity-row small,
+.agent-current-state span,
+.agent-summary-metrics span,
+.agent-lookup-result dt {
+  font-size: 11px;
+}
+
+.agent-panel-header > button {
+  width: 38px;
+  height: 38px;
+  font-size: 24px;
+}
+
+.agent-status-strip {
+  gap: 7px;
+  padding: 0 18px 13px;
+}
+
+.agent-status-strip span {
+  padding: 6px 9px;
+}
+
+.agent-pace-switch {
+  margin: 0 18px 13px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.agent-pace-switch strong {
+  font-size: 12px;
+}
+
+.agent-tabs {
+  padding: 0 18px;
+}
+
+.agent-tabs button {
+  min-height: 48px;
+  font-size: 14px;
+}
+
+.agent-panel-body {
+  padding: 18px;
+}
+
+.agent-run-view,
+.agent-knowledge-view,
+.agent-trace-view {
+  gap: 16px;
+}
+
+.agent-role-guide {
+  gap: 12px;
+  padding: 16px;
+}
+
+.agent-role-guide > header button,
+.agent-command-form label,
+.agent-suggestions > span,
+.agent-source-list > span,
+.agent-action-list > span,
+.agent-share-result span {
+  font-size: 12px;
+}
+
+.agent-role-guide > header button {
+  min-height: 34px;
+  padding-inline: 10px;
+}
+
+.agent-role-guide h2 {
+  font-size: 20px;
+}
+
+.agent-role-flow span,
+.agent-source-list code,
+.agent-action-list code,
+.agent-trace-list code,
+.agent-verification,
+.agent-share-result code,
+.agent-current-state code {
+  font-size: 11px;
+}
+
+.agent-role-flow strong,
+.agent-command-form input,
+.agent-command-form button,
+.agent-plan-actions button,
+.agent-suggestions button,
+.agent-plan-heading strong,
+.agent-summary-result header strong,
+.agent-lookup-result header strong {
+  font-size: 14px;
+}
+
+.agent-role-guide > p,
+.agent-empty-state p,
+.agent-trace-list strong {
+  font-size: 13px;
+}
+
+.agent-shared-banner strong,
+.agent-clarification strong {
+  font-size: 13px;
+}
+
+.agent-shared-banner span,
+.agent-clarification p,
+.agent-suggestions small,
+.agent-matched-route,
+.agent-lookup-result dd,
+.agent-lookup-result p {
+  font-size: 12px;
+}
+
+.agent-command-form input,
+.agent-command-form button,
+.agent-plan-actions button {
+  min-height: 48px;
+}
+
+.agent-suggestions button {
+  gap: 5px;
+  padding: 12px 13px;
+}
+
+.agent-empty-state span {
+  font-size: 30px;
+}
+
+.agent-entity-row > span,
+.agent-action-list div > span,
+.agent-summary-table > div {
+  font-size: 12px;
+}
+
+.agent-knowledge-hero h2 {
+  font-size: 28px;
+}
+
+.agent-knowledge-hero p {
+  font-size: 13px;
+}
+
+.agent-knowledge-stats strong {
+  font-size: 20px;
+}
+
+.agent-code-flow > div strong {
+  font-size: 12px;
+}
+
+.agent-action-list small {
+  font-size: 11px;
+}
+
+.agent-step-status {
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+}
+
+.agent-trace-list li {
+  grid-template-columns: 32px minmax(0, 1fr);
+}
+
+.agent-summary-metrics strong {
+  font-size: 18px;
+}
+
+.agent-lookup-funnel span {
+  font-size: 11px;
+}
+
+.agent-lookup-funnel strong {
+  font-size: 15px;
+}
+
+.agent-panel-footer {
+  padding: 11px 18px;
+  font-size: 11px;
+}
+
+.agent-panel,
+.agent-panel *,
+.agent-dock,
+.agent-dock * {
+  letter-spacing: 0 !important;
+}
+
 @media (max-width: 720px) {
   .agent-dock {
     right: 10px;
@@ -1023,7 +1260,7 @@
 
   .agent-panel-title strong,
   .agent-tabs button {
-    font-size: 11px;
+    font-size: 15px;
   }
 
   .agent-panel-title span:last-child,
@@ -1034,7 +1271,7 @@
   .agent-suggestions > span,
   .agent-source-list > span,
   .agent-action-list > span {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .agent-role-guide > header button {
@@ -1043,7 +1280,7 @@
   }
 
   .agent-role-guide h2 {
-    font-size: 16px;
+    font-size: 20px;
   }
 
   .agent-role-flow {
@@ -1052,23 +1289,23 @@
 
   .agent-role-flow span,
   .agent-role-guide > p {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .agent-role-flow strong {
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .agent-command-form input,
   .agent-command-form button,
   .agent-plan-actions button {
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .agent-suggestions button,
   .agent-plan-heading strong,
   .agent-trace-list strong {
-    font-size: 11px;
+    font-size: 13px;
   }
 
   .agent-suggestions small,
@@ -1078,11 +1315,11 @@
   .agent-summary-table > div,
   .agent-lookup-result dd,
   .agent-lookup-result p {
-    font-size: 9px;
+    font-size: 12px;
   }
 
   .agent-panel-footer {
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .agent-lookup-funnel {

@@ -11,7 +11,7 @@ shared back-stack model.
 
 ```text
 /products
-└─ /product/1
+├─ /product/1
    ├─ /product/1/orders
    │  ├─ /product/1/order/2
    │  │  └─ /product/1/order/2/edit
@@ -19,6 +19,9 @@ shared back-stack model.
    ├─ /product/1/settings
    └─ /product/1/orders/paid
       └─ /product/1/orders/paid/order/1
+└─ /product/2
+   └─ /product/2/orders
+      └─ /product/2/order/2
 
 /employees
 └─ /employee/A-17
@@ -45,6 +48,12 @@ finishes leaving.
 
 Every presenter also exposes `presenter.push()`, which runs the same operation
 as `Shift + N`.
+
+The route rail keeps the current URL route and route-less Presenters visible as
+one stack. In tiled 3D mode, each Presenter owns its own hit target; selecting a
+route Presenter or temporary Presenter calls `closeUntilUid()` and closes only
+the surfaces above that UID. On narrow screens the rail becomes a horizontal
+route strip and the tiled overview switches to one readable column.
 
 ## Agent demo
 
@@ -90,6 +99,8 @@ URL never contains selectors or executable code.
 
 - `src/App.tsx`: owns the raw route-less presenter/modal records and History
   API behavior
+- `src/RouteRail.tsx`: renders route navigation plus the current route and
+  route-less Presenter composition
 - `src/router/routes.ts`: route definitions, matching, and parent reconstruction
 - `src/core/Presenter.tsx`: page lifecycle plus normal and 3D enter/leave projection
 - `src/core/Modal.tsx`: ports the original per-instance modal state and

@@ -177,6 +177,12 @@ const actionCandidates = [
     enabled: /const navigateToParent = useCallback/.test(sources.app),
   },
   {
+    id: "close-until-presenter",
+    label: "按 UID 定向回退到 Presenter",
+    evidence: "closeUntilUid()",
+    enabled: /const closeUntilUid = useCallback/.test(sources.app),
+  },
+  {
     id: "push-presenter",
     label: "派生同 URL Presenter",
     evidence: "pushPresenter()",

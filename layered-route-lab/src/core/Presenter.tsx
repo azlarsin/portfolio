@@ -172,7 +172,7 @@ export default function Presenter({
   const mobileOverview = getPresenterOverviewInsets(
     index,
     total,
-    2,
+    1,
     12,
     12,
     38,
@@ -216,6 +216,15 @@ export default function Presenter({
         }
       }}
     >
+      <button
+        type="button"
+        className="presenter-grid-target"
+        aria-label={`定向到 ${label}`}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect();
+        }}
+      />
       <header className="surface-bar">
         <div>
           <span className="surface-dot" />
