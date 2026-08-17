@@ -211,10 +211,13 @@ export default function App({
   const pendingPresenterNavigationRef =
     useRef<PendingPresenterNavigation | null>(null);
   const pendingPresenterDepthRef = useRef<number | null>(null);
+  const pendingPresenterHistoryStepsRef = useRef(0);
   const pendingFocusedRouteRef = useRef<string | null>(null);
   const presenterCloseCameFromPopRef = useRef(false);
   const pendingModalDepthRef = useRef<number | null>(null);
+  const pendingModalHistoryStepsRef = useRef(0);
   const modalCloseCameFromPopRef = useRef(false);
+  const ignoreNextOverlayPopRef = useRef(false);
   const previousPresenterCountRef = useRef(presenterCount);
   const previousInspectionModeRef =
     useRef<InspectionMode>(inspectionMode);
@@ -382,15 +385,8 @@ export default function App({
       createPresenterRecord(currentPresenters, window.location.href),
     ];
 
-    // Matches context.presenter.push: reserve history without changing the URL.
-    window.history.pushState(
-      {
-        ...window.history.state,
-        layeredPresenterDepth: nextPresenters.length,
-      },
-      "",
-      currentBrowserLocation(),
-    );
+    // Matches src_v3 App: reserve an empty history slot at the same URL.
+    window.history.pushState(null, "", currentBrowserLocation());
     presentersRef.current = nextPresenters;
     setPresenters(nextPresenters);
   }, []);
@@ -413,6 +409,9 @@ export default function App({
         currentPresenters[currentPresenters.length - 1];
 
       pendingPresenterDepthRef.current = depth;
+      pendingPresenterHistoryStepsRef.current = cameFromPop
+        ? 0
+        : currentPresenters.length - depth;
       presenterCloseCameFromPopRef.current = cameFromPop;
       leavingPushedPresenterIdRef.current = topPresenter.id;
       setLeavingPushedPresenterId(topPresenter.id);
@@ -445,11 +444,11 @@ export default function App({
     pendingPresenterDepthRef.current = null;
     presenterCloseCameFromPopRef.current = false;
 
-    const historyDepth = Number(
-      window.history.state?.layeredPresenterDepth || 0,
-    );
-    if (!cameFromPop && historyDepth > remaining.length) {
-      window.history.go(remaining.length - historyDepth);
+    const historySteps = pendingPresenterHistoryStepsRef.current;
+    pendingPresenterHistoryStepsRef.current = 0;
+    if (!cameFromPop && historySteps > 0) {
+      ignoreNextOverlayPopRef.current = true;
+      window.history.go(-historySteps);
     }
   }, []);
 
@@ -500,16 +499,11 @@ export default function App({
     }
 
     const currentModals = modalsRef.current;
-    const nextDepth = currentModals.length + 1;
     const nextModals = [
       ...currentModals,
       createModalRecord(currentModals),
     ];
-    window.history.pushState(
-      { ...window.history.state, layeredModalDepth: nextDepth },
-      "",
-      currentBrowserLocation(),
-    );
+    window.history.pushState(null, "", currentBrowserLocation());
     modalsRef.current = nextModals;
     setModals(nextModals);
   }, []);
@@ -526,6 +520,9 @@ export default function App({
       const topModal = currentModals[currentModals.length - 1];
 
       pendingModalDepthRef.current = depth;
+      pendingModalHistoryStepsRef.current = cameFromPop
+        ? 0
+        : currentModals.length - depth;
       modalCloseCameFromPopRef.current = cameFromPop;
       leavingModalIdRef.current = topModal.id;
       setLeavingModalId(topModal.id);
@@ -560,11 +557,11 @@ export default function App({
     pendingModalDepthRef.current = null;
     modalCloseCameFromPopRef.current = false;
 
-    if (
-      !cameFromPop &&
-      Number(window.history.state?.layeredModalDepth || 0) > remaining.length
-    ) {
-      window.history.back();
+    const historySteps = pendingModalHistoryStepsRef.current;
+    pendingModalHistoryStepsRef.current = 0;
+    if (!cameFromPop && historySteps > 0) {
+      ignoreNextOverlayPopRef.current = true;
+      window.history.go(-historySteps);
     }
   }, []);
 
@@ -716,10 +713,33 @@ export default function App({
     const handlePopState = (event: PopStateEvent) => {
       const nextPath = getRoutePathFromBrowserUrl();
       const nextLocation = getRouteLocationFromBrowserUrl();
-      const presenterDepth = Number(
-        event.state?.layeredPresenterDepth || 0,
-      );
-      const modalDepth = Number(event.state?.layeredModalDepth || 0);
+      const currentPath = pathnameRef.current;
+
+      if (ignoreNextOverlayPopRef.current) {
+        ignoreNextOverlayPopRef.current = false;
+        if (nextPath === currentPath) {
+          const focusedRoute = pendingFocusedRouteRef.current;
+          if (focusedRoute) {
+            pendingFocusedRouteRef.current = null;
+            navigate(focusedRoute);
+          }
+          return;
+        }
+      }
+
+      const hasLayeredDepth =
+        Number.isFinite(event.state?.layeredPresenterDepth) &&
+        Number.isFinite(event.state?.layeredModalDepth);
+      const presenterDepth = hasLayeredDepth
+        ? Number(event.state.layeredPresenterDepth)
+        : Math.max(
+            0,
+            presentersRef.current.length -
+              (modalsRef.current.length ? 0 : 1),
+          );
+      const modalDepth = hasLayeredDepth
+        ? Number(event.state.layeredModalDepth)
+        : Math.max(0, modalsRef.current.length - 1);
 
       if (modalsRef.current.length > modalDepth) {
         startModalLeave(modalDepth, true);
@@ -751,7 +771,6 @@ export default function App({
         setModals(restored);
       }
 
-      const currentPath = pathnameRef.current;
       if (nextPath === currentPath) {
         const focusedRoute = pendingFocusedRouteRef.current;
         if (
@@ -926,6 +945,7 @@ export default function App({
               </button>
               <button
                 type="button"
+                className="escape-action"
                 disabled={
                   !currentRoute.parentPath &&
                   !presenters.length &&

@@ -131,7 +131,7 @@ export default function Presenter({
 
     if (
       pageActive &&
-      (previousPageActive !== pageActive || (d3 && inspectionModeChanged))
+      (previousPageActive !== pageActive || inspectionModeChanged)
     ) {
       lifecycle.emit("willAppear");
       lifecycleTimerRef.current = window.setTimeout(() => {

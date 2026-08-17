@@ -1240,8 +1240,24 @@
 @media (max-width: 720px) {
   .agent-dock {
     right: 10px;
-    bottom: 10px;
-    width: calc(100vw - 20px);
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 7px;
+    border-radius: 13px;
+  }
+
+  .agent-dock > span:nth-child(2),
+  .agent-dock kbd {
+    display: none;
+  }
+
+  .agent-dock .agent-logo {
+    width: 36px;
+    height: 36px;
+    justify-self: center;
   }
 
   .agent-panel {

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import {
   flattenDemoRouteTree,
   type ResolvedRoute,
@@ -35,6 +35,13 @@ export default function RouteRail({
 }: RouteRailProps) {
   const currentRoute = routeStack[routeStack.length - 1];
   const mountedPaths = new Set(routeStack.map((route) => route.path));
+  const routeListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    routeListRef.current
+      ?.querySelector<HTMLElement>('[aria-current="page"]')
+      ?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [currentRoute.path]);
 
   return (
     <aside className="route-rail" aria-label="Layered Route Lab navigation">
@@ -57,26 +64,30 @@ export default function RouteRail({
             <span>route</span>
             <code>{currentRoute.path}</code>
           </button>
-          <span className="route-composition-plus" aria-hidden="true">+</span>
-          <div className="route-presenter-array" aria-label="Temporary presenters">
-            <span aria-hidden="true">[</span>
-            {temporaryPresenters.map((presenter) => (
-              <button
-                type="button"
-                key={presenter.uid}
-                onClick={() => onCloseUntilUid(presenter.uid)}
-              >
-                {presenter.label}
-              </button>
-            ))}
-            <span aria-hidden="true">]</span>
-          </div>
+          {temporaryPresenters.length ? (
+            <>
+              <span className="route-composition-plus" aria-hidden="true">+</span>
+              <div className="route-presenter-array" aria-label="Temporary presenters">
+                <span aria-hidden="true">[</span>
+                {temporaryPresenters.map((presenter) => (
+                  <button
+                    type="button"
+                    key={presenter.uid}
+                    onClick={() => onCloseUntilUid(presenter.uid)}
+                  >
+                    {presenter.label}
+                  </button>
+                ))}
+                <span aria-hidden="true">]</span>
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
 
       <nav aria-label="Demo routes">
         <span className="route-rail-section-label">Routes</span>
-        <div className="lab-route-list">
+        <div className="lab-route-list" ref={routeListRef}>
           {routeNodes.map((node, index) => {
             const route = resolveRoute(node.path)!;
             const isActive = currentRoute.path === route.path;

@@ -338,18 +338,41 @@ test("large list pages reload in 3D without compressing their content", async ()
   assert.match(business, /demo-list-spinner/);
   assert.match(presenter, /const pageActive = \(isTop \|\| d3\) && !leaving/);
   assert.match(presenter, /previousInspectionModeRef/);
-  assert.match(presenter, /d3 && inspectionModeChanged/);
+  assert.match(presenter, /previousPageActive !== pageActive \|\| inspectionModeChanged/);
   assert.match(
     presenter,
     /\[d3, inspectionMode, lifecycle, pageActive\]/,
   );
   assert.match(css, /\.demo-lifecycle-list\[data-loading="true"\][\s\S]*?min-height/);
-  assert.doesNotMatch(css, /\.stage\[data-d3/);
+  assert.match(
+    css,
+    /\.demo-lifecycle-list\[data-loading="true"\] \{[\s\S]*?position: fixed[\s\S]*?inset: 52px 0 0[\s\S]*?background: var\(--presenter-background/,
+  );
+  assert.match(
+    css,
+    /\.demo-table-shell \{[\s\S]*?min-width: 0[\s\S]*?max-width: 100%/,
+  );
+  assert.match(
+    css,
+    /\.demo-business-surface \{[\s\S]*?min-width: 0/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.stage\[data-d3="true"\] \.demo-business-surface/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.stage\[data-d3-mode="grid"\] \.demo-business-surface/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.stage\[data-d3-mode="grid"\] \.demo-table(?:\s|\{)/,
+  );
   assert.match(data, /\{ length: 72 \}/);
   assert.match(data, /\{ length: 96 \}/);
 });
 
-test("deepest route pushes route-less presenters on the same URL", async () => {
+test("temporary surfaces reserve empty history slots on the same URL", async () => {
   const app = await readFile(
     new URL("../src/App.tsx", import.meta.url),
     "utf8",
@@ -357,14 +380,23 @@ test("deepest route pushes route-less presenters on the same URL", async () => {
 
   assert.match(app, /interface PresenterRecord/);
   assert.match(app, /const pushPresenter = useCallback/);
-  assert.match(app, /layeredPresenterDepth: nextPresenters\.length/);
+  assert.equal(
+    (app.match(
+      /window\.history\.pushState\(null, "", currentBrowserLocation\(\)\)/g,
+    ) || []).length,
+    2,
+  );
+  assert.match(app, /const ignoreNextOverlayPopRef = useRef\(false\)/);
+  assert.match(app, /if \(ignoreNextOverlayPopRef\.current\)/);
+  assert.match(app, /const hasLayeredDepth =/);
+  assert.match(app, /window\.history\.go\(-historySteps\)/);
   assert.match(
     app,
     /function currentBrowserLocation\(\) \{[\s\S]*?window\.location\.pathname[\s\S]*?window\.location\.search/,
   );
   assert.match(
     app,
-    /window\.history\.pushState\([\s\S]*?currentBrowserLocation\(\)/,
+    /window\.history\.pushState\(null, "", currentBrowserLocation\(\)\)/,
   );
   assert.match(
     app,
@@ -448,7 +480,7 @@ test("3D mode tiles every presenter by its index target", async () => {
   assert.match(app, /pendingFocusedRouteRef\.current = targetRoute\.path/);
   assert.match(
     app,
-    /window\.history\.go\(remaining\.length - historyDepth\)/,
+    /window\.history\.go\(-historySteps\)/,
   );
   assert.match(presenter, /onSelect\(\)/);
   assert.match(presenter, /className="presenter-grid-target"/);
@@ -487,6 +519,11 @@ test("route rail combines route navigation with route-less presenters", async ()
   assert.match(routeRail, /className="route-composition-path"/);
   assert.match(routeRail, /className="route-presenter-array"/);
   assert.match(routeRail, /flattenDemoRouteTree\(\)/);
+  assert.match(routeRail, /ref=\{routeListRef\}/);
+  assert.match(
+    routeRail,
+    /scrollIntoView\(\{ block: "nearest", inline: "center" \}\)/,
+  );
   assert.match(app, /<header className="workbench-bar">/);
   assert.match(app, /<div className="bar-actions" aria-label="Layer controls">/);
   assert.match(app, /<span>Push page<\/span>[\s\S]*?<kbd>⇧ N<\/kbd>/);
@@ -498,6 +535,40 @@ test("route rail combines route navigation with route-less presenters", async ()
     css,
     /\.route-presenter-array \{[\s\S]*?flex-wrap: wrap/,
   );
+});
+
+test("mobile layout keeps controls, content, and the Agent launcher in bounds", async () => {
+  const [app, css, businessCss, agentCss, overlay] = await Promise.all([
+    readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/layered-route-lab.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/demo-business.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/agent-demo.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(css, /--presenter-background: var\(--surface\)/);
+  assert.match(
+    css,
+    /@media \(max-width: 720px\)[\s\S]*?\.bar-actions \{[\s\S]*?gap: 4px[\s\S]*?\.bar-actions button \{[\s\S]*?padding: 8px 6px/,
+  );
+  assert.match(app, /className="escape-action"/);
+  assert.match(
+    css,
+    /\.bar-actions \.escape-action > span \{[\s\S]*?display: none[\s\S]*?\.bar-actions \.escape-action > kbd \{[\s\S]*?display: inline/,
+  );
+  assert.match(
+    css,
+    /\.presenter-title-row \{[\s\S]*?padding-right: 0[\s\S]*?\.eyebrow \{[\s\S]*?min-height: 42px[\s\S]*?padding-right: 150px/,
+  );
+  assert.match(
+    businessCss,
+    /@media \(max-width: 720px\)[\s\S]*?\.demo-lifecycle-list\[data-loading="true"\][\s\S]*?inset: 48px 0 0/,
+  );
+  assert.match(
+    agentCss,
+    /@media \(max-width: 720px\)[\s\S]*?\.agent-dock \{[\s\S]*?width: 52px[\s\S]*?height: 52px/,
+  );
+  assert.match(overlay, /aria-label="打开 Agent Demo"/);
 });
 
 test("each modal handle owns lifecycle state and ports source stack math", async () => {

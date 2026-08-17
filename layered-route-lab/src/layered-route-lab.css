@@ -726,13 +726,14 @@
 
 .presenter {
   --stack-index: 0;
+  --presenter-background: var(--surface);
   position: absolute;
   inset: 0;
   z-index: calc(10 + var(--stack-index));
   min-width: 0;
   overflow: auto;
   color: var(--ink);
-  background: var(--surface);
+  background: var(--presenter-background);
   border-left: 1px solid #d2d0c4;
   opacity: 0;
   transform: translate3d(102%, 0, 0);
@@ -751,7 +752,7 @@
 }
 
 .presenter[data-reconstructible="true"] {
-  background: #eaf7ff;
+  --presenter-background: #eaf7ff;
 }
 
 .presenter[data-reconstructible="true"] .surface-bar {
@@ -1400,17 +1401,33 @@
 
   .bar-actions {
     width: 100%;
+    gap: 4px;
     padding-bottom: 1px;
   }
 
   .bar-actions button {
     min-height: 42px;
-    padding: 8px 11px;
+    padding: 8px 6px;
     font-size: 11px;
   }
 
   .bar-actions kbd {
     display: none;
+  }
+
+  .bar-actions .escape-action > span {
+    display: none;
+  }
+
+  .bar-actions .escape-action > kbd {
+    min-width: 0;
+    display: inline;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    font-size: 11px;
+    font-weight: 700;
   }
 
   .experience-guide {
@@ -1499,15 +1516,18 @@
   }
 
   .surface-content {
-    padding: 24px 18px 30px;
+    padding: 24px 18px 84px;
   }
 
   .presenter-title-row {
     display: grid;
     justify-items: start;
+    padding-right: 0;
   }
 
   .eyebrow {
+    min-height: 42px;
+    padding-right: 150px;
     font-size: 11px;
   }
 
@@ -1561,7 +1581,7 @@
   }
 
   .stage[data-d3-mode="grid"] .surface-content {
-    padding: 10px;
+    padding: 10px 10px 68px;
   }
 
   .stage[data-d3-mode="grid"] .surface-content-minimal h1 {
@@ -1574,6 +1594,11 @@
     min-height: 32px;
     padding: 0 9px;
     font-size: 10px;
+  }
+
+  .stage[data-d3-mode="grid"] .eyebrow {
+    min-height: 32px;
+    padding-right: 112px;
   }
 
   .stage[data-d3-mode="grid"] .surface-state {

@@ -540,7 +540,13 @@ export default function AgentDemoOverlay({
 
   return (
     <>
-      <button className="agent-dock" type="button" onClick={() => setOpen(true)}>
+      <button
+        className="agent-dock"
+        type="button"
+        aria-label="打开 Agent Demo"
+        title="打开 Agent Demo"
+        onClick={() => setOpen(true)}
+      >
         <span className="agent-logo" aria-hidden="true">A</span>
         <span>
           <strong>Agent Demo</strong>

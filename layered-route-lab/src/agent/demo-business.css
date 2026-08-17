@@ -1,15 +1,23 @@
 .demo-business-surface {
   width: min(940px, 100%);
+  min-width: 0;
   display: grid;
   gap: 18px;
   margin-top: clamp(24px, 4vw, 44px);
 }
 
 .demo-section-heading {
+  min-width: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
+}
+
+.demo-section-heading > div:first-child,
+.demo-filter-row {
+  min-width: 0;
 }
 
 .demo-section-heading > div:first-child > span,
@@ -116,6 +124,9 @@
 }
 
 .demo-table-shell {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow: auto;
   border: 1px solid #ceccc0;
   border-radius: 11px;
@@ -201,11 +212,16 @@
 
 .demo-lifecycle-list {
   position: relative;
+  min-width: 0;
 }
 
 .demo-lifecycle-list[data-loading="true"] {
+  position: fixed;
+  z-index: 6;
+  inset: 52px 0 0;
   display: grid;
-  min-height: max(360px, calc(100vh - 360px));
+  min-height: 0;
+  background: var(--presenter-background, var(--surface));
   place-items: center;
 }
 
@@ -214,6 +230,10 @@
   width: 100%;
   min-height: inherit;
   place-items: center;
+}
+
+.stage[data-d3-mode="grid"] .demo-lifecycle-list[data-loading="true"] {
+  inset: 38px 0 0;
 }
 
 .demo-list-spinner span {
@@ -350,6 +370,14 @@
 }
 
 @media (max-width: 720px) {
+  .demo-lifecycle-list[data-loading="true"] {
+    inset: 48px 0 0;
+  }
+
+  .stage[data-d3-mode="grid"] .demo-lifecycle-list[data-loading="true"] {
+    inset: 38px 0 0;
+  }
+
   .demo-business-surface {
     gap: 14px;
     margin-top: 24px;
