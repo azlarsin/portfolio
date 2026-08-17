@@ -1,9 +1,16 @@
 "use client";
 
+import { useEffect, useState, type ReactNode } from "react";
+import type {
+  PresenterLifecycle,
+  PresenterLifecycleEvent,
+} from "../core/PresenterLifecycle";
 import type { ResolvedRoute } from "../router/routes";
 import {
   demoEmployees,
+  demoOrderRows,
   demoOrders,
+  demoProductRows,
   findDemoEmployee,
   findDemoOrder,
   queryDemoOrders,
@@ -15,6 +22,7 @@ import "./demo-business.css";
 interface DemoBusinessSurfaceProps {
   route: ResolvedRoute;
   currentUrl: string;
+  lifecycle: PresenterLifecycle;
 }
 
 function formatAmount(amount: number) {
@@ -23,6 +31,119 @@ function formatAmount(amount: number) {
 
 function StatusBadge({ status }: { status: string }) {
   return <span className={`demo-status demo-status-${status}`}>{status}</span>;
+}
+
+interface LifecycleListState {
+  event: PresenterLifecycleEvent;
+  loading: boolean;
+  refreshCount: number;
+}
+
+function lifecycleEventIsLoading(event: PresenterLifecycleEvent) {
+  return event !== "didAppear";
+}
+
+function LifecycleList({
+  children,
+  lifecycle,
+  listId,
+  rowCount,
+}: {
+  children: ReactNode;
+  lifecycle: PresenterLifecycle;
+  listId: "products" | "orders";
+  rowCount: number;
+}) {
+  const initialEvent = lifecycle.getCurrentEvent();
+  const [state, setState] = useState<LifecycleListState>({
+    event: initialEvent,
+    loading: lifecycleEventIsLoading(initialEvent),
+    refreshCount: initialEvent === "willAppear" ? 1 : 0,
+  });
+
+  useEffect(() => {
+    const receiveEvent = (event: PresenterLifecycleEvent) => {
+      setState((current) => {
+        if (current.event === event) return current;
+        return {
+          event,
+          loading: lifecycleEventIsLoading(event),
+          refreshCount:
+            event === "willAppear"
+              ? current.refreshCount + 1
+              : current.refreshCount,
+        };
+      });
+    };
+    const unregister = [
+      lifecycle.on("willAppear", () => receiveEvent("willAppear")),
+      lifecycle.on("didAppear", () => receiveEvent("didAppear")),
+      lifecycle.on("willDisappear", () => receiveEvent("willDisappear")),
+      lifecycle.on("didDisappear", () => receiveEvent("didDisappear")),
+    ];
+    receiveEvent(lifecycle.getCurrentEvent());
+    return () => unregister.forEach((removeListener) => removeListener());
+  }, [lifecycle]);
+
+  return (
+    <section
+      className="demo-lifecycle-list"
+      data-large-list={listId}
+      data-lifecycle-event={state.event}
+      data-loading={state.loading}
+      data-row-count={rowCount}
+    >
+      <div className="demo-list-runtime" role="status" aria-live="polite">
+        <span className={state.loading ? "is-loading" : "is-ready"}>
+          <i aria-hidden="true" />
+          {state.loading ? "LOADING" : "READY"}
+        </span>
+        <code>presenter.{state.event}</code>
+        <small>
+          {rowCount} ROWS · REFRESH {String(state.refreshCount).padStart(2, "0")}
+        </small>
+      </div>
+      <div className="demo-list-body" aria-busy={state.loading}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function ProductTable() {
+  return (
+    <div className="demo-table-shell">
+      <table className="demo-table demo-product-table">
+        <thead>
+          <tr>
+            <th>产品</th>
+            <th>运行环境</th>
+            <th>订单</th>
+            <th>状态</th>
+            <th>更新日期</th>
+          </tr>
+        </thead>
+        <tbody>
+          {demoProductRows.map((product) => (
+            <tr key={product.id}>
+              <td>
+                <strong>{product.name}</strong>
+                <span>{product.id}</span>
+              </td>
+              <td>{product.environment}</td>
+              <td>{product.orderCount}</td>
+              <td>
+                <span className={`demo-product-status demo-product-status-${product.status.toLowerCase()}`}>
+                  {product.status}
+                </span>
+              </td>
+              <td>{product.updatedAt}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
 function OrderTable({
@@ -74,6 +195,7 @@ function OrderTable({
 export default function DemoBusinessSurface({
   route,
   currentUrl,
+  lifecycle,
 }: DemoBusinessSurfaceProps) {
   const search = new URL(currentUrl, "http://localhost").searchParams;
   const showAgentData = search.get("demo_data") === "1";
@@ -90,7 +212,7 @@ export default function DemoBusinessSurface({
         <div className="demo-kpi-grid">
           <article>
             <span>ACTIVE PRODUCTS</span>
-            <strong>03</strong>
+            <strong>{demoProductRows.length}</strong>
             <p>公开演示工作区</p>
           </article>
           <article>
@@ -104,22 +226,13 @@ export default function DemoBusinessSurface({
             <p>本项目直接静态分析</p>
           </article>
         </div>
-        <div className="demo-product-list">
-          {[
-            ["Product 1", "订单、设置与已支付分支", "READY"],
-            ["Product 2", "用于展示可迁移的代码索引", "INDEXED"],
-            ["Product 3", "保留给新的行为适配器", "PLANNED"],
-          ].map(([name, description, status]) => (
-            <article key={name}>
-              <div>
-                <span>{status}</span>
-                <h3>{name}</h3>
-                <p>{description}</p>
-              </div>
-              <span aria-hidden="true">↗</span>
-            </article>
-          ))}
-        </div>
+        <LifecycleList
+          lifecycle={lifecycle}
+          listId="products"
+          rowCount={demoProductRows.length}
+        >
+          <ProductTable />
+        </LifecycleList>
       </div>
     );
   }
@@ -295,6 +408,9 @@ export default function DemoBusinessSurface({
   }
 
   if (route.id === "product-orders" || route.id === "product-orders-paid") {
+    const visibleOrderCount = route.id === "product-orders-paid"
+      ? demoOrderRows.filter((order) => order.status === "已支付").length
+      : demoOrderRows.length;
     return (
       <div className="demo-business-surface">
         <div className="demo-section-heading">
@@ -307,7 +423,16 @@ export default function DemoBusinessSurface({
             <span>2026-08-06</span>
           </div>
         </div>
-        <OrderTable paidOnly={route.id === "product-orders-paid"} />
+        <LifecycleList
+          lifecycle={lifecycle}
+          listId="orders"
+          rowCount={visibleOrderCount}
+        >
+          <OrderTable
+            paidOnly={route.id === "product-orders-paid"}
+            orders={demoOrderRows}
+          />
+        </LifecycleList>
       </div>
     );
   }

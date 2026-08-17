@@ -297,6 +297,42 @@ test("presenter leave keeps the surface mounted until transition completion", as
   );
 });
 
+test("large list pages register presenter lifecycle loading events", async () => {
+  const [productsResponse, ordersResponse, presenter, lifecycle, business, data] =
+    await Promise.all([
+      render("/products"),
+      render("/product/1/orders"),
+      readFile(new URL("../src/core/Presenter.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../src/core/PresenterLifecycle.ts", import.meta.url), "utf8"),
+      readFile(new URL("../src/agent/DemoBusinessSurface.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../src/agent/demoData.ts", import.meta.url), "utf8"),
+    ]);
+
+  const [productsHtml, ordersHtml] = await Promise.all([
+    productsResponse.text(),
+    ordersResponse.text(),
+  ]);
+
+  assert.match(productsHtml, /data-large-list="products"/);
+  assert.match(productsHtml, /data-row-count="72"/);
+  assert.match(ordersHtml, /data-large-list="orders"/);
+  assert.match(ordersHtml, /data-row-count="96"/);
+  assert.match(productsHtml, /data-loading="true"/);
+  assert.match(ordersHtml, /data-loading="true"/);
+  assert.match(lifecycle, /"willAppear"/);
+  assert.match(lifecycle, /"didAppear"/);
+  assert.match(lifecycle, /"willDisappear"/);
+  assert.match(lifecycle, /"didDisappear"/);
+  assert.match(presenter, /lifecycle\.emit\("willAppear"\)/);
+  assert.match(presenter, /lifecycle\.emit\("willDisappear"\)/);
+  assert.match(business, /lifecycle\.on\("willAppear"/);
+  assert.match(business, /lifecycle\.on\("didAppear"/);
+  assert.match(business, /lifecycle\.on\("willDisappear"/);
+  assert.match(business, /lifecycle\.on\("didDisappear"/);
+  assert.match(data, /\{ length: 72 \}/);
+  assert.match(data, /\{ length: 96 \}/);
+});
+
 test("deepest route pushes route-less presenters on the same URL", async () => {
   const app = await readFile(
     new URL("../src/App.tsx", import.meta.url),

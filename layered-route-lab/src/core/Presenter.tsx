@@ -8,11 +8,14 @@ import {
   useState,
 } from "react";
 import { AppContext } from "./AppContext";
+import { createPresenterLifecycle } from "./PresenterLifecycle";
 import {
   type ResolvedRoute,
   resolveRoute,
 } from "../router/routes";
 import DemoBusinessSurface from "../agent/DemoBusinessSurface";
+
+const PRESENTER_LIFECYCLE_SETTLE_MS = 420;
 
 type PresenterStyle = CSSProperties & {
   "--stack-index": number;
@@ -97,6 +100,14 @@ export default function Presenter({
 }: PresenterProps) {
   const [entered, setEntered] = useState(index === 0);
   const didLeaveRef = useRef(false);
+  const pageActive = isTop && !leaving;
+  const previousPageActiveRef = useRef<boolean | null>(null);
+  const lifecycleTimerRef = useRef<number | null>(null);
+  const [lifecycle] = useState(() =>
+    createPresenterLifecycle(
+      pageActive ? "willAppear" : "didDisappear",
+    ),
+  );
   const context = useContext(AppContext);
   const d3 = inspectionMode !== "off";
 
@@ -104,6 +115,37 @@ export default function Presenter({
     const frame = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(frame);
   }, []);
+
+  useEffect(() => {
+    const previousPageActive = previousPageActiveRef.current;
+    previousPageActiveRef.current = pageActive;
+
+    if (lifecycleTimerRef.current !== null) {
+      window.clearTimeout(lifecycleTimerRef.current);
+      lifecycleTimerRef.current = null;
+    }
+
+    if (pageActive) {
+      lifecycle.emit("willAppear");
+      lifecycleTimerRef.current = window.setTimeout(() => {
+        lifecycle.emit("didAppear");
+        lifecycleTimerRef.current = null;
+      }, PRESENTER_LIFECYCLE_SETTLE_MS);
+    } else if (previousPageActive) {
+      lifecycle.emit("willDisappear");
+      lifecycleTimerRef.current = window.setTimeout(() => {
+        lifecycle.emit("didDisappear");
+        lifecycleTimerRef.current = null;
+      }, PRESENTER_LIFECYCLE_SETTLE_MS);
+    }
+
+    return () => {
+      if (lifecycleTimerRef.current !== null) {
+        window.clearTimeout(lifecycleTimerRef.current);
+        lifecycleTimerRef.current = null;
+      }
+    };
+  }, [lifecycle, pageActive]);
 
   useEffect(() => {
     if (
@@ -201,6 +243,7 @@ export default function Presenter({
       data-d3={d3}
       data-d3-mode={inspectionMode}
       data-leaving={leaving}
+      data-page-active={pageActive}
       data-reconstructible={reconstructible}
       data-surface-id={surfaceId}
       data-selectable="true"
@@ -253,7 +296,11 @@ export default function Presenter({
           </button>
         </div>
         {route ? (
-          <DemoBusinessSurface route={route} currentUrl={currentUrl} />
+          <DemoBusinessSurface
+            route={route}
+            currentUrl={currentUrl}
+            lifecycle={lifecycle}
+          />
         ) : null}
         {(reconstructible ||
           isManualPayDetail ||

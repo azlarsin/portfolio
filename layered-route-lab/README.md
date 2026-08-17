@@ -55,6 +55,12 @@ route Presenter or temporary Presenter calls `closeUntilUid()` and closes only
 the surfaces above that UID. On narrow screens the rail becomes a horizontal
 route strip and the tiled overview switches to one readable column.
 
+The Products and Product Orders pages render deterministic large lists and
+subscribe to the Presenter `willAppear`, `didAppear`, `willDisappear`, and
+`didDisappear` events. Leaving or covering either page puts its retained list
+into loading state; returning to the same mounted Presenter clears loading when
+the appear transition completes, without discarding its scrollable content.
+
 ## Agent demo
 
 Open `/products?agent_demo=1` for the public Agent sidecar. The demo uses only

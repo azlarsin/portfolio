@@ -18,6 +18,15 @@ export interface DemoEmployee {
   role: string;
 }
 
+export interface DemoProduct {
+  id: string;
+  name: string;
+  environment: string;
+  orderCount: number;
+  status: "READY" | "INDEXED" | "PLANNED";
+  updatedAt: string;
+}
+
 export const demoEmployees: DemoEmployee[] = [
   { code: "A-17", name: "示例员工 A-17", team: "示例团队 Alpha", role: "产品协作" },
   { code: "B-04", name: "示例员工 B-04", team: "示例团队 Beta", role: "体验设计" },
@@ -91,6 +100,43 @@ export const demoOrders: DemoOrder[] = [
     items: [{ name: "轻食拼盘", quantity: 1, amount: 32 }],
   },
 ];
+
+const productEnvironments = ["Console", "Mobile", "Embedded", "Partner"];
+const productStatuses: DemoProduct["status"][] = [
+  "READY",
+  "INDEXED",
+  "READY",
+  "PLANNED",
+];
+
+export const demoProductRows: DemoProduct[] = Array.from(
+  { length: 72 },
+  (_, index) => ({
+    id: `P-${String(index + 1).padStart(3, "0")}`,
+    name: `Product ${index + 1}`,
+    environment: productEnvironments[index % productEnvironments.length],
+    orderCount: 18 + ((index * 17) % 143),
+    status: productStatuses[index % productStatuses.length],
+    updatedAt: `2026-08-${String(17 - (index % 12)).padStart(2, "0")}`,
+  }),
+);
+
+export const demoOrderRows: DemoOrder[] = Array.from(
+  { length: 96 },
+  (_, index) => {
+    const source = demoOrders[index % demoOrders.length];
+    const cycle = Math.floor(index / demoOrders.length);
+    return {
+      ...source,
+      id: index < demoOrders.length
+        ? source.id
+        : String(1000 + index),
+      date: `2026-08-${String(17 - (cycle % 12)).padStart(2, "0")}`,
+      amount: source.amount + (cycle % 4) * 3,
+      items: source.items.map((item) => ({ ...item })),
+    };
+  },
+);
 
 const queryRestoreDemoOrder: DemoOrder = {
   id: "123",

@@ -146,6 +146,10 @@
   border-bottom: 0;
 }
 
+.demo-table tbody tr:nth-child(even) {
+  background: rgba(234, 247, 255, 0.34);
+}
+
 .demo-table td:first-child span {
   display: block;
   margin-top: 2px;
@@ -171,6 +175,106 @@
 .demo-status-已退款 {
   color: #784741;
   background: #ffe0db;
+}
+
+.demo-product-status {
+  display: inline-flex;
+  min-width: 58px;
+  justify-content: center;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: #4f5b30;
+  background: #eaffbd;
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.demo-product-status-indexed {
+  color: #27536d;
+  background: #d9f1ff;
+}
+
+.demo-product-status-planned {
+  color: #6f5521;
+  background: #ffedbd;
+}
+
+.demo-lifecycle-list {
+  position: relative;
+  display: grid;
+  gap: 8px;
+}
+
+.demo-list-runtime {
+  position: sticky;
+  z-index: 3;
+  top: 8px;
+  display: grid;
+  min-height: 38px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border: 1px solid #aaa89c;
+  background: rgba(255, 254, 247, 0.96);
+  box-shadow: 0 5px 18px rgba(38, 39, 34, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.demo-list-runtime > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.demo-list-runtime i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6b8c28;
+}
+
+.demo-list-runtime .is-loading i {
+  border: 1px solid #d39f2d;
+  border-top-color: transparent;
+  background: transparent;
+  animation: demo-list-spin 700ms linear infinite;
+}
+
+.demo-list-runtime code,
+.demo-list-runtime small {
+  min-width: 0;
+  color: #6e6d64;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8px;
+}
+
+.demo-list-runtime code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demo-list-runtime small {
+  text-align: right;
+}
+
+.demo-list-body {
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.demo-lifecycle-list[data-loading="true"] .demo-list-body {
+  filter: grayscale(0.72);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+@keyframes demo-list-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .demo-detail-grid {
@@ -359,8 +463,25 @@
   }
 
   .demo-table td:first-child span,
-  .demo-status {
+  .demo-status,
+  .demo-product-status {
     font-size: 10px;
+  }
+
+  .demo-list-runtime {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .demo-list-runtime > span,
+  .demo-list-runtime code,
+  .demo-list-runtime small {
+    font-size: 10px;
+  }
+
+  .demo-list-runtime small {
+    grid-column: 1 / -1;
+    text-align: left;
   }
 
   .demo-detail-grid dl,
