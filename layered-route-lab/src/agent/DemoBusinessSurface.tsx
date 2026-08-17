@@ -36,7 +36,6 @@ function StatusBadge({ status }: { status: string }) {
 interface LifecycleListState {
   event: PresenterLifecycleEvent;
   loading: boolean;
-  refreshCount: number;
 }
 
 function lifecycleEventIsLoading(event: PresenterLifecycleEvent) {
@@ -58,7 +57,6 @@ function LifecycleList({
   const [state, setState] = useState<LifecycleListState>({
     event: initialEvent,
     loading: lifecycleEventIsLoading(initialEvent),
-    refreshCount: initialEvent === "willAppear" ? 1 : 0,
   });
 
   useEffect(() => {
@@ -68,10 +66,6 @@ function LifecycleList({
         return {
           event,
           loading: lifecycleEventIsLoading(event),
-          refreshCount:
-            event === "willAppear"
-              ? current.refreshCount + 1
-              : current.refreshCount,
         };
       });
     };
@@ -92,20 +86,13 @@ function LifecycleList({
       data-lifecycle-event={state.event}
       data-loading={state.loading}
       data-row-count={rowCount}
+      aria-busy={state.loading}
     >
-      <div className="demo-list-runtime" role="status" aria-live="polite">
-        <span className={state.loading ? "is-loading" : "is-ready"}>
-          <i aria-hidden="true" />
-          {state.loading ? "LOADING" : "READY"}
-        </span>
-        <code>presenter.{state.event}</code>
-        <small>
-          {rowCount} ROWS · REFRESH {String(state.refreshCount).padStart(2, "0")}
-        </small>
-      </div>
-      <div className="demo-list-body" aria-busy={state.loading}>
-        {children}
-      </div>
+      {state.loading ? (
+        <div className="demo-list-spinner" role="status" aria-label="Loading list">
+          <span aria-hidden="true" />
+        </div>
+      ) : children}
     </section>
   );
 }

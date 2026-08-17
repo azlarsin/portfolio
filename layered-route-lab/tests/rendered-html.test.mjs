@@ -297,14 +297,15 @@ test("presenter leave keeps the surface mounted until transition completion", as
   );
 });
 
-test("large list pages register presenter lifecycle loading events", async () => {
-  const [productsResponse, ordersResponse, presenter, lifecycle, business, data] =
+test("large list pages release tables while loading and remain visible in 3D", async () => {
+  const [productsResponse, ordersResponse, presenter, lifecycle, business, css, data] =
     await Promise.all([
       render("/products"),
       render("/product/1/orders"),
       readFile(new URL("../src/core/Presenter.tsx", import.meta.url), "utf8"),
       readFile(new URL("../src/core/PresenterLifecycle.ts", import.meta.url), "utf8"),
       readFile(new URL("../src/agent/DemoBusinessSurface.tsx", import.meta.url), "utf8"),
+      readFile(new URL("../src/agent/demo-business.css", import.meta.url), "utf8"),
       readFile(new URL("../src/agent/demoData.ts", import.meta.url), "utf8"),
     ]);
 
@@ -319,6 +320,10 @@ test("large list pages register presenter lifecycle loading events", async () =>
   assert.match(ordersHtml, /data-row-count="96"/);
   assert.match(productsHtml, /data-loading="true"/);
   assert.match(ordersHtml, /data-loading="true"/);
+  assert.match(productsHtml, /class="demo-list-spinner"/);
+  assert.match(ordersHtml, /class="demo-list-spinner"/);
+  assert.doesNotMatch(productsHtml, /P-001/);
+  assert.doesNotMatch(ordersHtml, /Order 1006/);
   assert.match(lifecycle, /"willAppear"/);
   assert.match(lifecycle, /"didAppear"/);
   assert.match(lifecycle, /"willDisappear"/);
@@ -329,6 +334,15 @@ test("large list pages register presenter lifecycle loading events", async () =>
   assert.match(business, /lifecycle\.on\("didAppear"/);
   assert.match(business, /lifecycle\.on\("willDisappear"/);
   assert.match(business, /lifecycle\.on\("didDisappear"/);
+  assert.match(business, /state\.loading \? \(/);
+  assert.match(business, /demo-list-spinner/);
+  assert.match(presenter, /const pageActive = \(isTop \|\| d3\) && !leaving/);
+  assert.match(css, /\.demo-lifecycle-list\[data-loading="true"\][\s\S]*?min-height/);
+  assert.match(css, /\.stage\[data-d3="true"\] \.demo-business-surface \{[\s\S]*?gap: 10px/);
+  assert.doesNotMatch(
+    css,
+    /\.stage\[data-d3="true"\] \.demo-business-surface \{\s*display: none/,
+  );
   assert.match(data, /\{ length: 72 \}/);
   assert.match(data, /\{ length: 96 \}/);
 });

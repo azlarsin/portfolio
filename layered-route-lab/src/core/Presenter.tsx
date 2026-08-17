@@ -100,7 +100,8 @@ export default function Presenter({
 }: PresenterProps) {
   const [entered, setEntered] = useState(index === 0);
   const didLeaveRef = useRef(false);
-  const pageActive = isTop && !leaving;
+  const d3 = inspectionMode !== "off";
+  const pageActive = (isTop || d3) && !leaving;
   const previousPageActiveRef = useRef<boolean | null>(null);
   const lifecycleTimerRef = useRef<number | null>(null);
   const [lifecycle] = useState(() =>
@@ -109,7 +110,6 @@ export default function Presenter({
     ),
   );
   const context = useContext(AppContext);
-  const d3 = inspectionMode !== "off";
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => setEntered(true));
