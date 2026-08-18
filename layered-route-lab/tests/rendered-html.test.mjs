@@ -59,7 +59,9 @@ test("the onboarding guide connects route layers to the constrained Agent loop",
   assert.match(app, /onPushTemporaryPresenter=\{pushPresenter\}/);
   assert.match(app, /onOpenAgent=\{openAgentFromGuide\}/);
 
-  assert.match(guide, /先看页面层，再看 Agent/);
+  assert.match(guide, />操作指南</);
+  assert.match(guide, /按下方步骤操作，观察 URL、History 与界面层如何协作/);
+  assert.doesNotMatch(guide, /先看页面层，再看 Agent/);
   assert.match(guide, /Route Presenter/);
   assert.match(guide, /Temp Presenter · Modal/);
   assert.match(guide, /URL 保持不变/);

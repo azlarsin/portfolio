@@ -341,6 +341,35 @@ describe('portfolio acceptance contracts', () => {
     )
   })
 
+  it('describes Baidu road-attribute work as implementation, not commit metadata', () => {
+    const roadImpact = baiduMapWorkbenchProject.impact[1]
+    const interactionChapter = baiduMapWorkbenchProject.chapters.find(
+      (chapter) => chapter.id === 'workbench-interactions',
+    )
+    const interactionText = interactionChapter?.paragraphs.join(' ') || ''
+    const englishProject = getLocalizedProjects(
+      [baiduMapWorkbenchProject],
+      'en',
+    )[0]
+    const englishRoadImpact = englishProject.impact[1]
+    const englishInteractionText =
+      englishProject.chapters
+        .find((chapter) => chapter.id === 'workbench-interactions')
+        ?.paragraphs.join(' ') || ''
+
+    expect(roadImpact).toContain('实现道路属性规格适配')
+    expect(roadImpact).toContain('后端数据规格与前端视觉模型之间的双向转换')
+    expect(roadImpact).not.toMatch(/个人提交|提交的实现/)
+    expect(interactionText).toMatch(/TTFA.*时间条件.*车辆类型位图.*车道组成/)
+    expect(interactionText).toContain('兼容新旧数据规格')
+    expect(englishRoadImpact).toContain('implemented road-attribute adaptation')
+    expect(englishRoadImpact).not.toMatch(/personal commits|directly attributable commits/i)
+    expect(englishInteractionText).toMatch(
+      /time conditions.*vehicle-type bitmasks.*lane composition.*TTFA/i,
+    )
+    expect(englishInteractionText).toContain('compatibility across specification revisions')
+  })
+
   it('positions full-stack delivery as an evidenced career stage', () => {
     const sanyaExperience = profile.experience.find(
       (experience) => experience.company === '三亚汪汪信息科技有限公司',
@@ -503,6 +532,23 @@ describe('portfolio acceptance contracts', () => {
     expect(
       layeredAgentProject.links?.find((link) => link.label === 'Agent Demo')?.url,
     ).toBe(layeredAgentProject.demo?.source)
+  })
+
+  it('12. gives the Poke demo real resize handles and a cancellable pointer gesture', () => {
+    const assetPath = fileURLToPath(
+      new URL('../src/assets/poke-editor-demo.html', import.meta.url),
+    )
+    const source = readFileSync(assetPath, 'utf8')
+
+    expect(source).toContain("handle.className = 'resize-handle'")
+    expect(source).toContain("['nw','se']")
+    expect(source).toContain("mode:'resize'")
+    expect(source).toContain('artboard.setPointerCapture(event.pointerId)')
+    expect(source).toContain('gesture.pointerId !== event.pointerId')
+    expect(source).toContain("artboard.addEventListener('pointercancel'")
+    expect(source).toContain("artboard.addEventListener('lostpointercapture'")
+    expect(source).toContain('MIN_RESIZE_SIZE = 16')
+    expect(source).not.toMatch(/\.selected::(?:before|after)/)
   })
 
   it('13. retains every source-backed legacy demo asset as non-empty HTML', () => {

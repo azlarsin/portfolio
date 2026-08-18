@@ -42,10 +42,8 @@ export default function ExperienceGuide({
       <header className="guide-header">
         <div>
           <span className="guide-kicker">START HERE · 2 MIN</span>
-          <h2 id="experience-guide-title">先看页面层，再看 Agent</h2>
-          <p>
-            这个 Lab 演示的不是一组抽屉动画，而是 URL、History 与界面层如何协作。
-          </p>
+          <h2 id="experience-guide-title">操作指南</h2>
+          <p>按下方步骤操作，观察 URL、History 与界面层如何协作。</p>
         </div>
         <button type="button" aria-label="关闭操作指南" onClick={onClose}>
           ×

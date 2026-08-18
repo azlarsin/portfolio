@@ -79,18 +79,17 @@
     .statusbar { position: absolute; z-index: 20; top: 0; right: 0; left: 0; display: flex; height: 17px; align-items: center; justify-content: space-between; padding: 0 8px; color: #667080; font-size: 6px; pointer-events: none; }
     .canvas-element { position: absolute; border: 1px solid transparent; cursor: move; user-select: none; }
     .canvas-element.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.75), 0 0 0 2px #2f79ed; }
-    .canvas-element.selected::before, .canvas-element.selected::after { position: absolute; z-index: 4; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: #2f79ed; content: ''; }
-    .canvas-element.selected::before { top: -4px; left: -4px; } .canvas-element.selected::after { right: -4px; bottom: -4px; }
     .canvas-element.text { display: flex; align-items: center; border-style: dashed; }
     .canvas-element.nav { display: flex; align-items: center; justify-content: space-around; }
     .canvas-container { position: absolute; overflow: visible; }
     .canvas-container.mask { overflow: hidden; border-radius: 9px; }
     .container-hit { position: absolute; z-index: 30; border: 1px solid transparent; cursor: move; inset: 0; }
     .container-hit.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 0 0 2px #2f79ed; }
-    .container-hit.selected::before, .container-hit.selected::after { position: absolute; width: 6px; height: 6px; border: 1px solid white; border-radius: 50%; background: #2f79ed; content: ''; }
-    .container-hit.selected::before { top: -4px; left: -4px; }
-    .container-hit.selected::after { right: -4px; bottom: -4px; }
     .canvas-container.expanded .container-hit { border: 1px dashed rgba(47,121,237,.65); pointer-events: none; }
+    .resize-overlay { position: absolute; z-index: 60; pointer-events: none; }
+    .resize-handle { position: absolute; width: 16px; height: 16px; padding: 0; border: 0; background: radial-gradient(circle, #2f79ed 0 3px, white 3.5px 4.5px, transparent 5px); cursor: nwse-resize; pointer-events: auto; touch-action: none; }
+    .resize-handle[data-resize-direction="nw"] { top: -8px; left: -8px; }
+    .resize-handle[data-resize-direction="se"] { right: -8px; bottom: -8px; }
     .inspector-head { display: flex; min-height: 44px; align-items: center; gap: 9px; padding: 0 12px; border-bottom: 1px solid #d8dce1; background: #f9fafb; }
     .inspector-icon { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #cdd2d9; border-radius: 5px; color: #617087; background: white; font-size: 9px; }
     .inspector-head strong { display: block; font-size: 10px; }
@@ -239,6 +238,7 @@
       ];
 
       const clone = value => JSON.parse(JSON.stringify(value));
+      const MIN_RESIZE_SIZE = 16;
       const artboard = document.querySelector('#artboard');
       const stage = document.querySelector('.stage');
       const leftContent = document.querySelector('#leftContent');
@@ -265,7 +265,7 @@
       let expandedContainerId = null;
       let clipboard = null;
       let eventElementIds = new Set();
-      let dragging = null;
+      let gesture = null;
       let replaying = false;
       let idSequence = 100;
       let toastTimer = null;
@@ -364,6 +364,35 @@
         return {x:x,y:y,w:right-x,h:bottom-y};
       }
 
+      function geometrySnapshot(items) {
+        return items.map(item => ({id:item.id,x:item.x,y:item.y,w:item.w,h:item.h}));
+      }
+
+      function restoreGeometry(snapshot) {
+        snapshot.forEach(origin => {
+          const item = getElement(origin.id);
+          if (item) Object.assign(item, {x:origin.x,y:origin.y,w:origin.w,h:origin.h});
+        });
+        containers.forEach(syncContainer);
+      }
+
+      function applyBoundsToSnapshot(snapshot, before, next) {
+        const scaleX = next.w / before.w;
+        const scaleY = next.h / before.h;
+        snapshot.forEach(origin => {
+          const item = getElement(origin.id);
+          if (!item) return;
+          const left = next.x + (origin.x-before.x)*scaleX;
+          const top = next.y + (origin.y-before.y)*scaleY;
+          const right = next.x + (origin.x+origin.w-before.x)*scaleX;
+          const bottom = next.y + (origin.y+origin.h-before.y)*scaleY;
+          item.x = Math.round(left);
+          item.y = Math.round(top);
+          item.w = Math.max(1, Math.round(right-left));
+          item.h = Math.max(1, Math.round(bottom-top));
+        });
+      }
+
       function selectionRules() {
         const ids = Array.from(selectedIds);
         const entities = ids.map(getEntity).filter(Boolean);
@@ -455,6 +484,31 @@
         artboard.appendChild(wrapper);
       }
 
+      function renderResizeOverlay() {
+        if (currentPage !== 'home' || selectedIds.size !== 1) return;
+        const entity = selected();
+        if (!entity) return;
+        if (getContainer(entity.id)) syncContainer(entity);
+        const overlay = document.createElement('div');
+        overlay.className = 'resize-overlay';
+        Object.assign(overlay.style, {
+          left:entity.x+'px',
+          top:entity.y+'px',
+          width:entity.w+'px',
+          height:entity.h+'px'
+        });
+        ['nw','se'].forEach(direction => {
+          const handle = document.createElement('button');
+          handle.type = 'button';
+          handle.className = 'resize-handle';
+          handle.dataset.resizeDirection = direction;
+          handle.setAttribute('aria-label', direction === 'nw' ? '调整左上角' : '调整右下角');
+          handle.addEventListener('pointerdown', startResize);
+          overlay.appendChild(handle);
+        });
+        artboard.appendChild(overlay);
+      }
+
       function renderCanvas() {
         artboard.innerHTML = '<div class="statusbar"><span>9:41</span><span>◉ ◌ 100%</span></div>';
         if (currentPage === 'details') {
@@ -476,6 +530,7 @@
             artboard.appendChild(createElementNode(item, 0, 0, item.id));
           }
         });
+        renderResizeOverlay();
       }
 
       function setSelection(id, additive) {
@@ -491,8 +546,29 @@
         if (currentPage === 'home') lastHomeSelection = new Set(selectedIds);
       }
 
+      function pointerScale() {
+        const rect = artboard.getBoundingClientRect();
+        return {
+          x:rect.width ? artboard.clientWidth/rect.width : 1,
+          y:rect.height ? artboard.clientHeight/rect.height : 1
+        };
+      }
+
+      function captureGesture(event, details) {
+        const scale = pointerScale();
+        gesture = Object.assign({
+          pointerId:event.pointerId,
+          startX:event.clientX,
+          startY:event.clientY,
+          scaleX:scale.x,
+          scaleY:scale.y,
+          changed:false
+        }, details);
+        artboard.setPointerCapture(event.pointerId);
+      }
+
       function startDrag(event) {
-        if (event.button !== 0 || currentPage !== 'home') return;
+        if (event.button !== 0 || event.isPrimary === false || gesture || currentPage !== 'home') return;
         event.preventDefault();
         event.stopPropagation();
         closeContextMenu();
@@ -505,41 +581,105 @@
           setSelection(id, false);
         }
         const movableItems = selectedVisualItems();
-        dragging = {
+        captureGesture(event, {
+          mode:'move',
           label:selectedIds.size > 1 ? selectedIds.size + ' 个图层' : (getEntity(id) ? getEntity(id).name : '图层'),
-          startX:event.clientX,
-          startY:event.clientY,
-          origins:movableItems.map(item => ({id:item.id,x:item.x,y:item.y}))
-        };
+          snapshot:geometrySnapshot(movableItems)
+        });
         renderCanvas();
         renderLayers();
         renderInspector();
         updateChrome();
       }
 
-      window.addEventListener('pointermove', event => {
-        if (!dragging) return;
-        const dx = Math.round(event.clientX - dragging.startX);
-        const dy = Math.round(event.clientY - dragging.startY);
-        dragging.origins.forEach(origin => {
-          const item = getElement(origin.id);
-          if (item) {
-            item.x = origin.x + dx;
-            item.y = origin.y + dy;
-          }
+      function startResize(event) {
+        if (event.button !== 0 || event.isPrimary === false || gesture || currentPage !== 'home' || selectedIds.size !== 1) return;
+        event.preventDefault();
+        event.stopPropagation();
+        closeContextMenu();
+        const entity = selected();
+        if (!entity) return;
+        const container = getContainer(entity.id);
+        if (container) syncContainer(container);
+        const items = container ? container.childIds.map(getElement).filter(Boolean) : [entity];
+        captureGesture(event, {
+          mode:'resize',
+          direction:event.currentTarget.dataset.resizeDirection,
+          entityId:entity.id,
+          label:entity.name,
+          bounds:{x:entity.x,y:entity.y,w:entity.w,h:entity.h},
+          snapshot:geometrySnapshot(items)
         });
-        containers.forEach(syncContainer);
+      }
+
+      function resizedBounds(before, direction, dx, dy) {
+        if (direction === 'se') {
+          return {
+            x:before.x,
+            y:before.y,
+            w:Math.max(MIN_RESIZE_SIZE, before.w+dx),
+            h:Math.max(MIN_RESIZE_SIZE, before.h+dy)
+          };
+        }
+        const w = Math.max(MIN_RESIZE_SIZE, before.w-dx);
+        const h = Math.max(MIN_RESIZE_SIZE, before.h-dy);
+        return {x:before.x+before.w-w,y:before.y+before.h-h,w:w,h:h};
+      }
+
+      function updateGesture(event) {
+        if (!gesture || gesture.pointerId !== event.pointerId) return;
+        event.preventDefault();
+        const dx = Math.round((event.clientX-gesture.startX)*gesture.scaleX);
+        const dy = Math.round((event.clientY-gesture.startY)*gesture.scaleY);
+        if (gesture.mode === 'move') {
+          gesture.snapshot.forEach(origin => {
+            const item = getElement(origin.id);
+            if (item) {
+              item.x = origin.x+dx;
+              item.y = origin.y+dy;
+            }
+          });
+          containers.forEach(syncContainer);
+        } else {
+          const next = resizedBounds(gesture.bounds, gesture.direction, dx, dy);
+          const container = getContainer(gesture.entityId);
+          if (container) {
+            applyBoundsToSnapshot(gesture.snapshot, gesture.bounds, next);
+            syncContainer(container);
+          } else {
+            const item = getElement(gesture.entityId);
+            if (item) {
+              Object.assign(item, next);
+              if (item.containerId) syncContainer(getContainer(item.containerId));
+            }
+          }
+        }
+        gesture.changed = gesture.snapshot.some(origin => {
+          const item = getElement(origin.id);
+          return item && (item.x !== origin.x || item.y !== origin.y || item.w !== origin.w || item.h !== origin.h);
+        });
         renderCanvas();
         syncInspectorValues();
-      });
+      }
 
-      window.addEventListener('pointerup', () => {
-        if (!dragging) return;
-        const label = dragging.label;
-        dragging = null;
+      function finishGesture(event, cancel) {
+        if (!gesture || (event && gesture.pointerId !== event.pointerId)) return;
+        const completed = gesture;
+        gesture = null;
+        if (cancel) restoreGeometry(completed.snapshot);
+        if (artboard.hasPointerCapture(completed.pointerId)) artboard.releasePointerCapture(completed.pointerId);
         renderAll();
-        flash('已移动 ' + label);
-      });
+        if (!cancel && completed.changed) flash((completed.mode === 'resize' ? '已调整大小 ' : '已移动 ') + completed.label);
+      }
+
+      function cancelActiveGesture() {
+        if (gesture) finishGesture(null, true);
+      }
+
+      artboard.addEventListener('pointermove', updateGesture);
+      artboard.addEventListener('pointerup', event => finishGesture(event, false));
+      artboard.addEventListener('pointercancel', event => finishGesture(event, true));
+      artboard.addEventListener('lostpointercapture', event => finishGesture(event, true));
 
       function renderLayerRow(item, nested) {
         const isContainer = Boolean(getContainer(item.id));
@@ -655,7 +795,7 @@
         if (container) {
           syncContainer(container);
           const typeName = {group:'GROUP',mask:'MASK',component:'COMPONENT'}[container.type] || 'CONTAINER';
-          inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(container) + '</div><div><strong>' + esc(container.name) + '</strong><span>' + typeName + ' · ' + esc(container.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-container-prop="x" type="number" value="' + container.x + '"></label><label>Y<input data-container-prop="y" type="number" value="' + container.y + '"></label><label>W<input data-container-prop="w" type="number" value="' + container.w + '"></label><label>H<input data-container-prop="h" type="number" value="' + container.h + '"></label></div></div><div class="inspector-section"><h3>STRUCTURE</h3><div class="full-field"><span>子图层</span><input value="' + container.childIds.length + ' layers" disabled></div><button class="interaction-button" id="enterContainer" style="margin-top:9px"><span>↳ 进入容器编辑</span></button></div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (container.childIds.some(id => eventElementIds.has(id)) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+          inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(container) + '</div><div><strong>' + esc(container.name) + '</strong><span>' + typeName + ' · ' + esc(container.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-container-prop="x" type="number" value="' + container.x + '"></label><label>Y<input data-container-prop="y" type="number" value="' + container.y + '"></label><label>W<input data-container-prop="w" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + container.w + '"></label><label>H<input data-container-prop="h" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + container.h + '"></label></div></div><div class="inspector-section"><h3>STRUCTURE</h3><div class="full-field"><span>子图层</span><input value="' + container.childIds.length + ' layers" disabled></div><button class="interaction-button" id="enterContainer" style="margin-top:9px"><span>↳ 进入容器编辑</span></button></div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (container.childIds.some(id => eventElementIds.has(id)) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
           inspector.querySelectorAll('[data-container-prop]').forEach(input => input.addEventListener('change', () => updateContainerGeometry(container, input.dataset.containerProp, Number(input.value))));
           inspector.querySelector('#enterContainer').addEventListener('click', () => {
             expandedContainerId = container.id;
@@ -668,10 +808,11 @@
         }
 
         const hasText = Object.prototype.hasOwnProperty.call(item, 'text');
-        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" value="' + item.h + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.h + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
         inspector.querySelectorAll('[data-prop]').forEach(input => input.addEventListener('input', () => {
           const prop = input.dataset.prop;
-          item[prop] = ['x','y','w','h','radius','opacity'].includes(prop) ? Number(input.value) : input.value;
+          const value = ['x','y','w','h','radius','opacity'].includes(prop) ? Number(input.value) : input.value;
+          item[prop] = (prop === 'w' || prop === 'h') && Number.isFinite(value) ? Math.max(MIN_RESIZE_SIZE, value) : value;
           if (item.containerId) syncContainer(getContainer(item.containerId));
           renderCanvas();
           renderLayers();
@@ -684,21 +825,13 @@
         if (!Number.isFinite(value)) return;
         const before = containerBounds(container);
         const members = container.childIds.map(getElement).filter(Boolean);
+        const snapshot = geometrySnapshot(members);
         if (prop === 'x' || prop === 'y') {
-          const delta = value - before[prop];
+          const delta = value-before[prop];
           members.forEach(item => { item[prop] += delta; });
-        } else if (prop === 'w' && before.w > 0) {
-          const scale = Math.max(1, value) / before.w;
-          members.forEach(item => {
-            item.x = Math.round(before.x + (item.x-before.x)*scale);
-            item.w = Math.max(1, Math.round(item.w*scale));
-          });
-        } else if (prop === 'h' && before.h > 0) {
-          const scale = Math.max(1, value) / before.h;
-          members.forEach(item => {
-            item.y = Math.round(before.y + (item.y-before.y)*scale);
-            item.h = Math.max(1, Math.round(item.h*scale));
-          });
+        } else if (prop === 'w' || prop === 'h') {
+          const next = Object.assign({}, before, {[prop]:Math.max(MIN_RESIZE_SIZE, value)});
+          applyBoundsToSnapshot(snapshot, before, next);
         }
         syncContainer(container);
         renderAll();
@@ -707,9 +840,11 @@
       function syncInspectorValues() {
         if (selectedIds.size !== 1) return;
         const item = selected();
-        if (!item || getContainer(item.id)) return;
-        ['x','y'].forEach(prop => {
-          const input = inspector.querySelector('[data-prop="' + prop + '"]');
+        if (!item) return;
+        const container = getContainer(item.id);
+        const attribute = container ? 'data-container-prop' : 'data-prop';
+        ['x','y','w','h'].forEach(prop => {
+          const input = inspector.querySelector('[' + attribute + '="' + prop + '"]');
           if (input) input.value = item[prop];
         });
       }
@@ -747,6 +882,7 @@
 
       function switchPage(pageId) {
         if (!pages.some(page => page.id === pageId)) return;
+        cancelActiveGesture();
         closeContextMenu();
         interactionPanel.classList.remove('open');
         currentPage = pageId;
@@ -969,6 +1105,7 @@
 
       function deleteSelection() {
         if (!selectedIds.size) return;
+        cancelActiveGesture();
         const elementIds = new Set();
         const containerIds = new Set();
         selectedIds.forEach(id => {
@@ -1225,7 +1362,10 @@
       }, true);
       window.addEventListener('wheel', closeContextMenu, {capture:true,passive:true});
       window.addEventListener('resize', closeContextMenu);
-      window.addEventListener('blur', closeContextMenu);
+      window.addEventListener('blur', () => {
+        closeContextMenu();
+        cancelActiveGesture();
+      });
 
       stage.addEventListener('contextmenu', event => {
         if (event.defaultPrevented) return;
@@ -1329,6 +1469,11 @@
 
       document.addEventListener('keydown', event => {
         const editable = event.target.matches('input, textarea, select, [contenteditable="true"]');
+        if (event.key === 'Escape' && gesture) {
+          event.preventDefault();
+          cancelActiveGesture();
+          return;
+        }
         if (!confirmLayer.hidden) {
           if (event.key === 'Escape') closeConfirm();
           return;
@@ -1371,6 +1516,7 @@
 
       async function runReplay() {
         if (replaying) return;
+        cancelActiveGesture();
         replaying = true;
         closePreview();
         closeContextMenu();

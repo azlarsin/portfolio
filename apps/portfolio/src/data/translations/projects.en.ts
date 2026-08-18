@@ -184,7 +184,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     ],
     impact: [
       'Contributed core work to a complex map-operations frontend, organizing roads, tracks, GPS, and business annotations through Map, Layer, Feature, and Element boundaries in the internal SVG map system.',
-      'Handled tile-difference loading, spatial indexing, geometric filtering, and selection, editing, association, highlighting, measurement, and dynamic labels; verifiable personal commits also cover bidirectional road-attribute conversion between backend specifications and frontend visual models.',
+      'Handled tile-difference loading, spatial indexing, and geometric filtering as the viewport changed; supported selection, editing, association, highlighting, measurement, and dynamic labels for spatial features; and implemented road-attribute adaptation between backend data specifications and frontend visual models.',
       'Led PHP / Yii2 spatial-statistics services and Python batch jobs while extending asynchronous QA, callback deduplication, rework / acceptance state, and JSONB exception analysis in the Python / PostgreSQL operations backend.',
       'Used Elasticsearch count / search / scroll and MySQL business records to derive stage timings across collection, matching, command, recycling, and QA.',
       'Led five frontend engineers delivering map operations, statistics consoles, and related tools, including task breakdown, technical design, difficult issues, and code review.',
@@ -248,7 +248,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Operations interaction across maps, imagery, and task state',
         paragraphs: [
           'Operators compared plan views with photos, panoramas, or top-view imagery and selected, edited, and associated road names, lanes, speed limits, turns, and traffic facilities. The map also coordinated reference data, active annotations, differences, and QA findings.',
-          'Directly attributable commits also cover road-attribute adaptation: bidirectional conversion of time conditions, vehicle-type bitmasks, and lane composition between backend TTFA rules and frontend visual models, including compatibility across specification revisions.',
+          'I also implemented road-attribute adaptation, converting time conditions, vehicle-type bitmasks, and lane composition in both directions between backend TTFA rules and frontend visual models while maintaining compatibility across specification revisions.',
           'Layer visibility, selection, history, tools, and task state jointly drove the frontend. Highlighting, measurement, dynamic labels, and reference tracks were operational aids for decisions and edits in dense spatial context, not isolated visual effects.',
         ],
         phase: 'Map-data operations workbench',
@@ -281,7 +281,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Team delivery: five frontend engineers and cross-stack work',
         paragraphs: [
           'At Baidu I led five frontend engineers across map-data operations, statistics consoles, and the Baijiahao editor. I combined task breakdown, technical design, and code review with direct work on critical map interactions and difficult implementation issues.',
-          'On the backend, I directly led the statistics service and continued contributing Python and PostgreSQL business capabilities to the existing operations platform. This case separates personal code, team delivery, and pre-existing infrastructure instead of treating leadership as proof of authorship.',
+          'On the backend, I directly led the statistics service and continued implementing Python and PostgreSQL business capabilities in the existing operations platform. This case separates personal code, team delivery, and pre-existing infrastructure instead of treating leadership as proof of authorship.',
         ],
         phase: 'Frontend lead · Cross-stack delivery',
       },
@@ -289,14 +289,14 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         id: 'boundaries',
         title: 'Evidence and technology boundaries',
         paragraphs: [
-          'This public case is based on my work history, retained source, and verifiable commit history and includes no internal screens, real map data, or unauthorized screenshots. The rendering source establishes the system architecture and interaction complexity but lacks complete original history, so I do not claim sole authorship of the map engine.',
-          'Backend commits support the PHP / Yii2, Python / Tornado, PostgreSQL / JSONB, MySQL, and Elasticsearch query work. Kafka was project-level usage experience and is not presented as a design or platform-building outcome; Elasticsearch usage is likewise not described as cluster engineering.',
+          'This public case is based on my work history, retained source, and verifiable repository history and includes no internal screens, real map data, or unauthorized screenshots. The rendering source establishes the system architecture and interaction complexity but lacks complete original history, so I do not claim sole authorship of the map engine.',
+          'Retained backend code covers the PHP / Yii2, Python / Tornado, PostgreSQL / JSONB, MySQL, and Elasticsearch query work. Kafka was project-level usage experience and is not presented as a design or platform-building outcome; Elasticsearch usage is likewise not described as cluster engineering.',
         ],
         phase: 'Public disclosure boundary',
       },
     ],
     provenanceNote:
-      'This case is based on my Baidu work history, retained source, and verifiable commits. The rendering section describes the operations frontend scope in which I participated and held responsibility without treating an internally shared map foundation with incomplete history as my sole work; backend and team claims are attributed separately to commits and résumé evidence.',
+      'This case is based on my Baidu work history, retained source, and verifiable repository history. The rendering section describes the operations frontend scope in which I participated and held responsibility without treating an internally shared map foundation with incomplete history as my sole work; backend and team claims are described through retained code and résumé evidence.',
   },
   'baijiahao-editor': {
     title: 'Baijiahao Editor: From Deep UEditor Customization to an Internal Reusable Package',
