@@ -333,7 +333,6 @@ export default function AgentDemoOverlay({
   const [pacedPlayback, setPacedPlayback] = useState(true);
   const runSequence = useRef(0);
   const pacedPlaybackRef = useRef(true);
-  const shortcutPacingRef = useRef(false);
   const commandInputRef = useRef<HTMLInputElement>(null);
 
   const knowledgeStats = useMemo(
@@ -477,42 +476,17 @@ export default function AgentDemoOverlay({
         setTab("run");
         return;
       }
-      if (event.altKey && event.code === "KeyS") {
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        if (event.repeat) return;
-        setOpen(true);
-        shortcutPacingRef.current = true;
-        void (async () => {
-          await setPlaybackPacing(true);
-          if (plan && plan.mode !== "clarify" && !running) {
-            await runPlan(plan);
-          }
-        })();
-        return;
-      }
       if (open && !running && event.key === "Escape") {
         event.preventDefault();
         event.stopImmediatePropagation();
         setOpen(false);
       }
     };
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (
-        shortcutPacingRef.current &&
-        (event.code === "KeyS" || event.code === "AltLeft" || event.code === "AltRight")
-      ) {
-        shortcutPacingRef.current = false;
-        void setPlaybackPacing(false);
-      }
-    };
     window.addEventListener("keydown", handleKeyDown, true);
-    window.addEventListener("keyup", handleKeyUp, true);
     return () => {
       window.removeEventListener("keydown", handleKeyDown, true);
-      window.removeEventListener("keyup", handleKeyUp, true);
     };
-  }, [open, plan, runPlan, running, setPlaybackPacing]);
+  }, [open, running]);
 
   const submitCommand = (event: React.FormEvent) => {
     event.preventDefault();
@@ -598,7 +572,7 @@ export default function AgentDemoOverlay({
               <span>MODEL: {plan?.model === "skipped" ? "SKIPPED" : "NOT CALLED"}</span>
               <span>CRAWLS: 0</span>
               <span>STEP DELAY: {pacedPlayback ? `${(AGENT_STEP_DELAY_MS / 1000).toFixed(1)}S` : "OFF"}</span>
-              <span>HOLD: ALT+S</span>
+              <span>REVIEW PLAN → EXECUTE</span>
             </div>
 
             <button
@@ -691,6 +665,7 @@ export default function AgentDemoOverlay({
                   {!plan || plan.mode === "clarify" ? (
                     <div className="agent-suggestions">
                       <span>可运行示例</span>
+                      <p>点击示例生成计划，确认后才会执行。</p>
                       {agentSuggestions.map((suggestion) => (
                         <button
                           key={suggestion.command}
@@ -718,7 +693,7 @@ export default function AgentDemoOverlay({
                   ) : (
                     <div className="agent-empty-state">
                       <span>01</span>
-                      <p>选择一条示例，观察“静态索引 → 计划 → 页面执行 → 状态验证”的完整过程。</p>
+                      <p>选择示例生成计划；确认执行后，依次观察页面动作与状态验证。</p>
                     </div>
                   )}
 

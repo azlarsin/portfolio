@@ -102,6 +102,11 @@ export function ResumePage() {
           </object>
         </section>
       ) : null}
+
+      <section className="resume-website" aria-label="Portfolio website">
+        <span>Portfolio</span>
+        <a href={profile.contact.website}>{profile.contact.website}</a>
+      </section>
     </main>
   )
 }

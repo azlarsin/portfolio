@@ -328,12 +328,13 @@ def bullet(text: str, styles: dict[str, ParagraphStyle]) -> Paragraph:
     return Paragraph(f"• {plain_text(text)}", styles["bullet"])
 
 
-def make_footer(note: str):
+def make_footer(note: str, website: str):
     def footer(canvas, doc) -> None:
         canvas.saveState()
         canvas.setFont("ResumeSans", 7)
         canvas.setFillColor(colors.HexColor("#8a8a8a"))
         canvas.drawString(doc.leftMargin, 13 * mm, note)
+        canvas.drawCentredString(A4[0] / 2, 13 * mm, website)
         canvas.drawRightString(A4[0] - doc.rightMargin, 13 * mm, f"{doc.page}")
         canvas.restoreState()
 
@@ -431,10 +432,11 @@ def build_resume() -> None:
         f"Phone: {plain_text(contact['phone'])}"
         f" &nbsp;|&nbsp; Email: {plain_text(contact['email'])}"
         f" &nbsp;|&nbsp; GitHub: {plain_text(contact['github'])}"
+        f" &nbsp;|&nbsp; Website: {plain_text(contact['website'])}"
     )
     story.extend([Spacer(1, 5), Paragraph(contact_text, styles["note"])])
 
-    footer = make_footer(document["footer"])
+    footer = make_footer(document["footer"], contact["website"])
     print(f"Using regular font: {regular_font}")
     print(f"Using bold font: {bold_font}")
     print(f"Writing resume to: {OUTPUT}")

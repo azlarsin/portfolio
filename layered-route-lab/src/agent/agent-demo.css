@@ -87,8 +87,8 @@
   right: 10px;
   bottom: 10px;
   width: min(448px, calc(100vw - 20px));
-  display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   color: #e9ecf7;
   background: #11131e;
@@ -280,6 +280,7 @@
 }
 
 .agent-panel-body {
+  flex: 1 1 auto;
   min-height: 0;
   padding: 14px;
   overflow-y: auto;
@@ -466,29 +467,63 @@
 
 .agent-suggestions {
   display: grid;
-  gap: 6px;
+  gap: 7px;
+  padding: 11px;
+  border: 1px solid rgba(191, 255, 74, 0.42);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(191, 255, 74, 0.1), rgba(23, 26, 39, 0.92) 48%);
+}
+
+.agent-suggestions > span {
+  color: var(--signal);
+  font-weight: 800;
+}
+
+.agent-suggestions > p {
+  margin: -2px 0 3px;
+  color: #abb3c9;
+  font-size: 8px;
+  line-height: 1.5;
 }
 
 .agent-suggestions button {
   display: grid;
-  gap: 3px;
-  padding: 9px 10px;
-  color: #cfd4e3;
-  background: #171a27;
-  border: 1px solid #292d40;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 12px;
+  padding: 10px 11px;
+  color: #e8edf8;
+  background: rgba(23, 26, 39, 0.92);
+  border: 1px solid #465071;
   border-radius: 9px;
   cursor: pointer;
   font-size: 9px;
   text-align: left;
 }
 
-.agent-suggestions button:hover {
-  border-color: #555e82;
-  background: #1c2030;
+.agent-suggestions button::after {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  color: var(--signal);
+  content: "→";
+  font-size: 16px;
+  transition: transform 140ms ease;
+}
+
+.agent-suggestions button:hover,
+.agent-suggestions button:focus-visible {
+  border-color: var(--signal);
+  background: #202637;
+  outline: none;
+}
+
+.agent-suggestions button:hover::after,
+.agent-suggestions button:focus-visible::after {
+  transform: translateX(3px);
 }
 
 .agent-suggestions small {
-  color: #7f88a7;
+  color: #aeb8d2;
   font-size: 7px;
 }
 

@@ -171,11 +171,12 @@ test("agent execution keeps every step visible and reveals deep routes progressi
   assert.doesNotMatch(overlay, /await wait\(260\)/);
 });
 
-test("agent commands are acknowledged by the host App bridge and Alt+S starts execution", async () => {
-  const [app, overlay, bridge] = await Promise.all([
+test("agent commands are acknowledged by the host App bridge without conflicting Alt+S capture", async () => {
+  const [app, overlay, bridge, agentCss] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/agent/appBridge.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/agent-demo.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(bridge, /layered-route-lab:agent-command/);
@@ -186,10 +187,16 @@ test("agent commands are acknowledged by the host App bridge and Alt+S starts ex
   assert.match(bridge, /type: "inspection\.set"/);
   assert.match(bridge, /type: "playback\.set"/);
   assert.match(overlay, /sendLabAppCommand/);
-  assert.match(overlay, /event\.altKey && event\.code === "KeyS"/);
-  assert.match(overlay, /window\.addEventListener\("keyup", handleKeyUp, true\)/);
-  assert.match(overlay, /setPlaybackPacing\(false\)/);
-  assert.match(overlay, /void runPlan\(plan\)/);
+  assert.match(overlay, /event\.key\.toLowerCase\(\) === "k"/);
+  assert.match(overlay, /REVIEW PLAN → EXECUTE/);
+  assert.doesNotMatch(overlay, /event\.altKey && event\.code === "KeyS"/);
+  assert.doesNotMatch(overlay, /HOLD: ALT\+S|shortcutPacingRef|handleKeyUp/);
+  assert.match(overlay, /点击示例生成计划，确认后才会执行。/);
+  assert.match(overlay, /onClick=\{\(\) => runCommand\(suggestion\.command\)\}/);
+  assert.match(overlay, /onClick=\{\(\) => void runPlan\(plan\)\}/);
+  assert.match(agentCss, /\.agent-panel \{[\s\S]*?display: flex[\s\S]*?flex-direction: column/);
+  assert.match(agentCss, /\.agent-panel-body \{[\s\S]*?flex: 1 1 auto[\s\S]*?min-height: 0[\s\S]*?overflow-y: auto/);
+  assert.match(agentCss, /\.agent-suggestions button::after/);
   assert.match(overlay, /data-app-bridge="ready"/);
   assert.match(overlay, /data-playback-mode=/);
   assert.doesNotMatch(overlay, /new PopStateEvent|new KeyboardEvent/);
@@ -336,6 +343,9 @@ test("large list pages reload in 3D without compressing their content", async ()
   assert.match(business, /lifecycle\.on\("didAppear"/);
   assert.match(business, /lifecycle\.on\("willDisappear"/);
   assert.match(business, /lifecycle\.on\("didDisappear"/);
+  assert.match(business, /const LIST_LOADING_PAINT_MS = 160/);
+  assert.match(business, /loadingSinceRef/);
+  assert.match(business, /LIST_LOADING_PAINT_MS - elapsed/);
   assert.match(business, /state\.loading \? \(/);
   assert.match(business, /demo-list-spinner/);
   assert.match(presenter, /const pageActive = \(isTop \|\| d3\) && !leaving/);
@@ -609,6 +619,25 @@ test("each modal handle owns lifecycle state and ports source stack math", async
   assert.match(modal, /<dt>lastFullModal<\/dt>/);
   assert.match(modal, /<dt>lastFullModalID<\/dt>/);
   assert.match(modal, /<dt>currentDepth<\/dt>/);
+  assert.match(modal, /export interface ModalLifecycleTelemetry/);
+  assert.match(modal, /onLifecycleEvent: \(telemetry:/);
+  assert.match(app, /const \[modalTelemetry, setModalTelemetry\]/);
+  assert.match(app, /const recordModalLifecycle = useCallback/);
+  assert.match(app, /telemetry\.modalIndex !== 1/);
+  assert.match(app, /observedModal=\{index === 0 \? modalTelemetry : null\}/);
+  assert.match(modal, /observes modal-2/);
+  assert.match(modal, /FULL MODAL PARAMETERS/);
+  assert.match(modal, /requested preset/);
+  assert.match(modal, /effective target/);
+  assert.match(modal, /modal-lifecycle-events/);
+  assert.match(app, /modalStack=\{modals\}/);
+  assert.match(modal, /modalStack: readonly ModalRecord\[\]/);
+  assert.match(modal, /Parameters for every modal in the stack/);
+  assert.match(modal, /modalStack\.map\(\(stackModal, stackIndex\)/);
+  assert.match(modal, /stateChanged\(event\);[\s\S]*?if \(event === "didLeave"\) \{[\s\S]*?onDidLeave\(modal\.id\);/);
+  assert.match(css, /\.modal-stack-parameters \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.modal-diagnostics > dl \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /\.modal-diagnostics dd \{[\s\S]*?font-size: clamp\(16px/);
   assert.match(app, /id: \+\+modalHandleSequence/);
   assert.match(app, /lastFullModalId:/);
   assert.match(

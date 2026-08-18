@@ -9,7 +9,10 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import Modal, { ModalRecord } from "./core/Modal";
+import Modal, {
+  type ModalLifecycleTelemetry,
+  ModalRecord,
+} from "./core/Modal";
 import Presenter from "./core/Presenter";
 import ExperienceGuide from "./ExperienceGuide";
 import RouteRail from "./RouteRail";
@@ -182,6 +185,8 @@ export default function App({
   );
   const [presenters, setPresenters] = useState<PresenterRecord[]>([]);
   const [modals, setModals] = useState<ModalRecord[]>([]);
+  const [modalTelemetry, setModalTelemetry] =
+    useState<ModalLifecycleTelemetry | null>(null);
   const [inspectionMode, setInspectionMode] =
     useState<InspectionMode>("off");
   const [agentPlaybackMode, setAgentPlaybackMode] =
@@ -217,6 +222,7 @@ export default function App({
   const pendingModalDepthRef = useRef<number | null>(null);
   const pendingModalHistoryStepsRef = useRef(0);
   const modalCloseCameFromPopRef = useRef(false);
+  const modalTelemetrySequenceRef = useRef(0);
   const ignoreNextOverlayPopRef = useRef(false);
   const previousPresenterCountRef = useRef(presenterCount);
   const previousInspectionModeRef =
@@ -503,6 +509,9 @@ export default function App({
       ...currentModals,
       createModalRecord(currentModals),
     ];
+    if (nextModals.length === 2) {
+      setModalTelemetry(null);
+    }
     window.history.pushState(null, "", currentBrowserLocation());
     modalsRef.current = nextModals;
     setModals(nextModals);
@@ -534,6 +543,17 @@ export default function App({
     startModalLeave(undefined, false);
   }, [startModalLeave]);
 
+  const recordModalLifecycle = useCallback((
+    telemetry: Omit<ModalLifecycleTelemetry, "sequence">,
+  ) => {
+    if (telemetry.modalIndex !== 1) return;
+
+    setModalTelemetry({
+      ...telemetry,
+      sequence: ++modalTelemetrySequenceRef.current,
+    });
+  }, []);
+
   const finishModalLeave = useCallback((id: number) => {
     if (leavingModalIdRef.current !== id) return;
 
@@ -541,6 +561,10 @@ export default function App({
     const targetDepth =
       pendingModalDepthRef.current ?? Math.max(0, remaining.length);
     const cameFromPop = modalCloseCameFromPopRef.current;
+
+    if (!remaining.length) {
+      setModalTelemetry(null);
+    }
 
     modalsRef.current = remaining;
     leavingModalIdRef.current = null;
@@ -1050,6 +1074,7 @@ export default function App({
                 modal={modal}
                 index={modal.index}
                 total={modals.length}
+                modalStack={modals}
                 leaving={modal.id === leavingModalId}
                 leavingIndex={leavingModalIndex}
                 showMask={index === 0 || Boolean(modals[index - 1]?.full)}
@@ -1059,8 +1084,10 @@ export default function App({
                     : { width: modal.width, height: modal.height }
                 }
                 isTop={index === modals.length - 1}
+                observedModal={index === 0 ? modalTelemetry : null}
                 onClose={closeTopModal}
                 onDidLeave={finishModalLeave}
+                onLifecycleEvent={recordModalLifecycle}
               />
             ))}
 

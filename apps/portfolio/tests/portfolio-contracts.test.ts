@@ -79,6 +79,31 @@ describe('portfolio acceptance contracts', () => {
     expect(anchored.href).toBe('/work/layered-agent?from=home#demo')
   })
 
+  it('1a. directs the homepage résumé CTA to the canonical résumé route', () => {
+    const homeHeroPath = fileURLToPath(
+      new URL('../src/components/home/HomeHero.tsx', import.meta.url),
+    )
+    const resumePagePath = fileURLToPath(
+      new URL('../src/pages/ResumePage.tsx', import.meta.url),
+    )
+    const generatorPath = fileURLToPath(
+      new URL('../../../scripts/generate_public_resume.py', import.meta.url),
+    )
+    const homeHero = readFileSync(homeHeroPath, 'utf8')
+    const resumePage = readFileSync(resumePagePath, 'utf8')
+    const generator = readFileSync(generatorPath, 'utf8')
+
+    expect(profile.contact.website).toBe('https://me.azlar.cc')
+    expect(homeHero).toContain('href="https://me.azlar.cc/resume"')
+    expect(homeHero).not.toContain('download={')
+    expect(resumePage).toContain('profile.contact.website')
+    expect(resumePage.indexOf('pdf-preview')).toBeLessThan(
+      resumePage.lastIndexOf('resume-website'),
+    )
+    expect(generator).toContain("contact['website']")
+    expect(generator).toContain('drawCentredString(A4[0] / 2, 13 * mm, website)')
+  })
+
   it('2. resolves every unknown path to an explicit NotFound route', () => {
     const resolved = resolveRoute('/work/unknown-project?from=test#missing')
 

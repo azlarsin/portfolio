@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type {
   PresenterLifecycle,
   PresenterLifecycleEvent,
@@ -38,6 +38,8 @@ interface LifecycleListState {
   loading: boolean;
 }
 
+const LIST_LOADING_PAINT_MS = 160;
+
 function lifecycleEventIsLoading(event: PresenterLifecycleEvent) {
   return event !== "didAppear";
 }
@@ -54,20 +56,45 @@ function LifecycleList({
   rowCount: number;
 }) {
   const initialEvent = lifecycle.getCurrentEvent();
+  const loadingSinceRef = useRef<number | null>(null);
+  const loadingTimerRef = useRef<number | null>(null);
   const [state, setState] = useState<LifecycleListState>({
     event: initialEvent,
     loading: lifecycleEventIsLoading(initialEvent),
   });
 
   useEffect(() => {
+    const clearLoadingTimer = () => {
+      if (loadingTimerRef.current !== null) {
+        window.clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+    };
     const receiveEvent = (event: PresenterLifecycleEvent) => {
-      setState((current) => {
-        if (current.event === event) return current;
-        return {
-          event,
-          loading: lifecycleEventIsLoading(event),
-        };
-      });
+      clearLoadingTimer();
+      if (lifecycleEventIsLoading(event)) {
+        loadingSinceRef.current = window.performance.now();
+        setState({ event, loading: true });
+        return;
+      }
+
+      const elapsed = loadingSinceRef.current === null
+        ? 0
+        : window.performance.now() - loadingSinceRef.current;
+      setState({ event, loading: true });
+      const reveal = () => {
+        loadingTimerRef.current = null;
+        loadingSinceRef.current = null;
+        setState({ event, loading: false });
+      };
+      if (elapsed >= LIST_LOADING_PAINT_MS) {
+        reveal();
+      } else {
+        loadingTimerRef.current = window.setTimeout(
+          reveal,
+          LIST_LOADING_PAINT_MS - elapsed,
+        );
+      }
     };
     const unregister = [
       lifecycle.on("willAppear", () => receiveEvent("willAppear")),
@@ -76,7 +103,10 @@ function LifecycleList({
       lifecycle.on("didDisappear", () => receiveEvent("didDisappear")),
     ];
     receiveEvent(lifecycle.getCurrentEvent());
-    return () => unregister.forEach((removeListener) => removeListener());
+    return () => {
+      clearLoadingTimer();
+      unregister.forEach((removeListener) => removeListener());
+    };
   }, [lifecycle]);
 
   return (

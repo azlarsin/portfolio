@@ -963,6 +963,32 @@
   border-bottom: 1px solid var(--line);
 }
 
+.resume-website {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--text-tertiary);
+  font-size: 0.76rem;
+}
+
+.resume-website span {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.resume-website a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.resume-website a:hover {
+  color: var(--accent);
+}
+
 .resume-html > article {
   display: grid;
   grid-template-columns: 210px minmax(0, 1fr);
@@ -1295,6 +1321,12 @@
 
   .resume-actions {
     flex-wrap: wrap;
+  }
+
+  .resume-website {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .resume-html > article {

@@ -1,4 +1,3 @@
-import { resumeDocument } from '../../data/resume'
 import { layeredAgentProject } from '../../data'
 import { getLocalizedProfile, getLocalizedProject } from '../../data/localized'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -32,15 +31,7 @@ export function HomeHero() {
         <AppLink className="button button-secondary" to="/work/meican-platform">
           {copy.home.viewSelectedCase}
         </AppLink>
-        <a
-          className="button button-secondary"
-          href={resumeDocument.source}
-          download={
-            language === 'en'
-              ? 'Chen-Cheng-Frontend-Tech-Lead-Resume-CN.pdf'
-              : resumeDocument.fileName
-          }
-        >
+        <a className="button button-secondary" href="https://me.azlar.cc/resume">
           {copy.home.downloadResume}
         </a>
       </div>

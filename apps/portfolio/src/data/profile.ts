@@ -31,7 +31,7 @@ export interface Profile {
   education: Array<{ degree: string; school: string; major: string }>
   skills: ProfileSkillGroup[]
   selfEvaluation: string[]
-  contact: { github: string; email: string; phone: string }
+  contact: { github: string; email: string; phone: string; website: string }
 }
 
 export type ProfileTranslation = Omit<Profile, 'contact'>
