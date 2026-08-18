@@ -31,30 +31,20 @@ export type ModalLifecycleEvent =
   | "didEnter"
   | "didLeave";
 
-export interface ModalLifecycleTelemetry {
-  modalId: number;
-  modalIndex: number;
-  event: ModalLifecycleEvent;
-  active: boolean;
-  leaving: boolean;
-  isOpen: boolean;
-  sequence: number;
-}
-
 interface ModalProps {
   modal: ModalRecord;
   index: number;
   total: number;
-  modalStack: readonly ModalRecord[];
+  modalPrefix: readonly ModalRecord[];
   leaving: boolean;
   leavingIndex: number | undefined;
   showMask: boolean;
   lastSize: Pick<ModalRecord, "width" | "height">;
   isTop: boolean;
-  observedModal?: ModalLifecycleTelemetry | null;
+  focusSequence: number;
   onClose: () => void;
+  onSelectModal: (id: number) => void;
   onDidLeave: (id: number) => void;
-  onLifecycleEvent: (telemetry: Omit<ModalLifecycleTelemetry, "sequence">) => void;
 }
 
 type PresenterEvent = ModalLifecycleEvent;
@@ -115,16 +105,16 @@ export default function Modal({
   modal,
   index,
   total,
-  modalStack,
+  modalPrefix,
   leaving,
   leavingIndex,
   showMask,
   lastSize,
   isTop,
-  observedModal,
+  focusSequence,
   onClose,
+  onSelectModal,
   onDidLeave,
-  onLifecycleEvent,
 }: ModalProps) {
   const [handle, setHandle] = useState<ModalHandleState>({
     active: false,
@@ -146,7 +136,10 @@ export default function Modal({
   });
   const mountedRef = useRef(false);
   const safeTransitionTimerRef = useRef<number | null>(null);
+  const focusPulseFrameRef = useRef<number | null>(null);
+  const previousFocusSequenceRef = useRef(focusSequence);
   const previousLeavingRef = useRef(false);
+  const [focusPulse, setFocusPulse] = useState(false);
 
   if (handle.leaving !== Boolean(leaving)) {
     setHandle((current) => ({
@@ -172,15 +165,7 @@ export default function Modal({
             ? false
             : current.isOpen,
     }));
-    onLifecycleEvent({
-      modalId: modal.id,
-      modalIndex: index,
-      event,
-      active: event === "willEnter" || event === "didEnter",
-      leaving: event === "willLeave" || event === "didLeave",
-      isOpen: event === "didEnter",
-    });
-  }, [index, modal.id, onLifecycleEvent]);
+  }, []);
 
   const callEvent = useCallback(
     (event: PresenterEvent) => {
@@ -250,6 +235,9 @@ export default function Modal({
       if (safeTransitionTimerRef.current !== null) {
         window.clearTimeout(safeTransitionTimerRef.current);
       }
+      if (focusPulseFrameRef.current !== null) {
+        window.cancelAnimationFrame(focusPulseFrameRef.current);
+      }
       callEvent("willLeave");
       callEvent("didLeave");
     };
@@ -275,8 +263,26 @@ export default function Modal({
     safeTransitionTimerRef.current = window.setTimeout(() => {
       callEvent("didLeave");
       safeTransitionTimerRef.current = null;
-    }, 300);
+    }, 360);
   }, [callEvent, handle.active, handle.leaving]);
+
+  useEffect(() => {
+    if (
+      focusSequence === previousFocusSequenceRef.current ||
+      !isTop ||
+      handle.leaving
+    ) {
+      previousFocusSequenceRef.current = focusSequence;
+      return;
+    }
+
+    previousFocusSequenceRef.current = focusSequence;
+    setFocusPulse(false);
+    focusPulseFrameRef.current = window.requestAnimationFrame(() => {
+      setFocusPulse(true);
+      focusPulseFrameRef.current = null;
+    });
+  }, [focusSequence, handle.leaving, isTop]);
 
   const handleTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
     if (
@@ -335,89 +341,136 @@ export default function Modal({
         aria-label={label}
         onTransitionEnd={handleTransitionEnd}
       >
-        <header className="modal-bar">
-          <div>
-            <span className="surface-dot" />
-            <strong>{label}</strong>
-          </div>
-          <span>
-            {String(index + 1).padStart(2, "0")} /{" "}
-            {String(total).padStart(2, "0")}
-          </span>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close current modal"
-          >
-            Close
-          </button>
-        </header>
-        <div className="modal-body">
-          <p className="eyebrow">Modal</p>
-          <h2>{label}</h2>
-          <dl className="surface-state">
+        <div
+          className={`modal-card-focus ${focusPulse ? "modal-card-focus-pulse" : ""}`}
+          onAnimationEnd={(event) => {
+            if (
+              event.target === event.currentTarget &&
+              event.animationName === "modal-focus-pulse"
+            ) {
+              setFocusPulse(false);
+            }
+          }}
+        >
+          <header className="modal-bar">
             <div>
-              <dt>lastFullModal</dt>
-              <dd>{lastFullModal}</dd>
+              <span className="surface-dot" />
+              <strong>{label}</strong>
             </div>
-            <div>
-              <dt>lastFullModalID</dt>
-              <dd>{lastFullModalId}</dd>
-            </div>
-            <div>
-              <dt>currentDepth</dt>
-              <dd>{currentDepth}</dd>
-            </div>
-            {index === 0 && observedModal ? (
-              <div className="modal-observation">
-                <dt>observes modal-2</dt>
-                <dd>{`${observedModal.event} · #${observedModal.sequence}`}</dd>
-              </div>
-            ) : null}
-          </dl>
-          {modal.full ? (
-            <section className="modal-diagnostics" aria-label="Modal parameters and lifecycle">
+            <span>
+              {String(index + 1).padStart(2, "0")} /{" "}
+              {String(total).padStart(2, "0")}
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close current modal"
+            >
+              Close
+            </button>
+          </header>
+          <div className="modal-body">
+            <p className="eyebrow">Modal</p>
+            <h2>{label}</h2>
+            <section
+              className="modal-diagnostics"
+              aria-label="Modal parameters and lifecycle"
+            >
               <header>
-                <p className="eyebrow">FULL MODAL PARAMETERS</p>
-                <strong>Stage-filling presentation with retained stack metadata</strong>
+                <p className="eyebrow">MODAL DIAGNOSTICS</p>
+                <strong>Handle-local presentation and lifecycle state</strong>
               </header>
-              <div className="modal-stack-parameters" aria-label="Parameters for every modal in the stack">
-                {modalStack.map((stackModal, stackIndex) => (
-                  <article key={stackModal.id}>
-                    <header>
-                      <strong>{`modal-${stackIndex + 1}`}</strong>
-                      <span>{stackModal.full ? "full stage" : "dialog"}</span>
-                    </header>
-                    <dl>
-                      <div><dt>preset</dt><dd>{`${stackModal.width} × ${stackModal.height}`}</dd></div>
-                      <div><dt>id / index</dt><dd>{`${stackModal.id} / ${stackIndex}`}</dd></div>
-                      <div><dt>last full</dt><dd>{stackModal.lastFullModalId || "body"}</dd></div>
-                    </dl>
-                  </article>
-                ))}
-              </div>
               <dl>
-                <div><dt>requested preset</dt><dd>{`${modal.width} × ${modal.height}`}</dd></div>
-                <div><dt>effective target</dt><dd>{`${targetSize.width} × ${targetHeight}`}</dd></div>
-                <div><dt>render policy</dt><dd>fills stage</dd></div>
-                <div><dt>modal id / index</dt><dd>{`${modal.id} / ${index}`}</dd></div>
-                <div><dt>stack total</dt><dd>{total}</dd></div>
-                <div><dt>last full index</dt><dd>{modal.lastFullIndex}</dd></div>
-                <div><dt>leaving index</dt><dd>{leavingIndex ?? "none"}</dd></div>
-                <div><dt>top / leaving</dt><dd>{`${isTop} / ${handle.leaving}`}</dd></div>
-                <div><dt>prev leaving / shift</dt><dd>{`${presentation.prevLeaving} / ${presentation.shiftFactor}`}</dd></div>
-                <div><dt>transform</dt><dd>{presentation.transform}</dd></div>
-                <div><dt>background</dt><dd>{presentation.background}</dd></div>
-                <div><dt>handle flags</dt><dd>{`${handle.active} / ${handle.isOpen} / ${handle.leaving}`}</dd></div>
+                <div>
+                  <dt>requested preset</dt>
+                  <dd>{`${modal.width} × ${modal.height}`}</dd>
+                </div>
+                <div>
+                  <dt>effective target</dt>
+                  <dd>{`${targetSize.width} × ${targetHeight}`}</dd>
+                </div>
+                <div>
+                  <dt>mode</dt>
+                  <dd>{modal.full ? "full" : "dialog"}</dd>
+                </div>
+                <div>
+                  <dt>stable UID / index</dt>
+                  <dd>{`${modal.id} / ${index}`}</dd>
+                </div>
+                <div>
+                  <dt>lastFullModal</dt>
+                  <dd>{lastFullModal}</dd>
+                </div>
+                <div>
+                  <dt>lastFullModalID</dt>
+                  <dd>{lastFullModalId}</dd>
+                </div>
+                <div>
+                  <dt>last full index</dt>
+                  <dd>{modal.lastFullIndex}</dd>
+                </div>
+                <div>
+                  <dt>currentDepth</dt>
+                  <dd>{currentDepth}</dd>
+                </div>
+                <div>
+                  <dt>stack total</dt>
+                  <dd>{total}</dd>
+                </div>
+                <div>
+                  <dt>leaving index</dt>
+                  <dd>{leavingIndex ?? "none"}</dd>
+                </div>
+                <div>
+                  <dt>presentation</dt>
+                  <dd>
+                    {`${presentation.prevLeaving ? "recovering" : isTop ? "top" : "covered"} · shift ${presentation.shiftFactor}`}
+                  </dd>
+                </div>
+                <div>
+                  <dt>transform</dt>
+                  <dd>{presentation.transform}</dd>
+                </div>
+                <div>
+                  <dt>background</dt>
+                  <dd>{presentation.background}</dd>
+                </div>
+                <div>
+                  <dt>handle flags</dt>
+                  <dd>{`${handle.active} / ${handle.isOpen} / ${handle.leaving}`}</dd>
+                </div>
               </dl>
               <div className="modal-lifecycle-events">
                 <span>lifecycle</span>
                 {lifecycleEvents.map((event) => (
-                  <span key={event} data-called={handle.calledEvents[event]}>{event}</span>
+                  <span key={event} data-called={handle.calledEvents[event]}>
+                    {event}
+                  </span>
                 ))}
               </div>
             </section>
-          ) : null}
+            <footer className="modal-footer" aria-label="Modal stack prefix">
+              <span>relative stack</span>
+              <div>
+                {modalPrefix.map((prefixModal, prefixIndex) => {
+                  const isCurrent = prefixModal.id === modal.id;
+                  return (
+                    <button
+                      key={prefixModal.id}
+                      type="button"
+                      className={isCurrent ? "current" : ""}
+                      aria-current={isCurrent ? "step" : undefined}
+                      onClick={() => onSelectModal(prefixModal.id)}
+                    >
+                      {`[modal-${prefixIndex + 1}${
+                        prefixModal.full ? " (full)" : ""
+                      }${isCurrent ? " (current)" : ""}]`}
+                    </button>
+                  );
+                })}
+              </div>
+            </footer>
+          </div>
         </div>
       </section>
     </div>

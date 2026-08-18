@@ -1,8 +1,5 @@
-import bezierPickerLab from '../assets/bezier-picker-lab.html?url'
-import dataviewObservatoryDemo from '../assets/dataview-observatory-demo.html?url'
 import pokeEditorArchitecture from '../assets/poke-editor-architecture.html?url'
-import pokeEditorDemo from '../assets/poke-editor-demo.html?url'
-import turntableMotionLab from '../assets/turntable-motion-lab.html?url'
+import { demoExperiences } from './demoExperiences'
 import type { PortfolioProject } from './types'
 import { cocoWalletProject } from './cocoWallet'
 import { elpisProject } from './featured/elpis'
@@ -47,7 +44,8 @@ const pokeProject = {
     },
   ],
   demo: {
-    source: pokeEditorDemo,
+    experienceId: 'poke-prototype-editor',
+    source: demoExperiences['poke-prototype-editor'].source,
     title: 'Poke Studio · Archive Reconstruction',
     description:
       '基于原始源码和实际运行结果重建。可创建图层、调整属性、配置页面跳转并进入预览；演示使用虚构项目，不连接旧服务。',
@@ -150,7 +148,8 @@ const dataViewProject = {
     { label: '时期', value: '2020–2021 · 独立兼职项目' },
   ],
   demo: {
-    source: dataviewObservatoryDemo,
+    experienceId: 'dataview-observatory',
+    source: demoExperiences['dataview-observatory'].source,
     title: 'Distributed Network Observatory',
     description:
       '可切换总览、节点地图、网络画像和协作流，并操作筛选、时间范围、节点详情与自动巡演。演示使用合成数据，不请求接口。',
@@ -228,7 +227,8 @@ const turntableProject = {
     { label: '时期', value: '2018 · 个人技术作品' },
   ],
   demo: {
-    source: turntableMotionLab,
+    experienceId: 'turntable-motion-lab',
+    source: demoExperiences['turntable-motion-lab'].source,
     title: 'Turntable Motion Lab',
     description: '可重组数据、悬停聚焦、双击删除，并按住 S 降速观察动画。',
     provenanceLabel: 'INTERACTIVE MOTION EXPERIMENT',
@@ -266,6 +266,121 @@ const turntableProject = {
   provenanceNote: '本项目为个人动效实验。公开 Demo 保留核心交互，不将其描述为完整抽奖产品。',
 } satisfies PortfolioProject
 
+const merchantCommerceProject = {
+  slug: 'merchant-commerce',
+  order: 15,
+  tier: 'archive',
+  provenance: 'personal-product',
+  title: '移动电商系统：Android 客户端、运营后台与订单服务',
+  shortTitle: '移动电商系统',
+  eyebrow: 'INDEPENDENT FULL-STACK PROJECT / ARCHIVE',
+  summary: '独立实现的 Flutter Android 客户端、React 运营后台与 Go 订单服务全栈项目',
+  thesis:
+    '这是一个 2024.07—2025.06 的独立全栈项目归档。公开内容仅根据保留源码与提交历史说明 Flutter Android 购物端、React 运营后台、Go 服务及容器化运行组合的实现范围；不连接历史服务，也不公开真实记录或部署细节。',
+  period: '2024.07—2025.06 · 独立全栈项目（仓库记录）',
+  role: '独立全栈实现 · Flutter / React / Go / Docker',
+  status: '历史项目归档 · 公开版不连接服务、不包含真实记录',
+  technologies: [
+    'Flutter',
+    'GetX',
+    'Dio',
+    'React 18',
+    'Ant Design 5',
+    'Go 1.22',
+    'Gin',
+    'GORM',
+    'MySQL',
+    'Redis',
+    'Docker Compose',
+    'Nginx',
+  ],
+  impact: [
+    '独立实现 Flutter Android 购物端、React 运营后台与 Go API 的端到端协作边界。',
+    '覆盖商品目录、搜索、商品、购物车、地址、账号与订单流程，以及运营管理、物流、短信和 WebSocket 支持等已留存实现范围。',
+    '保留实现使用 Docker Compose、MySQL、Redis 与 Nginx 组成容器化运行组合；公开案例不披露环境配置。',
+  ],
+  scope: [
+    'Android 端商品目录、搜索、商品、购物车、地址、账号与订单流程',
+    '运营管理',
+    'Go / Gin / GORM API、MySQL、Redis 与 WebSocket 支持',
+    '微信支付下单、支付通知、退款、短信与物流查询的实现边界',
+    'Docker Compose 与 Nginx 容器化运行配置',
+  ],
+  facts: [
+    { label: '类型', value: '独立移动电商全栈项目 / 历史归档' },
+    { label: '客户端', value: 'Flutter Android · GetX · Dio' },
+    { label: '运营后台', value: 'React 18 · Ant Design 5' },
+    { label: '服务', value: 'Go / Gin / GORM · MySQL · Redis' },
+  ],
+  chapters: [
+    {
+      id: 'delivery-shape',
+      title: '项目形态与公开范围',
+      paragraphs: [
+        '该独立项目由 Android 购物端、Web 运营后台与 Go 服务组成。这里记录经源码和提交历史可核对的工程范围，而不是对历史站点或线上状态的展示。',
+        '公开页面不连接任何服务，不展示品牌、商品、用户、订单、接口、配置、证书、截图或部署信息。',
+      ],
+      phase: '独立项目归档',
+    },
+    {
+      id: 'customer-purchase-flow',
+      title: 'Android 购物流程',
+      paragraphs: [
+        'Flutter Android 客户端使用 GetX 与 Dio 组织路由、状态和请求，覆盖商品目录、搜索、商品、购物车、地址、账号和订单等流程。',
+        '该说明仅描述可从源码确认的功能覆盖，不推断历史商品内容、用户规模、安装渠道或当前服务可用性。',
+      ],
+      phase: 'Flutter Android',
+    },
+    {
+      id: 'operations-console',
+      title: '运营后台',
+      paragraphs: [
+        'React 18 与 Ant Design 5 后台覆盖商品、分类、用户、订单、退款和客服相关管理界面，编辑与运营操作围绕相应服务接口组织。',
+        '公开版不复制页面、运营数据、账号权限模型或具体业务规则。',
+      ],
+      phase: 'React 运营端',
+    },
+    {
+      id: 'transaction-after-sales',
+      title: '支付与售后边界',
+      paragraphs: [
+        '保留实现包含微信支付下单、支付通知和退款流程，以及订单、退款与部分退款的服务端处理边界。',
+        '这表示代码层面的集成覆盖，不构成对支付安全、交易结果、合规性或当前渠道状态的声明。',
+      ],
+      phase: '实现范围',
+    },
+    {
+      id: 'fulfillment-support',
+      title: '履约与客服',
+      paragraphs: [
+        '服务端覆盖订单状态、配送字段、物流查询缓存、短信能力，以及带身份校验、消息、图片和已读状态的 WebSocket 客服支持。',
+        '公开页面不包含真实物流、联系人、消息、图片、订单或任何业务记录。',
+      ],
+      phase: '服务能力',
+    },
+    {
+      id: 'service-delivery',
+      title: '服务与容器化运行',
+      paragraphs: [
+        'Go 1.22 服务采用 Gin 与 GORM，并使用 MySQL、Redis、Docker Compose 和 Nginx 组织运行环境。',
+        '公开描述仅保留技术组成；主机、域名、端口、环境变量、证书、密钥和部署配置均不公开。',
+      ],
+      phase: '容器化运行',
+    },
+    {
+      id: 'public-disclosure-boundary',
+      title: '公开披露边界',
+      paragraphs: [
+        '本案例是独立项目的去标识化工程归档，不是在线商城入口，也不证明当前持续运营、营收、用户量、性能或可用性。',
+        '为保护项目和服务安全，作品集不发布源代码、数据、截图、API、配置、凭据、证书或服务链接。',
+      ],
+      phase: '公开脱敏',
+    },
+  ],
+  provenanceNote:
+    '本条目依据保留源码与仓库提交历史整理，仅公开可核对的技术范围。服务主机、部署访问、凭据、证书、真实商品、用户、订单、截图和配置均已排除；页面没有线上 Demo 或外部服务链接。',
+} satisfies PortfolioProject
+
 const bezierProject = {
   slug: 'bezier-easing-picker',
   order: 14,
@@ -293,7 +408,8 @@ const bezierProject = {
     { label: '时期', value: '2017 · 从 Poke 抽离' },
   ],
   demo: {
-    source: bezierPickerLab,
+    experienceId: 'bezier-easing-picker',
+    source: demoExperiences['bezier-easing-picker'].source,
     title: 'Bezier Easing Picker',
     description:
       '选择常用预设或拖动控制点，右侧运动轨迹与 CSS 参数会同步更新。公开版本同时修正了旧 Demo 的状态和边界问题。',
@@ -332,6 +448,118 @@ const bezierProject = {
   provenanceNote: '从 Poke 抽离的个人组件作品；公开 Demo 对旧示例的状态和边界问题做了修正。',
 } satisfies PortfolioProject
 
+const irregularShapeLayoutProject = {
+  slug: 'irregular-shape-layout',
+  order: 16,
+  tier: 'archive',
+  provenance: 'public-reconstruction',
+  provenanceDisplay: {
+    label: '原创 CLEAN-ROOM 公开重建',
+    description: '原创 clean-room 公开重建；使用本地确定性合成几何',
+  },
+  title: '不规则形状布局：采样几何与有界搜索实验',
+  shortTitle: '不规则形状布局',
+  eyebrow: 'PUBLIC RECONSTRUCTION / GEOMETRY STUDY',
+  summary: '以合成 SVG 轮廓检查边界采样、径向距离搜索与邻角细化的公开重建实验',
+  thesis:
+    '2025.04—2025.05 的未完成内部原型中，我实现了计算部分的探索：沿预期由上游提供的裁切 SVG 边界采样，估计最小距离，以有界距离搜索进行径向放置，再以有界的粗到细搜索细化相邻角度。当前页面是全新、独立的公开重建实验，只使用确定性合成形状，不复现历史实现或声称产品算法、上游裁切或模型能力。',
+  period: '2025.04—2025.05 · 未完成内部原型 / 公开重建',
+  role: '计算部分探索 · SVG 边界采样 · 径向放置与角度细化',
+  status: '未完成内部原型 · 当前为独立 clean-room 公开实验',
+  technologies: ['SVG Path API', '采样边界几何', '有界二分搜索', '粗到细角度搜索'],
+  impact: [
+    '将不规则轮廓的距离估计、径向放置和邻角调整拆成可观察的计算步骤，并以合成形状独立呈现。',
+    '通过线段相交与点在多边形内守卫，将检测到的重叠判为无效，而非误报为较大的正间隙。',
+    '提供采样点、最近点对、径向搜索界限和裁切信息，便于检查近似方法的结果与限制。',
+  ],
+  scope: [
+    '确定性程序生成的不规则 SVG 轮廓',
+    '基于 SVG 长度 API 的边界采样与显式世界坐标变换',
+    '带上限的径向二分搜索与邻角粗到细搜索',
+    '采样最小距离、相交与包含守卫',
+    '收敛状态、迭代次数、耗时和调试叠层',
+  ],
+  facts: [
+    { label: '类型', value: '内部原型计算探索 / 公开 clean-room 重建' },
+    { label: '时期', value: '2025.04—2025.05 · 未完成内部原型' },
+    { label: '本人职责', value: '计算部分：采样、径向放置、角度细化探索' },
+    { label: '公开输入', value: '确定性合成 SVG 形状 · 无外部请求' },
+  ],
+  demo: {
+    experienceId: 'irregular-shape-arrangement',
+    source: demoExperiences['irregular-shape-arrangement'].source,
+    title: 'Irregular Shape Layout · Clean-room Lab',
+    description:
+      '调整合成形状、目标间隙和采样密度，观察采样距离、重叠守卫、有界径向搜索和邻角细化。结果是近似几何，不保证精确装箱或全局最优。',
+    provenanceLabel: 'CLEAN-ROOM PUBLIC RECONSTRUCTION · SYNTHETIC GEOMETRY',
+    statusLabel: 'SAMPLED SVG · BOUNDED SEARCH',
+    toolbar: 'Irregular Shape Layout · Sampled Geometry Lab',
+    badge: 'SVG · APPROXIMATE · LOCAL ONLY',
+    height: 700,
+    posterVariant: 'irregular-geometry',
+    ctaLabel: '加载几何实验',
+    desktopPreferred: true,
+  },
+  chapters: [
+    {
+      id: 'problem-input-contract',
+      title: '问题与输入契约',
+      paragraphs: [
+        '原始概念假定上游模型提供裁切后的 SVG 路径；计算层再根据这些轮廓安排位置。我只实现和探索了后者，不将上游裁切、模型层或完整 UX / 产品算法归为本人工作。',
+        '公开版本改用从种子确定生成的抽象 SVG 轮廓，保持“路径输入—边界计算—布局诊断”的研究结构，同时不引入任何历史素材、界面或实现细节。',
+      ],
+      phase: '计算探索 / 公开重建',
+    },
+    {
+      id: 'sampled-geometry',
+      title: '采样边界几何',
+      paragraphs: [
+        '每个路径通过 SVG 的 getTotalLength 与 getPointAtLength 均匀采样；再以显式旋转和平移把局部点转换到世界坐标。最小间隙是采样点之间的近似距离，而非连续曲线的精确距离。',
+        '为避免“轮廓已经相交却仍显示正距离”，公开实验额外检查采样多边形的线段相交和点在多边形内包含；任何命中的重叠都被标记为无效。',
+      ],
+      phase: '近似几何',
+    },
+    {
+      id: 'radial-search',
+      title: '径向有界搜索',
+      paragraphs: [
+        '形状按中心辐射方向逐个放置。每次先在明确上限内验证候选距离，再以有限轮次二分收缩到满足目标间隙的最小近似半径。',
+        '当有限上限内没有有效距离时，实验保留该状态并在结果中如实报告，而不是假设已经找到可行解。',
+      ],
+      phase: '有界二分',
+    },
+    {
+      id: 'angle-refinement',
+      title: '邻角粗到细细化',
+      paragraphs: [
+        '径向初排之后，后续形状围绕各自半径在有限邻域内尝试角度。搜索先排除重叠和目标间隙不足，再在有效候选中缩小相邻编号形状的采样间隙总量；它从较粗步长开始，逐轮缩小，并使用固定的同分决策，保证相同输入得到相同结果。',
+        '它只是在受限预算内改善局部相邻关系，并不求解全局最优或精确的不规则形状装箱。',
+      ],
+      phase: '局部改进',
+    },
+    {
+      id: 'diagnostics-public-reconstruction',
+      title: '诊断与公开重建',
+      paragraphs: [
+        '实验报告实测最小间隙、迭代次数、耗时与诚实的收敛状态。调试叠层显示边界样本、最近点对、径向射线与界限，以及 SVG 视口和裁切提示。',
+        '当前 Lab 是完全自包含的公开 clean-room 作品：无网络请求、无外部资源，所有形状和颜色都由本地确定性过程生成。',
+      ],
+      phase: '公开实验',
+    },
+    {
+      id: 'unfinished-boundary',
+      title: '未完成边界',
+      paragraphs: [
+        '历史跟踪的工作在未完成状态停止；这里不推测原因，也不把探索性计算描述为已交付的完整系统。',
+        '可见布局即使没有完全收敛仍可用于检查近似几何，但应结合采样密度、重叠守卫、裁切提示和迭代上限理解其结果。',
+      ],
+      phase: '边界说明',
+    },
+  ],
+  provenanceNote:
+    '此条目区分 2025.04—2025.05 未完成内部原型中的计算探索与当前原创 clean-room 公开重建。公开 Lab 仅使用确定性合成 SVG 形状，保留采样、径向搜索和角度细化的研究性说明；不包含或暗示历史界面、代码、品牌、素材、上游裁切或模型能力，也不宣称完整 UX / 产品算法或全局最优结果。',
+} satisfies PortfolioProject
+
 export const archiveProjects: PortfolioProject[] = [
   elpisProject,
   cocoWalletProject,
@@ -339,4 +567,6 @@ export const archiveProjects: PortfolioProject[] = [
   dataViewProject,
   turntableProject,
   bezierProject,
+  merchantCommerceProject,
+  irregularShapeLayoutProject,
 ]

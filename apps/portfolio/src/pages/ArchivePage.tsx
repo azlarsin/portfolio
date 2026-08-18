@@ -29,7 +29,10 @@ export function ArchivePage() {
           <article key={project.slug}>
             <div className="archive-year">{project.period.split('·')[0].trim()}</div>
             <div className="archive-copy">
-              <ProvenanceBadge provenance={project.provenance} />
+              <ProvenanceBadge
+                provenance={project.provenance}
+                displayOverride={project.provenanceDisplay}
+              />
               <h2>{project.title}</h2>
               <p>{project.summary || project.thesis}</p>
               <TagList tags={(project.technologies || []).slice(0, 5)} />

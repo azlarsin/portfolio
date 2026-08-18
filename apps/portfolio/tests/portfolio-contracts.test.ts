@@ -22,6 +22,9 @@ import {
   portfolioProjectBySlug,
   portfolioProjects,
   projectNavigation,
+  demoExperiences,
+  demoPlayerPath,
+  getDemoExperience,
 } from '../src/data'
 import { profile } from '../src/data/profile'
 import {
@@ -55,6 +58,9 @@ describe('portfolio acceptance contracts', () => {
       ['/archive/dataview-observatory', '超宽幅实时数据可视化平台｜项目档案'],
       ['/archive/turntable-motion-lab', 'Turntable Motion Lab｜项目档案'],
       ['/archive/bezier-easing-picker', 'Bezier Easing Picker｜项目档案'],
+      ['/archive/merchant-commerce', '移动电商独立全栈项目｜项目档案'],
+      ['/archive/irregular-shape-layout', '不规则形状布局实验｜项目档案'],
+      ['/demo', '交互体验播放器｜陈成作品集'],
       ['/resume', '个人简历｜陈成'],
       ['/not-found', '页面未找到｜陈成作品集'],
     ])
@@ -77,11 +83,97 @@ describe('portfolio acceptance contracts', () => {
     const anchored = resolveRoute('/work/layered-agent?from=home#demo')
     expect(anchored.anchor).toBe('demo')
     expect(anchored.href).toBe('/work/layered-agent?from=home#demo')
+
+    const resumePreview = resolveRoute('/resume#pdf-preview')
+    expect(resumePreview.route).toBe(ROUTES.RESUME)
+    expect(resumePreview.anchor).toBe('pdf-preview')
+    expect(resumePreview.href).toBe('/resume#pdf-preview')
+
+    const playerRoute = resolveRoute('/demo?experience=layered-route-agent')
+    expect(playerRoute.route).toBe(ROUTES.DEMO)
+    expect(playerRoute.search).toBe('?experience=layered-route-agent')
   })
 
-  it('1a. directs the homepage résumé CTA to the canonical résumé route', () => {
+  it('1a. resolves player experiences through the finite trusted registry only', () => {
+    const expectedIds = [
+      'layered-route-agent',
+      'layered-agent-action-graph',
+      'poke-prototype-editor',
+      'dataview-observatory',
+      'turntable-motion-lab',
+      'bezier-easing-picker',
+      'irregular-shape-arrangement',
+    ]
+
+    expect(Object.keys(demoExperiences)).toEqual(expectedIds)
+    expect(demoExperiences['layered-agent-action-graph'].name).toEqual({
+      zh: '行为动作图',
+      en: 'Behavior Action Graph',
+    })
+    expect(getDemoExperience('https://example.invalid/demo')).toBeNull()
+    expect(getDemoExperience('unknown-experience')).toBeNull()
+    expect(getDemoExperience(null)).toBeNull()
+    expect(demoPlayerPath('poke-prototype-editor')).toBe(
+      '/demo?experience=poke-prototype-editor',
+    )
+
+    const layeredSource = new URL(demoExperiences['layered-route-agent'].source)
+    expect(layeredSource.pathname).toBe('/products')
+    expect(layeredSource.searchParams.get('agent_demo')).toBe('1')
+    expect(layeredSource.searchParams.get('embed')).toBe('1')
+  })
+
+  it('1b. keeps the player shell safe and its entry points registry-backed', () => {
+    const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
+    const playerPage = readFileSync(`${sourceRoot}/pages/DemoPlayerPage.tsx`, 'utf8')
+    const deferredFrame = readFileSync(
+      `${sourceRoot}/components/common/DeferredFrame.tsx`,
+      'utf8',
+    )
+    const demoDirectory = readFileSync(
+      `${sourceRoot}/components/common/DemoDirectory.tsx`,
+      'utf8',
+    )
+    const homeHero = readFileSync(`${sourceRoot}/components/home/HomeHero.tsx`, 'utf8')
+    const sidebar = readFileSync(`${sourceRoot}/components/layout/Sidebar.tsx`, 'utf8')
+    const playerCss = readFileSync(`${sourceRoot}/styles/demo-player.css`, 'utf8')
+    const layeredSource = readFileSync(`${sourceRoot}/data/featured/layeredAgent.ts`, 'utf8')
+
+    expect(playerPage).toContain("getDemoExperience(new URLSearchParams(route.search).get('experience'))")
+    expect(playerPage).toContain('if (!experience?.source || loaded || timedOut) return')
+    expect(playerPage).toContain('if (!experience?.source) return <UnavailableDemo route={route} />')
+    expect(playerPage).toContain('new URLSearchParams(route.search).get(\'experience\')')
+    expect(playerPage).toContain('sandbox={experience.sandbox}')
+    expect(playerPage).toContain('referrerPolicy="strict-origin-when-cross-origin"')
+    expect(playerPage).toContain('className="demo-player-content" inert={drawerOpen ? true : undefined}')
+    expect(playerPage).toContain('className="demo-guide-drag-handle" {...dragHandlers}')
+    expect(playerPage).toContain('useDesktopGuidePosition(\n    !dismissed,\n    experience.id,\n  )')
+    expect(playerPage).not.toContain('className="demo-guide-titlebar" {...dragHandlers}')
+    expect(playerPage).not.toMatch(/searchParams\.get\(['\"](?:src|url)['\"]\)/)
+    expect(playerPage).not.toContain('const names: Record<DemoExperience')
+    expect(deferredFrame).toContain('to={demoPlayerPath(demo.experienceId)}')
+    expect(deferredFrame).toContain('to={demoPlayerPath(visual.experienceId)}')
+    expect(deferredFrame).toContain('!visual.experienceId ?')
+    expect(deferredFrame).not.toContain('href={demo.source}')
+    expect(demoDirectory).toContain('to={demoPlayerPath(project.demo.experienceId)}')
+    expect(homeHero).toContain("demoPlayerPath(agentProject.demo?.experienceId || 'layered-route-agent')")
+    expect(sidebar).toContain('handle: HTMLElement')
+    expect(sidebar).toContain('dragRef.current = null')
+    expect(sidebar).toContain('releaseGuidePointer(dragRef)')
+    expect(playerCss).toContain('.demo-guide-drag-handle')
+    expect(playerCss).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(getLocalizedProjects([layeredAgentProject], 'en')[0].visuals).toHaveLength(
+      layeredAgentProject.visuals?.length || 0,
+    )
+    expect(layeredSource).toContain("source: demoExperiences['layered-agent-action-graph'].source")
+  })
+
+  it('1c. directs contextual résumé entry to an anchored, accessible preview', () => {
     const homeHeroPath = fileURLToPath(
       new URL('../src/components/home/HomeHero.tsx', import.meta.url),
+    )
+    const sidebarPath = fileURLToPath(
+      new URL('../src/components/layout/Sidebar.tsx', import.meta.url),
     )
     const resumePagePath = fileURLToPath(
       new URL('../src/pages/ResumePage.tsx', import.meta.url),
@@ -90,16 +182,26 @@ describe('portfolio acceptance contracts', () => {
       new URL('../../../scripts/generate_public_resume.py', import.meta.url),
     )
     const homeHero = readFileSync(homeHeroPath, 'utf8')
+    const sidebar = readFileSync(sidebarPath, 'utf8')
     const resumePage = readFileSync(resumePagePath, 'utf8')
     const generator = readFileSync(generatorPath, 'utf8')
 
     expect(profile.contact.website).toBe('https://me.azlar.cc')
-    expect(homeHero).toContain('href="https://me.azlar.cc/resume"')
+    expect(homeHero).toContain('to="/resume#pdf-preview"')
     expect(homeHero).not.toContain('download={')
-    expect(resumePage).toContain('profile.contact.website')
-    expect(resumePage.indexOf('pdf-preview')).toBeLessThan(
+    expect(sidebar).toContain('to="/resume"')
+    expect(resumePage).toContain("route.anchor === 'pdf-preview'")
+    expect(resumePage).toContain('id="pdf-preview"')
+    expect(resumePage).toContain('aria-expanded={isPreviewOpen}')
+    expect(resumePage).toContain('aria-controls="pdf-preview-content"')
+    expect(resumePage).toContain('{isPreviewOpen ? (')
+    expect(resumePage.indexOf('id="pdf-preview"')).toBeLessThan(
+      resumePage.indexOf('className="resume-summary"'),
+    )
+    expect(resumePage.indexOf('id="pdf-preview"')).toBeLessThan(
       resumePage.lastIndexOf('resume-website'),
     )
+    expect(resumePage).toContain('profile.contact.website')
     expect(generator).toContain("contact['website']")
     expect(generator).toContain('drawCentredString(A4[0] / 2, 13 * mm, website)')
   })
@@ -214,9 +316,92 @@ describe('portfolio acceptance contracts', () => {
         'dataview-observatory',
         'turntable-motion-lab',
         'bezier-easing-picker',
+        'merchant-commerce',
+        'irregular-shape-layout',
       ]),
     )
     expect(archiveProjects.every((project) => project.tier === 'archive')).toBe(true)
+  })
+
+  it('keeps the clean-room irregular-shape lab registry-backed and bounded', () => {
+    const project = portfolioProjectBySlug.get('irregular-shape-layout')
+    const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
+    const assetPath = `${sourceRoot}/assets/irregular-shape-layout-lab.html`
+    const source = readFileSync(assetPath, 'utf8')
+
+    expect(project).toMatchObject({
+      slug: 'irregular-shape-layout',
+      tier: 'archive',
+      provenance: 'public-reconstruction',
+      period: '2025.04—2025.05 · 未完成内部原型 / 公开重建',
+      demo: {
+        experienceId: 'irregular-shape-arrangement',
+        source: demoExperiences['irregular-shape-arrangement'].source,
+        posterVariant: 'irregular-geometry',
+      },
+    })
+    expect(project?.chapters.map((chapter) => chapter.id)).toEqual([
+      'problem-input-contract',
+      'sampled-geometry',
+      'radial-search',
+      'angle-refinement',
+      'diagnostics-public-reconstruction',
+      'unfinished-boundary',
+    ])
+    expect(demoExperiences['irregular-shape-arrangement']).toMatchObject({
+      id: 'irregular-shape-arrangement',
+      casePath: '/archive/irregular-shape-layout',
+      provenance: 'public-reconstruction',
+      sandbox: 'allow-scripts',
+      posterVariant: 'irregular-geometry',
+    })
+    expect(demoExperiences['irregular-shape-arrangement'].source).not.toHaveLength(0)
+    expect(source).toContain('placementObjective')
+    expect(source).toContain('localExcessGap')
+    expect(source).toContain('getTotalLength()')
+    expect(source).toContain('getPointAtLength')
+    expect(source).toContain('segmentsIntersect')
+    expect(source).toContain('pointInPolygon')
+    expect(source).toContain('MAX_RADIAL_STEPS')
+    expect(source).toContain('MAX_ANGLE_ROUNDS')
+    expect(source).toContain('MAX_ANGLE_STEPS')
+    expect(source).toContain('localToWorld')
+    expect(source).toContain('mulberry32')
+    expect(source).not.toMatch(/https?:\/\//)
+    expect(source).not.toMatch(/\b(fetch|XMLHttpRequest|WebSocket)\b/)
+  })
+
+  it('keeps Merchant as a redacted, text-only independent full-stack project archive', () => {
+    const merchant = portfolioProjectBySlug.get('merchant-commerce')
+    const merchantText = JSON.stringify(merchant)
+
+    expect(merchant).toMatchObject({
+      tier: 'archive',
+      provenance: 'personal-product',
+      period: '2024.07—2025.06 · 独立全栈项目（仓库记录）',
+      eyebrow: 'INDEPENDENT FULL-STACK PROJECT / ARCHIVE',
+    })
+    expect(merchant?.links).toBeUndefined()
+    expect(merchant?.demo).toBeUndefined()
+    expect(merchant?.visuals).toBeUndefined()
+    expect(merchant?.chapters.map((chapter) => chapter.id)).toEqual([
+      'delivery-shape',
+      'customer-purchase-flow',
+      'operations-console',
+      'transaction-after-sales',
+      'fulfillment-support',
+      'service-delivery',
+      'public-disclosure-boundary',
+    ])
+    expect(merchantText).toContain('Flutter')
+    expect(merchantText).toContain('Dio')
+    expect(merchantText).toContain('React 18')
+    expect(merchantText).toContain('Go 1.22')
+    expect(merchantText).toContain('微信支付')
+    expect(merchantText).toContain('不连接服务')
+    expect(merchantText).not.toMatch(/https?:\/\//)
+    expect(merchantText).not.toMatch(/Alipay|支付宝/)
+    expect(merchantText).not.toMatch(/外部交付|external delivery/i)
   })
 
   it('keeps the former Elpis URL as an alias of its personal-project route', () => {
@@ -546,17 +731,22 @@ describe('portfolio acceptance contracts', () => {
     expect(JSON.stringify(profile)).not.toMatch(/至今|现负责|现任/)
   })
 
-  it('11. derives the Agent demo source from the Lab products route', () => {
+  it('11. derives the Agent demo source from the Lab products route and player registry', () => {
     expect(layeredAgentProject.demo).toBeDefined()
 
     const source = new URL(layeredAgentProject.demo!.source)
     expect(source.pathname).toBe('/products')
     expect(source.searchParams.get('agent_demo')).toBe('1')
+    expect(source.searchParams.get('embed')).toBe('1')
     expect(source.hash).toBe('')
     expect(layeredAgentProject.demo?.desktopPreferred).toBe(true)
+    expect(layeredAgentProject.links).toBeUndefined()
     expect(
-      layeredAgentProject.links?.find((link) => link.label === 'Agent Demo')?.url,
-    ).toBe(layeredAgentProject.demo?.source)
+      layeredAgentProject.visuals?.find((visual) => visual.id === 'agent-action-graph'),
+    ).toMatchObject({
+      experienceId: 'layered-agent-action-graph',
+      source: demoExperiences['layered-agent-action-graph'].source,
+    })
   })
 
   it('12. gives the Poke demo real resize handles and a cancellable pointer gesture', () => {
@@ -585,6 +775,7 @@ describe('portfolio acceptance contracts', () => {
       'poke-editor-architecture.html',
       'poke-editor-demo.html',
       'turntable-motion-lab.html',
+      'irregular-shape-layout-lab.html',
     ]
 
     for (const asset of demoAssets) {

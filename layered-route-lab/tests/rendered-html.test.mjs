@@ -55,6 +55,14 @@ test("the onboarding guide connects route layers to the constrained Agent loop",
   assert.match(app, /GUIDE_SESSION_KEY/);
   assert.match(app, /params\.get\("agent_demo"\) !== "1"/);
   assert.match(app, /!params\.has\("agent_cmd"\)/);
+  assert.match(app, /!embedded && \(/);
+  assert.match(app, /interface AppProps[\s\S]*initialLocation\?: string/);
+  assert.match(app, /resetModalClosePlan/);
+  assert.match(app, /pendingModalHistoryStepsRef\.current = 0/);
+  assert.match(app, /pendingModalFocusIdRef\.current = null/);
+  assert.match(app, /if \(leavingModalIdRef\.current\)[\s\S]*?if \(!cameFromPop\) return/);
+  assert.match(app, /onOpenGuide=\{embedded \? undefined : \(\) => setGuideOpen\(true\)\}/);
+  assert.match(app, /initialLocation=\{createInitialLocation/);
   assert.match(app, /<ExperienceGuide/);
   assert.match(app, /onPushTemporaryPresenter=\{pushPresenter\}/);
   assert.match(app, /onOpenAgent=\{openAgentFromGuide\}/);
@@ -68,6 +76,31 @@ test("the onboarding guide connects route layers to the constrained Agent loop",
   assert.match(guide, /匹配 Manifest/);
   assert.match(guide, /本地 planner 与合成数据/);
   assert.match(guide, /不调用线上模型或业务 API/);
+  assert.match(guide, /className="guide-drag-handle"/);
+  assert.match(guide, /useCallback/);
+  assert.match(guide, /ResizeObserver/);
+  assert.match(guide, /releasePointerCapture\(drag\.pointerId\)/);
+  assert.match(guide, /dragRef\.current = null;[\s\S]*?releasePointerCapture\(drag\.pointerId\)/);
+  assert.match(guide, /setPosition\(null\)/);
+  assert.match(guide, /event\.button !== 0/);
+  assert.match(guide, /!event\.isPrimary/);
+  assert.match(guide, /GUIDE_MOBILE_BREAKPOINT/);
+  assert.match(guide, /setPointerCapture\(event\.pointerId\)/);
+  assert.match(guide, /drag\.pointerId !== event\.pointerId/);
+  assert.match(guide, /onPointerUp=\{finishDrag\}/);
+  assert.match(guide, /onPointerCancel=\{finishDrag\}/);
+  assert.match(guide, /onLostPointerCapture=\{finishDrag\}/);
+  assert.match(guide, /aria-label="关闭操作指南" onClick=\{handleClose\}/);
+
+  const guideCss = await readFile(
+    new URL("../src/layered-route-lab.css", import.meta.url),
+    "utf8",
+  );
+  assert.match(guideCss, /top: var\(--guide-top, 72px\)/);
+  assert.match(guideCss, /left: var\(--guide-left, 16px\)/);
+  assert.match(guideCss, /\.guide-drag-handle \{[\s\S]*?cursor: grab[\s\S]*?touch-action: none/);
+  assert.match(guideCss, /\.experience-guide \{[\s\S]*?overflow-y: auto/);
+  assert.match(guideCss, /@media \(max-width: 720px\) \{[\s\S]*?\.experience-guide \{[\s\S]*?top: 66px[\s\S]*?right: 8px[\s\S]*?bottom: 8px[\s\S]*?left: 8px/);
 
   assert.match(overlay, /把任务变成可验证的宿主动作/);
   assert.match(overlay, /只调用 Manifest 允许的动作/);
@@ -205,6 +238,33 @@ test("agent commands are acknowledged by the host App bridge without conflicting
   assert.match(app, /data-agent-playback=\{agentPlaybackMode\}/);
   assert.match(app, /releasePendingResponses\(\)/);
   assert.match(app, /respondAfter\(request\.requestId, settleDuration\)/);
+});
+
+test("route navigation preserves only explicit shell query parameters", async () => {
+  const browserLocation = await readFile(
+    new URL("../src/router/browserLocation.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(browserLocation, /PRESERVED_SHELL_QUERY_PARAMS = \["embed", "agent_demo"\]/);
+  assert.match(browserLocation, /if \(!targetParams\.has\(key\) && browserParams\.has\(key\)\)/);
+  assert.match(browserLocation, /targetParams\.delete\(STATIC_ROUTE_QUERY_PARAM\)/);
+  assert.doesNotMatch(browserLocation, /agent_cmd/);
+});
+
+test("modal leave fallback remains later than the CSS transform transition", async () => {
+  const modal = await readFile(
+    new URL("../src/core/Modal.tsx", import.meta.url),
+    "utf8",
+  );
+  const css = await readFile(
+    new URL("../src/layered-route-lab.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(modal, /callEvent\("didLeave"\);[\s\S]*?\}, 360\)/);
+  assert.match(css, /transform 300ms ease-in-out/);
+  assert.match(modal, /event\.propertyName !== "transform"/);
 });
 
 test("route reconstruction uses a branched behavior tree", async () => {
@@ -583,7 +643,7 @@ test("mobile layout keeps controls, content, and the Agent launcher in bounds", 
   assert.match(overlay, /aria-label="打开 Agent Demo"/);
 });
 
-test("each modal handle owns lifecycle state and ports source stack math", async () => {
+test("each modal handle owns diagnostics, relative navigation, and focus recovery", async () => {
   const [app, modal, css] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/core/Modal.tsx", import.meta.url), "utf8"),
@@ -602,6 +662,15 @@ test("each modal handle owns lifecycle state and ports source stack math", async
     /showMask=\{index === 0 \|\| Boolean\(modals\[index - 1\]\?\.full\)\}/,
   );
   assert.match(app, /lastSize=/);
+  assert.match(app, /const selectModal = useCallback/);
+  assert.match(app, /modalsRef\.current\.findIndex\(\(modal\) => modal\.id === id\)/);
+  assert.match(app, /startModalLeave\(targetIndex \+ 1, false\)/);
+  assert.match(app, /pendingModalFocusIdRef\.current = null;[\s\S]*?setModalFocusSequence\(\+\+modalFocusSequenceRef\.current\)/);
+  assert.match(app, /!remaining\.some\(\(modal\) => modal\.id === focusedModalId\)/);
+  assert.match(app, /modalPrefix=\{modals\.slice\(0, index \+ 1\)\}/);
+  assert.match(app, /focusSequence=\{modalFocusSequence\}/);
+  assert.doesNotMatch(app, /modalTelemetry|recordModalLifecycle|observedModal/);
+
   assert.match(modal, /interface ModalHandleState/);
   assert.match(modal, /active: false/);
   assert.match(modal, /leaving: false/);
@@ -616,28 +685,23 @@ test("each modal handle owns lifecycle state and ports source stack math", async
   assert.match(modal, /!modal\.full && !isTop \? lastSize : modal/);
   assert.match(modal, /"--modal-background"/);
   assert.match(modal, /const label = `modal-\$\{index \+ 1\}`/);
-  assert.match(modal, /<dt>lastFullModal<\/dt>/);
-  assert.match(modal, /<dt>lastFullModalID<\/dt>/);
-  assert.match(modal, /<dt>currentDepth<\/dt>/);
-  assert.match(modal, /export interface ModalLifecycleTelemetry/);
-  assert.match(modal, /onLifecycleEvent: \(telemetry:/);
-  assert.match(app, /const \[modalTelemetry, setModalTelemetry\]/);
-  assert.match(app, /const recordModalLifecycle = useCallback/);
-  assert.match(app, /telemetry\.modalIndex !== 1/);
-  assert.match(app, /observedModal=\{index === 0 \? modalTelemetry : null\}/);
-  assert.match(modal, /observes modal-2/);
-  assert.match(modal, /FULL MODAL PARAMETERS/);
-  assert.match(modal, /requested preset/);
-  assert.match(modal, /effective target/);
-  assert.match(modal, /modal-lifecycle-events/);
-  assert.match(app, /modalStack=\{modals\}/);
-  assert.match(modal, /modalStack: readonly ModalRecord\[\]/);
-  assert.match(modal, /Parameters for every modal in the stack/);
-  assert.match(modal, /modalStack\.map\(\(stackModal, stackIndex\)/);
+  assert.match(modal, /<dt>requested preset<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /<dt>effective target<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /<dt>mode<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /<dt>stable UID \/ index<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /<dt>lastFullModal<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /<dt>lastFullModalID<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /<dt>currentDepth<\/dt>[\s\S]*?<dd>/);
+  assert.match(modal, /modalPrefix\.map\(\(prefixModal, prefixIndex\)/);
+  assert.match(modal, /onSelectModal\(prefixModal\.id\)/);
+  assert.match(modal, /modal-card-focus/);
+  assert.match(modal, /prefixModal\.full \? " \(full\)" : ""/);
+  assert.match(modal, /isCurrent \? " \(current\)" : ""/);
+  assert.match(modal, /event\.target === event\.currentTarget/);
+  assert.match(modal, /event\.animationName === "modal-focus-pulse"/);
+  assert.match(modal, /focusSequence === previousFocusSequenceRef\.current/);
+  assert.doesNotMatch(modal, /ModalLifecycleTelemetry|observes modal-2|modalStack|FULL MODAL PARAMETERS/);
   assert.match(modal, /stateChanged\(event\);[\s\S]*?if \(event === "didLeave"\) \{[\s\S]*?onDidLeave\(modal\.id\);/);
-  assert.match(css, /\.modal-stack-parameters \{[\s\S]*?grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(css, /\.modal-diagnostics > dl \{[\s\S]*?grid-template-columns: repeat\(3, minmax\(0, 1fr\)\)/);
-  assert.match(css, /\.modal-diagnostics dd \{[\s\S]*?font-size: clamp\(16px/);
   assert.match(app, /id: \+\+modalHandleSequence/);
   assert.match(app, /lastFullModalId:/);
   assert.match(
@@ -655,6 +719,12 @@ test("each modal handle owns lifecycle state and ports source stack math", async
   assert.match(css, /transform: var\(--modal-transform\)/);
   assert.match(css, /background: var\(--modal-background\)/);
   assert.match(css, /transform: translateY\(100%\)/);
+  assert.match(css, /\.modal-card-focus-pulse \{[\s\S]*?animation: modal-focus-pulse/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.modal-card-focus-pulse \{[\s\S]*?animation: none/);
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.modal-card-focus-pulse \{[\s\S]*?outline: 2px solid var\(--signal\)/,
+  );
   assert.match(
     css,
     /\.modal-card\.modal-card-full \{[\s\S]*?inset: 0;[\s\S]*?width: 100%;[\s\S]*?height: 100%;[\s\S]*?border-radius: 0;/,

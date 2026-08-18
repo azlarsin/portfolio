@@ -117,6 +117,30 @@ export const ROUTES = {
       description: '将 cubic-bezier 参数变成可直接操作、预览与复用的可视化组件。',
     },
   },
+  ARCHIVE_MERCHANT_COMMERCE: {
+    id: 'archive-merchant-commerce',
+    path: '/archive/merchant-commerce',
+    meta: {
+      title: '移动电商独立全栈项目｜项目档案',
+      description: 'Flutter Android 客户端、React 运营后台与 Go 服务的独立全栈项目归档，公开内容已脱敏。',
+    },
+  },
+  ARCHIVE_IRREGULAR_SHAPE_LAYOUT: {
+    id: 'archive-irregular-shape-layout',
+    path: '/archive/irregular-shape-layout',
+    meta: {
+      title: '不规则形状布局实验｜项目档案',
+      description: '以合成 SVG 轮廓呈现边界采样、径向有界搜索和邻角细化的公开 clean-room 重建实验。',
+    },
+  },
+  DEMO: {
+    id: 'demo',
+    path: '/demo',
+    meta: {
+      title: '交互体验播放器｜陈成作品集',
+      description: '在受限的全窗口播放器中体验经过登记的公开交互案例。',
+    },
+  },
   RESUME: {
     id: 'resume',
     path: '/resume',

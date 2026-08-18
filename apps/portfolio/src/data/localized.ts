@@ -11,25 +11,31 @@ export function mergeProjectTranslation(
 ): PortfolioProject {
   const demo =
     base.demo && translation.demo
-      ? { ...base.demo, ...translation.demo, source: base.demo.source }
-      : translation.demo || base.demo
-  const visuals = translation.visuals?.map((visual) => {
-    const sourceVisual = base.visuals?.find((candidate) => candidate.id === visual.id)
-    return sourceVisual
+      ? {
+          ...base.demo,
+          ...translation.demo,
+          experienceId: base.demo.experienceId,
+          source: base.demo.source,
+        }
+      : base.demo || translation.demo
+  const visuals = base.visuals?.map((sourceVisual) => {
+    const visual = translation.visuals?.find((candidate) => candidate.id === sourceVisual.id)
+    return visual
       ? {
           ...sourceVisual,
           ...visual,
           id: sourceVisual.id,
           kind: sourceVisual.kind,
+          experienceId: sourceVisual.experienceId,
           source: sourceVisual.source,
         }
-      : visual
-  }) || base.visuals
-  const links = translation.links?.map((link, index) => ({
-    ...base.links?.[index],
-    ...link,
-    url: base.links?.[index]?.url || link.url,
-  })) || base.links
+      : sourceVisual
+  }) || translation.visuals
+  const links = base.links?.map((baseLink, index) => ({
+    ...baseLink,
+    ...translation.links?.[index],
+    url: baseLink.url,
+  })) || translation.links
   const chapters = translation.chapters.map((chapter, index) => ({
     ...chapter,
     id: base.chapters[index]?.id || chapter.id,
@@ -42,6 +48,7 @@ export function mergeProjectTranslation(
     order: base.order,
     tier: base.tier,
     provenance: base.provenance,
+    provenanceDisplay: translation.provenanceDisplay || base.provenanceDisplay,
     demo,
     visuals,
     links,

@@ -31,6 +31,8 @@ export function Topbar({
     'archive-dataview-observatory': `${copy.navigation.projects} · DataView`,
     'archive-turntable-motion-lab': `${copy.navigation.projects} · Turntable`,
     'archive-bezier-easing-picker': `${copy.navigation.projects} · Bezier`,
+    'archive-merchant-commerce': `${copy.navigation.projects} · ${language === 'en' ? 'Independent Commerce' : '独立移动电商'}`,
+    'archive-irregular-shape-layout': `${copy.navigation.projects} · ${language === 'en' ? 'Irregular Shapes' : '不规则布局'}`,
     resume: copy.navigation.resume,
     'not-found': 'Not Found',
   }

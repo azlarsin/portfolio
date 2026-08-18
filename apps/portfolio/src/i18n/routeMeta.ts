@@ -67,6 +67,20 @@ const englishRouteMeta: Record<RouteId, RouteMeta> = {
     description:
       'A reusable visual editor and live preview for cubic-bezier easing parameters.',
   },
+  'archive-merchant-commerce': {
+    title: 'Mobile Commerce System | Independent Full-Stack Project Archive',
+    description:
+      'A redacted independent full-stack project archive covering a Flutter Android client, React operations console, and Go services.',
+  },
+  'archive-irregular-shape-layout': {
+    title: 'Irregular Shape Layout Lab | Project Archive',
+    description:
+      'A clean-room public reconstruction of sampled SVG-boundary geometry, bounded radial search, and neighboring-angle refinement.',
+  },
+  demo: {
+    title: 'Interactive Experience Player | Chen Cheng Portfolio',
+    description: 'A full-window player for registered public interactive experiences.',
+  },
   resume: {
     title: 'Résumé | Chen Cheng',
     description:

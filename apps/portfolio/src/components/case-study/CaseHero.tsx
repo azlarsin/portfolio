@@ -5,11 +5,18 @@ import { useLanguage } from '../../i18n/LanguageContext'
 
 export function CaseHero({ project, compact = false }: { project: PortfolioProject; compact?: boolean }) {
   const { copy } = useLanguage()
-  const provenanceDescription = useProvenanceDescription(project.provenance)
+  const provenanceDescription = useProvenanceDescription(
+    project.provenance,
+    project.provenanceDisplay,
+  )
 
   return (
     <header className={`case-hero ${compact ? 'case-hero--compact' : ''}`}>
-      <ProvenanceBadge provenance={project.provenance} showDescription />
+      <ProvenanceBadge
+        provenance={project.provenance}
+        displayOverride={project.provenanceDisplay}
+        showDescription
+      />
       <p className="eyebrow">{project.eyebrow}</p>
       <h1>{project.title}</h1>
       <p className="case-thesis">{project.thesis}</p>

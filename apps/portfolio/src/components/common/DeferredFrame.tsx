@@ -1,8 +1,10 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import type { DemoSpec, VisualSpec } from '../../data'
+import { demoPlayerPath, getDemoExperience } from '../../data/demoExperiences'
 import { DemoPoster, EvidencePoster } from './DemoPoster'
 import { useMediaQuery } from './useMediaQuery'
 import { useLanguage } from '../../i18n/LanguageContext'
+import { AppLink } from './AppLink'
 
 type FrameStyle = CSSProperties & { '--frame-height': string }
 
@@ -21,12 +23,14 @@ function InteractiveFrame({ demo }: { demo: DemoSpec }) {
   }, [attempt, loaded, shouldLoad])
 
   const load = () => {
+    if (!experience) return
     setLoaded(false)
     setTimedOut(false)
     setShouldLoad(true)
     setAttempt((value) => value + 1)
   }
 
+  const experience = getDemoExperience(demo.experienceId)
   const style: FrameStyle = { '--frame-height': `${demo.height || 680}px` }
 
   return (
@@ -40,17 +44,14 @@ function InteractiveFrame({ demo }: { demo: DemoSpec }) {
       </header>
 
       <div className="demo-frame-stage">
-        {shouldLoad && !isMobile ? (
+        {shouldLoad && !isMobile && experience ? (
           <iframe
             key={attempt}
-            src={demo.source}
+            src={experience.source}
             title={demo.title}
             loading="lazy"
-            allow={demo.allow || 'clipboard-write; fullscreen'}
-            sandbox={
-              demo.sandbox ||
-              'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox'
-            }
+            allow={experience.allow}
+            sandbox={experience.sandbox}
             referrerPolicy="strict-origin-when-cross-origin"
             onLoad={() => {
               setLoaded(true)
@@ -78,14 +79,17 @@ function InteractiveFrame({ demo }: { demo: DemoSpec }) {
       <footer className="demo-frame-footer">
         <p>{demo.description}</p>
         <div>
+          <AppLink
+            className="button button-primary"
+            to={demoPlayerPath(demo.experienceId)}
+          >
+            {copy.demo.openFullWindow}
+          </AppLink>
           {!isMobile ? (
-            <button type="button" className="button button-primary" onClick={load}>
+            <button type="button" className="button button-secondary" onClick={load}>
               {shouldLoad ? copy.demo.reloadDemo : demo.ctaLabel || copy.demo.loadDemo}
             </button>
           ) : null}
-          <a className="button button-secondary" href={demo.source} target="_blank" rel="noreferrer">
-            {copy.demo.openWindow}
-          </a>
         </div>
       </footer>
     </section>
@@ -152,14 +156,22 @@ function VisualFrame({ visual }: { visual: VisualSpec }) {
         ) : null}
       </div>
       <div className="evidence-frame-actions">
-        {!isMobile && !shouldLoad ? (
-          <button type="button" className="button button-secondary" onClick={load}>
-            {copy.demo.loadArchitecture}
-          </button>
-        ) : null}
-        <a href={visual.source} target="_blank" rel="noreferrer">
-          {copy.demo.viewWindow}
-        </a>
+        {visual.experienceId ? (
+          <AppLink className="button button-primary" to={demoPlayerPath(visual.experienceId)}>
+            {copy.demo.openFullWindow}
+          </AppLink>
+        ) : (
+          <>
+            {!isMobile && !shouldLoad ? (
+              <button type="button" className="button button-secondary" onClick={load}>
+                {copy.demo.loadArchitecture}
+              </button>
+            ) : null}
+            <a href={visual.source} target="_blank" rel="noreferrer">
+              {copy.demo.viewWindow}
+            </a>
+          </>
+        )}
       </div>
     </figure>
   )

@@ -1,5 +1,28 @@
 "use client";
 
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+} from "react";
+
+const GUIDE_MOBILE_BREAKPOINT = 720;
+const GUIDE_VIEWPORT_INSET = 8;
+
+interface GuideDrag {
+  pointerId: number;
+  handle: HTMLDivElement;
+  startX: number;
+  startY: number;
+  startTop: number;
+  startLeft: number;
+}
+
+type GuidePosition = { top: number; left: number };
+
 interface ExperienceGuideProps {
   open: boolean;
   routePath: string;
@@ -31,21 +54,164 @@ export default function ExperienceGuide({
   onCycleInspection,
   onOpenAgent,
 }: ExperienceGuideProps) {
+  const [position, setPosition] = useState<GuidePosition | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const guideRef = useRef<HTMLElement>(null);
+  const dragRef = useRef<GuideDrag | null>(null);
+
+  const clampPosition = useCallback((candidate: GuidePosition) => {
+    const guide = guideRef.current;
+    if (!guide || window.innerWidth <= GUIDE_MOBILE_BREAKPOINT) return null;
+
+    const rect = guide.getBoundingClientRect();
+    const maxTop = Math.max(
+      GUIDE_VIEWPORT_INSET,
+      window.innerHeight - rect.height - GUIDE_VIEWPORT_INSET,
+    );
+    const maxLeft = Math.max(
+      GUIDE_VIEWPORT_INSET,
+      window.innerWidth - rect.width - GUIDE_VIEWPORT_INSET,
+    );
+    return {
+      top: Math.min(maxTop, Math.max(GUIDE_VIEWPORT_INSET, candidate.top)),
+      left: Math.min(maxLeft, Math.max(GUIDE_VIEWPORT_INSET, candidate.left)),
+    };
+  }, []);
+
+  const releaseDrag = useCallback((pointerId?: number) => {
+    const drag = dragRef.current;
+    if (!drag || (pointerId !== undefined && drag.pointerId !== pointerId)) {
+      return;
+    }
+
+    dragRef.current = null;
+    if (drag.handle.hasPointerCapture(drag.pointerId)) {
+      drag.handle.releasePointerCapture(drag.pointerId);
+    }
+    setDragging(false);
+  }, []);
+
+  useEffect(() => {
+    const reclampPosition = () => {
+      if (window.innerWidth <= GUIDE_MOBILE_BREAKPOINT) {
+        releaseDrag();
+        setPosition(null);
+        return;
+      }
+      setPosition((current) => current && clampPosition(current));
+    };
+
+    window.addEventListener("resize", reclampPosition);
+    return () => window.removeEventListener("resize", reclampPosition);
+  }, [clampPosition, releaseDrag]);
+
+  useEffect(() => {
+    const guide = guideRef.current;
+    if (!guide || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      if (window.innerWidth > GUIDE_MOBILE_BREAKPOINT) {
+        setPosition((current) => current && clampPosition(current));
+      }
+    });
+    observer.observe(guide);
+    return () => observer.disconnect();
+  }, [clampPosition, open]);
+
+  useEffect(() => {
+    if (!open) {
+      releaseDrag();
+      const timer = window.setTimeout(() => setPosition(null), 0);
+      return () => window.clearTimeout(timer);
+    }
+  }, [open, releaseDrag]);
+
+  useEffect(() => () => releaseDrag(), [releaseDrag]);
+
+  const handleClose = () => {
+    releaseDrag();
+    setPosition(null);
+    onClose();
+  };
+
+  const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!event.isPrimary || dragRef.current?.pointerId !== event.pointerId) {
+      return;
+    }
+    releaseDrag(event.pointerId);
+  };
+
+  const handleDragStart = (event: PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current) return;
+    if (
+      event.button !== 0 ||
+      !event.isPrimary ||
+      window.innerWidth <= GUIDE_MOBILE_BREAKPOINT
+    ) {
+      return;
+    }
+
+    const guide = guideRef.current;
+    if (!guide) return;
+
+    const rect = guide.getBoundingClientRect();
+    dragRef.current = {
+      pointerId: event.pointerId,
+      handle: event.currentTarget,
+      startX: event.clientX,
+      startY: event.clientY,
+      startTop: rect.top,
+      startLeft: rect.left,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+  };
+
+  const handleDragMove = (event: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!event.isPrimary || !drag || drag.pointerId !== event.pointerId) {
+      return;
+    }
+
+    const nextPosition = clampPosition({
+      top: drag.startTop + event.clientY - drag.startY,
+      left: drag.startLeft + event.clientX - drag.startX,
+    });
+    if (nextPosition) setPosition(nextPosition);
+  };
+
   if (!open) return null;
+
+  const guideStyle = position
+    ? ({
+        "--guide-top": `${position.top}px`,
+        "--guide-left": `${position.left}px`,
+      } as CSSProperties)
+    : undefined;
 
   return (
     <section
       className="experience-guide"
       id="experience-guide"
+      ref={guideRef}
       aria-labelledby="experience-guide-title"
+      data-dragging={dragging}
+      style={guideStyle}
     >
       <header className="guide-header">
-        <div>
+        <div
+          className="guide-drag-handle"
+          onPointerDown={handleDragStart}
+          onPointerMove={handleDragMove}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+          onLostPointerCapture={finishDrag}
+        >
           <span className="guide-kicker">START HERE · 2 MIN</span>
           <h2 id="experience-guide-title">操作指南</h2>
           <p>按下方步骤操作，观察 URL、History 与界面层如何协作。</p>
         </div>
-        <button type="button" aria-label="关闭操作指南" onClick={onClose}>
+        <button type="button" aria-label="关闭操作指南" onClick={handleClose}>
           ×
         </button>
       </header>

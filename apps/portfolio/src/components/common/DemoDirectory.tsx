@@ -1,4 +1,5 @@
 import type { PortfolioProject } from '../../data'
+import { demoPlayerPath } from '../../data/demoExperiences'
 import { AppLink } from './AppLink'
 import { useLanguage } from '../../i18n/LanguageContext'
 
@@ -45,14 +46,12 @@ export function DemoDirectory({
             <h3>{project.shortTitle}</h3>
             <p>{project.summary || project.demo.description}</p>
             <div className="demo-directory-actions">
-              <a
+              <AppLink
                 className="button button-primary"
-                href={project.demo.source}
-                target="_blank"
-                rel="noreferrer"
+                to={demoPlayerPath(project.demo.experienceId)}
               >
                 {copy.demo.openDemo} <span aria-hidden="true">↗</span>
-              </a>
+              </AppLink>
               <AppLink className="text-link" to={projectPath(project)}>
                 {copy.demo.viewDescription} <span aria-hidden="true">→</span>
               </AppLink>

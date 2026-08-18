@@ -18,7 +18,7 @@
    - 百家号编辑器：从 UEditor 深度定制到内部复用包的生产系统演进。
    - Layered Route × Agent：公开重建与个人技术研究。
 3. **Experience**：由统一 profile 数据生成、按最近经历优先展示的职业时间线。
-4. **Personal Projects**：Elpis、Poke、DataView、Turntable 和 Bezier 等个人产品、独立交付与实验。
+4. **Personal Projects**：Elpis、Poke、DataView、Turntable、Bezier、不规则形状布局实验与移动电商独立全栈项目等个人产品与实验。
 5. **Resume**：移动端可直接阅读的 HTML 简历，以及桌面 PDF 预览和下载。
 
 首页只承担定位和精选入口，不把所有项目、长篇技术说明或 iframe 一次性加载。Selected Work 用完整案例讲清问题、职责、结果和取舍；Personal Projects 收录独立产品、旧作与 Demo。
@@ -42,10 +42,13 @@
 | `/archive/dataview-observatory` | DataView 项目档案 | `data/archive.ts` |
 | `/archive/turntable-motion-lab` | Turntable 项目档案 | `data/archive.ts` |
 | `/archive/bezier-easing-picker` | Bezier 项目档案 | `data/archive.ts` |
+| `/archive/merchant-commerce` | 移动电商独立全栈项目档案（公开脱敏） | `data/archive.ts` |
+| `/archive/irregular-shape-layout` | 不规则形状布局实验（公开 clean-room 重建） | `data/archive.ts` |
+| `/demo?experience=<typed-id>` | 统一全窗口交互体验播放器 | `pages/DemoPlayerPage.tsx`、`data/demoExperiences.ts` |
 | `/resume` | HTML / PDF 简历 | `pages/ResumePage.tsx`、`data/profile.json` |
 | `/not-found` | Not Found | `pages/NotFoundPage.tsx` |
 
-`/work/elpis` 作为旧地址保留，并会自动规范化到 `/archive/elpis`。
+首页和项目档案中的交互入口统一进入 `/demo?experience=<typed-id>`。播放器只接受 `data/demoExperiences.ts` 中登记的有限 ID，不接受任意 `src` 或 `url` 查询参数；菜单、Guide、加载态和失败回退由 Portfolio 外层负责。Layered Route 的登记源会携带 `agent_demo=1&embed=1`，隐藏实验内部的重复 Guide，但保留 RouteRail 和实验控件。未知 ID 只显示安全状态，不加载 iframe。
 
 案例章节使用 `chapters[].id` 作为页内锚点，例如 `/work/layered-agent#behavior-manifest`。锚点也是侧边目录和历史链接迁移的稳定标识，修改时需要同步检查外部链接。
 

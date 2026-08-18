@@ -1019,8 +1019,13 @@
 }
 
 .demo-poster--motion-lab,
-.demo-poster--easing-picker {
+.demo-poster--easing-picker,
+.demo-poster--irregular-geometry {
   background: #141821;
+}
+
+.demo-poster--irregular-geometry {
+  background: radial-gradient(circle at 22% 26%, #314a79 0, #141821 47%, #0d1119 100%);
 }
 
 .frame-status {

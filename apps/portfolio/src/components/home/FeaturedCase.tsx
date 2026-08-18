@@ -38,7 +38,10 @@ export function FeaturedCase({
       <div className="featured-case-copy">
         <div className="featured-case-meta">
           <span>{String(index).padStart(2, '0')}</span>
-          <ProvenanceBadge provenance={project.provenance} />
+          <ProvenanceBadge
+            provenance={project.provenance}
+            displayOverride={project.provenanceDisplay}
+          />
         </div>
         <h3>{project.title}</h3>
         <p>{project.thesis}</p>

@@ -44,6 +44,19 @@ export function getRouteLocationFromBrowserUrl(url = currentUrl()) {
   return `${routePath}${search ? `?${search}` : ""}`;
 }
 
+const PRESERVED_SHELL_QUERY_PARAMS = ["embed", "agent_demo"] as const;
+
+function mergeShellQueryParams(
+  targetParams: URLSearchParams,
+  browserParams: URLSearchParams,
+) {
+  PRESERVED_SHELL_QUERY_PARAMS.forEach((key) => {
+    if (!targetParams.has(key) && browserParams.has(key)) {
+      targetParams.set(key, browserParams.get(key) || "");
+    }
+  });
+}
+
 /**
  * Converts an in-app route such as `/products?agent_demo=1` to the address
  * that can be pushed into browser history. In a static build this remains the
@@ -53,6 +66,7 @@ export function createBrowserLocation(target: string) {
   const targetUrl = new URL(target, window.location.origin);
   const routePath = normalizeRoutePath(targetUrl.pathname);
   const targetParams = new URLSearchParams(targetUrl.searchParams);
+  mergeShellQueryParams(targetParams, currentUrl().searchParams);
 
   if (!isStaticDemoBuild()) {
     const search = targetParams.toString();

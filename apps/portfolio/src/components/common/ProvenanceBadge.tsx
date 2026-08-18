@@ -1,4 +1,4 @@
-import type { ProjectProvenance } from '../../data'
+import type { ProjectProvenance, ProjectProvenanceDisplay } from '../../data'
 import { useLanguage } from '../../i18n/LanguageContext'
 
 function useProvenanceCopy() {
@@ -8,18 +8,27 @@ function useProvenanceCopy() {
     'public-reconstruction': { label: copy.provenance.publicReconstruction[0], description: copy.provenance.publicReconstruction[1] },
     'personal-product': { label: copy.provenance.personalProduct[0], description: copy.provenance.personalProduct[1] },
     experiment: { label: copy.provenance.experiment[0], description: copy.provenance.experiment[1] },
-  } satisfies Record<ProjectProvenance, { label: string; description: string }>
+  } satisfies Record<ProjectProvenance, ProjectProvenanceDisplay>
+}
+
+function useProvenanceDisplay(
+  provenance: ProjectProvenance,
+  displayOverride?: ProjectProvenanceDisplay,
+) {
+  const provenanceCopy = useProvenanceCopy()
+  return displayOverride || provenanceCopy[provenance]
 }
 
 export function ProvenanceBadge({
   provenance,
+  displayOverride,
   showDescription = false,
 }: {
   provenance: ProjectProvenance
+  displayOverride?: ProjectProvenanceDisplay
   showDescription?: boolean
 }) {
-  const provenanceCopy = useProvenanceCopy()
-  const copy = provenanceCopy[provenance]
+  const copy = useProvenanceDisplay(provenance, displayOverride)
   return (
     <span className={`provenance provenance--${provenance}`}>
       <span>{copy.label}</span>
@@ -28,7 +37,9 @@ export function ProvenanceBadge({
   )
 }
 
-export function useProvenanceDescription(provenance: ProjectProvenance) {
-  const provenanceCopy = useProvenanceCopy()
-  return provenanceCopy[provenance].description
+export function useProvenanceDescription(
+  provenance: ProjectProvenance,
+  displayOverride?: ProjectProvenanceDisplay,
+) {
+  return useProvenanceDisplay(provenance, displayOverride).description
 }

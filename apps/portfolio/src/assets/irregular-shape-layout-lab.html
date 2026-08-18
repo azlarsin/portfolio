@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Irregular Shape Layout Lab</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #edf2ff;
+        --muted: #9daac3;
+        --line: #29344a;
+        --surface: #111827;
+        --surface-raised: #182235;
+        --accent: #85a7ff;
+        --accent-soft: #2b416e;
+        --good: #84d6ad;
+        --warn: #f4c56b;
+        --bad: #ff8e9a;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: #0b101b;
+        color: var(--ink);
+        font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      button, input { font: inherit; }
+
+      button, input[type="range"] { accent-color: var(--accent); }
+
+      button {
+        min-height: 36px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--surface-raised);
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      button:hover { border-color: var(--accent); }
+      button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      .lab {
+        display: grid;
+        min-height: 100vh;
+        grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      }
+
+      .panel {
+        padding: 18px;
+        border-right: 1px solid var(--line);
+        background: var(--surface);
+      }
+
+      .eyebrow, .caption {
+        margin: 0;
+        color: var(--accent);
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+
+      h1 { margin: 6px 0 8px; font-size: 22px; line-height: 1.15; }
+      .intro, .note { margin: 0; color: var(--muted); font-size: 12px; }
+
+      .controls { display: grid; gap: 14px; margin-top: 20px; }
+      .field { display: grid; gap: 6px; }
+      .field label { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 650; }
+      output { color: var(--accent); font-variant-numeric: tabular-nums; }
+      .field input { width: 100%; }
+
+      .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .actions button:first-child { border-color: var(--accent); background: var(--accent); color: #0a1120; font-weight: 750; }
+      .toggle { display: flex; align-items: center; gap: 8px; min-height: 36px; color: var(--muted); font-size: 12px; }
+
+      .status-card {
+        display: grid;
+        gap: 8px;
+        margin-top: 20px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #0d1524;
+      }
+
+      .status-line { margin: 0; color: var(--muted); font-size: 12px; }
+      .status-line strong { color: var(--ink); }
+      .status-line strong.good { color: var(--good); }
+      .status-line strong.warn { color: var(--warn); }
+      .status-line strong.bad { color: var(--bad); }
+      .method { margin-top: 16px; }
+      .method ul { display: grid; gap: 6px; margin: 8px 0 0; padding-left: 18px; color: var(--muted); font-size: 12px; }
+
+      .workspace { display: grid; min-width: 0; grid-template-rows: auto minmax(340px, 1fr) auto; }
+      .workspace-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px 16px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+        background: #0e1625;
+      }
+      .workspace-header strong { font-size: 13px; }
+      .viewport-info { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+      .canvas-wrap { position: relative; min-height: 0; padding: 16px; }
+      svg { display: block; width: 100%; height: 100%; min-height: 340px; border: 1px solid var(--line); border-radius: 10px; background: radial-gradient(circle at 50% 48%, #192941 0, #0c1422 68%); }
+      .shape { stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+      .shape-label { fill: #eaf0ff; font-size: 12px; font-weight: 750; pointer-events: none; }
+      .debug-point { fill: #c7d7ff; opacity: .72; }
+      .debug-link { stroke: #f5cd7a; stroke-width: 1.25; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+      .debug-ray { stroke: #5e759f; stroke-width: 1; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+      .debug-bound { fill: none; stroke: #8294b2; stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; opacity: .6; }
+      .center-mark { fill: #a9bbdf; }
+      .legend { padding: 0 18px 16px; color: var(--muted); font-size: 12px; }
+
+      @media (max-width: 760px) {
+        .lab { grid-template-columns: 1fr; }
+        .panel { border-right: 0; border-bottom: 1px solid var(--line); }
+        .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .actions, .toggle, .status-card, .method { grid-column: 1 / -1; }
+        .workspace { min-height: 500px; }
+      }
+
+      @media (max-width: 480px) {
+        .controls { grid-template-columns: 1fr; }
+        .workspace { min-height: 430px; }
+        .canvas-wrap { padding: 10px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="lab">
+      <aside class="panel" aria-label="Layout controls">
+        <p class="eyebrow">Public reconstruction / clean-room lab</p>
+        <h1>Irregular Shape Layout</h1>
+        <p class="intro">Synthetic seeded blobs arranged from sampled SVG boundaries. This is an approximate geometry study, not exact packing or a global optimum; angle refinement uses a bounded local-neighbor compactness objective.</p>
+
+        <form class="controls" id="controls">
+          <div class="field">
+            <label for="count">Shape count <output id="count-output"></output></label>
+            <input id="count" type="range" min="3" max="8" value="5" />
+          </div>
+          <div class="field">
+            <label for="seed">Seed <output id="seed-output"></output></label>
+            <input id="seed" type="range" min="1" max="99" value="19" />
+          </div>
+          <div class="field">
+            <label for="gap">Target gap <output id="gap-output"></output></label>
+            <input id="gap" type="range" min="10" max="60" value="28" />
+          </div>
+          <div class="field">
+            <label for="density">Boundary samples <output id="density-output"></output></label>
+            <input id="density" type="range" min="16" max="64" step="4" value="32" />
+          </div>
+          <div class="actions">
+            <button type="submit">Arrange</button>
+            <button type="button" id="reset">Reset</button>
+          </div>
+          <label class="toggle" for="debug"><input id="debug" type="checkbox" /> Show sampled-geometry debug overlay</label>
+        </form>
+
+        <section class="status-card" aria-live="polite" aria-atomic="true">
+          <p class="caption">Measured result</p>
+          <p class="status-line">Status: <strong id="status">Ready</strong></p>
+          <p class="status-line">Minimum gap: <strong id="measured-gap">—</strong></p>
+          <p class="status-line">Iterations: <strong id="iterations">—</strong></p>
+          <p class="status-line">Elapsed: <strong id="elapsed">—</strong></p>
+        </section>
+
+        <section class="method">
+          <p class="caption">Method and boundary</p>
+          <ul>
+            <li>Samples use SVG path length APIs, then explicit shape transforms place points in world coordinates.</li>
+            <li>Sampled minimum distance is guarded by segment intersections and point-in-polygon containment; overlap is invalid, not a positive gap.</li>
+            <li>Angle refinement first rejects overlap and target-gap deficits, then prefers a smaller sum of sampled gaps between adjacent indexed shapes; it is not a global packing objective.</li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="workspace" aria-label="Irregular shape layout viewport">
+        <header class="workspace-header">
+          <strong>Seeded synthetic geometry · local-only</strong>
+          <span class="viewport-info" id="viewport-info">Viewport —</span>
+        </header>
+        <div class="canvas-wrap">
+          <svg id="scene" viewBox="0 0 900 620" role="img" aria-label="Approximate arrangement of synthetic irregular shapes">
+            <defs id="defs"></defs>
+            <g id="rays"></g>
+            <g id="shapes"></g>
+            <g id="debug"></g>
+            <g id="labels"></g>
+          </svg>
+        </div>
+        <p class="legend">Debug: final placement rays, radial-search bounds on their original search rays, transformed sample points, nearest sampled pair, and current SVG viewport/crop information.</p>
+      </section>
+    </main>
+
+    <script>
+      (() => {
+        'use strict'
+
+        const $ = (id) => document.getElementById(id)
+        const scene = $('scene')
+        const defs = $('defs')
+        const layers = { rays: $('rays'), shapes: $('shapes'), debug: $('debug'), labels: $('labels') }
+        const inputs = ['count', 'seed', 'gap', 'density'].map($)
+        const NS = scene.namespaceURI
+        const VIEW = { width: 900, height: 620, center: { x: 450, y: 310 } }
+        const MAX_RADIAL_STEPS = 13
+        const MAX_ANGLE_ROUNDS = 3
+        const MAX_ANGLE_STEPS = 7
+        const RADIAL_CAP = 360
+        const MIN_RADIUS = 44
+        const MAX_RADIUS = 104
+        const state = { shapes: [], settings: null, result: null }
+
+        function createSvg(name, attributes = {}) {
+          const node = document.createElementNS(NS, name)
+          Object.entries(attributes).forEach(([key, value]) => node.setAttribute(key, String(value)))
+          return node
+        }
+
+        function clear(node) { node.replaceChildren() }
+
+        function mulberry32(seed) {
+          let value = seed >>> 0
+          return () => {
+            value += 0x6D2B79F5
+            let t = value
+            t = Math.imul(t ^ (t >>> 15), t | 1)
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+          }
+        }
+
+        function readSettings() {
+          return {
+            count: Number($('count').value),
+            seed: Number($('seed').value),
+            targetGap: Number($('gap').value),
+            density: Number($('density').value),
+            debug: $('debug').checked,
+          }
+        }
+
+        function updateOutputs() {
+          $('count-output').value = $('count').value
+          $('seed-output').value = $('seed').value
+          $('gap-output').value = `${$('gap').value}px`
+          $('density-output').value = `${$('density').value} pts`
+        }
+
+        function blobPath(random, radius) {
+          const count = 9
+          const points = []
+          for (let index = 0; index < count; index += 1) {
+            const angle = (Math.PI * 2 * index) / count - Math.PI / 2
+            const variation = 0.72 + random() * 0.42
+            const squash = 0.82 + random() * 0.32
+            points.push({
+              x: Math.cos(angle) * radius * variation,
+              y: Math.sin(angle) * radius * variation * squash,
+            })
+          }
+          let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`
+          for (let index = 0; index < count; index += 1) {
+            const current = points[index]
+            const next = points[(index + 1) % count]
+            const midpoint = { x: (current.x + next.x) / 2, y: (current.y + next.y) / 2 }
+            d += ` Q ${current.x.toFixed(2)} ${current.y.toFixed(2)} ${midpoint.x.toFixed(2)} ${midpoint.y.toFixed(2)}`
+          }
+          return `${d} Z`
+        }
+
+        function makeShapes(settings) {
+          clear(defs)
+          const random = mulberry32(settings.seed)
+          return Array.from({ length: settings.count }, (_, index) => {
+            const radius = MIN_RADIUS + random() * (MAX_RADIUS - MIN_RADIUS)
+            const path = createSvg('path', { d: blobPath(random, radius) })
+            defs.append(path)
+            const fillHue = Math.round(194 + index * 24 + random() * 10)
+            return {
+              id: index,
+              path,
+              d: path.getAttribute('d'),
+              radius,
+              rotation: Math.round(random() * 28 - 14),
+              angle: -Math.PI / 2 + (Math.PI * 2 * index) / settings.count,
+              x: VIEW.center.x,
+              y: VIEW.center.y,
+              color: `hsl(${fillHue} 58% ${45 + (index % 2) * 8}%)`,
+              samples: [],
+              polygon: [],
+              radialBounds: { low: 0, high: 0, searchAngle: -Math.PI / 2 },
+            }
+          })
+        }
+
+        function localToWorld(point, shape) {
+          const radians = (shape.rotation * Math.PI) / 180
+          const cosine = Math.cos(radians)
+          const sine = Math.sin(radians)
+          return {
+            x: shape.x + point.x * cosine - point.y * sine,
+            y: shape.y + point.x * sine + point.y * cosine,
+          }
+        }
+
+        function sampleShape(shape, density) {
+          const length = shape.path.getTotalLength()
+          const samples = []
+          for (let index = 0; index < density; index += 1) {
+            const point = shape.path.getPointAtLength((length * index) / density)
+            samples.push(localToWorld(point, shape))
+          }
+          shape.samples = samples
+          shape.polygon = samples
+        }
+
+        function orient(a, b, c) { return (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x) }
+        function onSegment(a, b, point) {
+          return Math.min(a.x, b.x) - 0.0001 <= point.x && point.x <= Math.max(a.x, b.x) + 0.0001 &&
+            Math.min(a.y, b.y) - 0.0001 <= point.y && point.y <= Math.max(a.y, b.y) + 0.0001
+        }
+        function segmentsIntersect(a, b, c, d) {
+          const abC = orient(a, b, c)
+          const abD = orient(a, b, d)
+          const cdA = orient(c, d, a)
+          const cdB = orient(c, d, b)
+          if (((abC > 0 && abD < 0) || (abC < 0 && abD > 0)) && ((cdA > 0 && cdB < 0) || (cdA < 0 && cdB > 0))) return true
+          return (Math.abs(abC) < 0.0001 && onSegment(a, b, c)) || (Math.abs(abD) < 0.0001 && onSegment(a, b, d)) ||
+            (Math.abs(cdA) < 0.0001 && onSegment(c, d, a)) || (Math.abs(cdB) < 0.0001 && onSegment(c, d, b))
+        }
+
+        function pointInPolygon(point, polygon) {
+          let inside = false
+          for (let current = 0, previous = polygon.length - 1; current < polygon.length; previous = current++) {
+            const a = polygon[current]
+            const b = polygon[previous]
+            const crosses = (a.y > point.y) !== (b.y > point.y) && point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y) + a.x
+            if (crosses) inside = !inside
+          }
+          return inside
+        }
+
+        function geometryGuard(a, b) {
+          const polygonA = a.polygon
+          const polygonB = b.polygon
+          for (let index = 0; index < polygonA.length; index += 1) {
+            const a1 = polygonA[index]
+            const a2 = polygonA[(index + 1) % polygonA.length]
+            for (let other = 0; other < polygonB.length; other += 1) {
+              if (segmentsIntersect(a1, a2, polygonB[other], polygonB[(other + 1) % polygonB.length])) return true
+            }
+          }
+          return pointInPolygon(polygonA[0], polygonB) || pointInPolygon(polygonB[0], polygonA)
+        }
+
+        function pairGap(a, b) {
+          let distance = Infinity
+          let pair = null
+          a.samples.forEach((first) => b.samples.forEach((second) => {
+            const candidate = Math.hypot(first.x - second.x, first.y - second.y)
+            if (candidate < distance) { distance = candidate; pair = [first, second] }
+          }))
+          if (geometryGuard(a, b)) return { gap: -1, overlap: true, pair }
+          return { gap: distance, overlap: false, pair }
+        }
+
+        function layoutScore(shapes, targetGap) {
+          let minGap = Infinity
+          let overlap = false
+          let closest = null
+          for (let left = 0; left < shapes.length; left += 1) {
+            for (let right = left + 1; right < shapes.length; right += 1) {
+              const result = pairGap(shapes[left], shapes[right])
+              if (result.overlap) overlap = true
+              if (result.gap < minGap) { minGap = result.gap; closest = { ...result, left, right } }
+            }
+          }
+          return { minGap, overlap, closest, valid: !overlap && minGap >= targetGap }
+        }
+
+        function setPolar(shape, angle, distance) {
+          shape.angle = angle
+          shape.x = VIEW.center.x + Math.cos(angle) * distance
+          shape.y = VIEW.center.y + Math.sin(angle) * distance
+        }
+
+        function arrangeRadially(shapes, settings, metrics) {
+          const placed = []
+          shapes.forEach((shape, index) => {
+            sampleShape(shape, settings.density)
+            if (index === 0) {
+              setPolar(shape, -Math.PI / 2, 0)
+              shape.radialBounds = { low: 0, high: 0, searchAngle: shape.angle }
+              placed.push(shape)
+              return
+            }
+            const searchAngle = shape.angle
+            let low = Math.max(0, shape.radius * .35)
+            let high = RADIAL_CAP
+            const candidate = () => {
+              sampleShape(shape, settings.density)
+              return layoutScore([...placed, shape], settings.targetGap).valid
+            }
+            setPolar(shape, searchAngle, high)
+            metrics.iterations += 1
+            if (!candidate()) {
+              shape.radialBounds = { low, high, searchAngle }
+              placed.push(shape)
+              return
+            }
+            for (let step = 0; step < MAX_RADIAL_STEPS; step += 1) {
+              const middle = (low + high) / 2
+              setPolar(shape, searchAngle, middle)
+              metrics.iterations += 1
+              if (candidate()) high = middle
+              else low = middle
+            }
+            setPolar(shape, searchAngle, high)
+            sampleShape(shape, settings.density)
+            shape.radialBounds = { low, high, searchAngle }
+            placed.push(shape)
+          })
+        }
+
+        function localNeighbors(left, right, count) {
+          if (left === 0 || right === 0) return false
+          return Math.abs(left - right) === 1 || (left === 1 && right === count - 1)
+        }
+
+        function placementObjective(shapes, targetGap) {
+          let overlapCount = 0
+          let totalGapDeficit = 0
+          let localExcessGap = 0
+          for (let left = 0; left < shapes.length; left += 1) {
+            for (let right = left + 1; right < shapes.length; right += 1) {
+              const result = pairGap(shapes[left], shapes[right])
+              if (result.overlap) {
+                overlapCount += 1
+                continue
+              }
+              totalGapDeficit += Math.max(0, targetGap - result.gap)
+              if (localNeighbors(left, right, shapes.length)) {
+                localExcessGap += Math.max(0, result.gap - targetGap)
+              }
+            }
+          }
+          return {
+            overlapCount,
+            totalGapDeficit,
+            localExcessGap,
+            valid: overlapCount === 0 && totalGapDeficit < 0.001,
+          }
+        }
+
+        function isBetterPlacement(candidate, best, candidateAngle, bestAngle, originalAngle) {
+          const epsilon = 0.001
+          if (candidate.overlapCount !== best.overlapCount) {
+            return candidate.overlapCount < best.overlapCount
+          }
+          if (Math.abs(candidate.totalGapDeficit - best.totalGapDeficit) > epsilon) {
+            return candidate.totalGapDeficit < best.totalGapDeficit
+          }
+          if (candidate.valid && best.valid && Math.abs(candidate.localExcessGap - best.localExcessGap) > epsilon) {
+            return candidate.localExcessGap < best.localExcessGap
+          }
+          const candidateOffset = Math.abs(candidateAngle - originalAngle)
+          const bestOffset = Math.abs(bestAngle - originalAngle)
+          if (Math.abs(candidateOffset - bestOffset) > epsilon) return candidateOffset < bestOffset
+          return candidateAngle < bestAngle - epsilon
+        }
+
+        function refineAngles(shapes, settings, metrics) {
+          let stepSize = Math.PI / 7
+          for (let round = 0; round < MAX_ANGLE_ROUNDS; round += 1) {
+            for (let index = 1; index < shapes.length; index += 1) {
+              const shape = shapes[index]
+              const original = shape.angle
+              const radialDistance = Math.hypot(shape.x - VIEW.center.x, shape.y - VIEW.center.y)
+              let best = { angle: original, objective: placementObjective(shapes, settings.targetGap) }
+              for (let step = -MAX_ANGLE_STEPS; step <= MAX_ANGLE_STEPS; step += 1) {
+                const angle = original + step * (stepSize / MAX_ANGLE_STEPS)
+                setPolar(shape, angle, radialDistance)
+                sampleShape(shape, settings.density)
+                const objective = placementObjective(shapes, settings.targetGap)
+                metrics.iterations += 1
+                if (isBetterPlacement(objective, best.objective, angle, best.angle, original)) {
+                  best = { angle, objective }
+                }
+              }
+              setPolar(shape, best.angle, radialDistance)
+              sampleShape(shape, settings.density)
+            }
+            stepSize /= 2
+          }
+        }
+
+        function withinViewport(shape) {
+          return shape.samples.every((point) => point.x >= 8 && point.x <= VIEW.width - 8 && point.y >= 8 && point.y <= VIEW.height - 8)
+        }
+
+        function arrange() {
+          const started = performance.now()
+          const settings = readSettings()
+          state.settings = settings
+          state.shapes = makeShapes(settings)
+          const metrics = { iterations: 0 }
+          arrangeRadially(state.shapes, settings, metrics)
+          refineAngles(state.shapes, settings, metrics)
+          const score = layoutScore(state.shapes, settings.targetGap)
+          const cropped = state.shapes.some((shape) => !withinViewport(shape))
+          const elapsed = performance.now() - started
+          state.result = { ...score, cropped, elapsed, iterations: metrics.iterations }
+          render()
+        }
+
+        function render() {
+          clear(layers.rays)
+          clear(layers.shapes)
+          clear(layers.debug)
+          clear(layers.labels)
+          const { settings, shapes, result } = state
+          if (!settings || !result) return
+
+          layers.shapes.append(createSvg('circle', { cx: VIEW.center.x, cy: VIEW.center.y, r: 3, class: 'center-mark' }))
+          shapes.forEach((shape) => {
+            const group = createSvg('g', { transform: `translate(${shape.x} ${shape.y}) rotate(${shape.rotation})` })
+            group.append(createSvg('path', { d: shape.d, class: 'shape', fill: shape.color, stroke: 'rgba(237,242,255,.82)' }))
+            layers.shapes.append(group)
+            layers.labels.append(createSvg('text', { x: shape.x, y: shape.y + 4, 'text-anchor': 'middle', class: 'shape-label' })).textContent = String(shape.id + 1)
+            if (settings.debug && shape.id > 0) {
+              const endpoint = { x: shape.x, y: shape.y }
+              layers.rays.append(createSvg('line', { x1: VIEW.center.x, y1: VIEW.center.y, x2: endpoint.x, y2: endpoint.y, class: 'debug-ray' }))
+              const bounds = shape.radialBounds
+              const low = { x: VIEW.center.x + Math.cos(bounds.searchAngle) * bounds.low, y: VIEW.center.y + Math.sin(bounds.searchAngle) * bounds.low }
+              const high = { x: VIEW.center.x + Math.cos(bounds.searchAngle) * bounds.high, y: VIEW.center.y + Math.sin(bounds.searchAngle) * bounds.high }
+              layers.rays.append(createSvg('line', { x1: low.x, y1: low.y, x2: high.x, y2: high.y, class: 'debug-bound' }))
+            }
+            if (settings.debug) shape.samples.forEach((point) => layers.debug.append(createSvg('circle', { cx: point.x, cy: point.y, r: 1.65, class: 'debug-point' })))
+          })
+          if (settings.debug && result.closest?.pair) {
+            const [first, second] = result.closest.pair
+            layers.debug.append(createSvg('line', { x1: first.x, y1: first.y, x2: second.x, y2: second.y, class: 'debug-link' }))
+          }
+
+          const status = result.overlap ? ['Overlap guard triggered', 'bad'] : result.valid ? ['Converged to target gap', 'good'] : ['Bounded search stopped short', 'warn']
+          if (result.cropped && !result.overlap) status[0] += ' · crop warning'
+          const statusElement = $('status')
+          statusElement.textContent = status[0]
+          statusElement.className = status[1]
+          $('measured-gap').textContent = result.overlap ? 'invalid / overlap' : `${result.minGap.toFixed(1)}px`
+          $('iterations').textContent = String(result.iterations)
+          $('elapsed').textContent = `${result.elapsed.toFixed(1)} ms`
+          $('viewport-info').textContent = `SVG ${VIEW.width} × ${VIEW.height} · crop ${result.cropped ? 'warning' : 'clear'} · ${settings.density} boundary samples / shape`
+        }
+
+        $('controls').addEventListener('submit', (event) => { event.preventDefault(); arrange() })
+        $('reset').addEventListener('click', () => {
+          $('count').value = '5'
+          $('seed').value = '19'
+          $('gap').value = '28'
+          $('density').value = '32'
+          $('debug').checked = false
+          updateOutputs()
+          arrange()
+        })
+        inputs.forEach((input) => input.addEventListener('input', updateOutputs))
+        $('debug').addEventListener('change', () => {
+          if (!state.settings) return
+          state.settings = { ...state.settings, debug: $('debug').checked }
+          render()
+        })
+        updateOutputs()
+        arrange()
+      })()
+    </script>
+  </body>
+</html>

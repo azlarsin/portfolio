@@ -9,10 +9,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import Modal, {
-  type ModalLifecycleTelemetry,
-  ModalRecord,
-} from "./core/Modal";
+import Modal, { type ModalRecord } from "./core/Modal";
 import Presenter from "./core/Presenter";
 import ExperienceGuide from "./ExperienceGuide";
 import RouteRail from "./RouteRail";
@@ -124,6 +121,7 @@ type PresenterCanvasStyle = CSSProperties & {
 
 interface AppProps {
   initialPathname?: string;
+  initialLocation?: string;
 }
 
 function resolveInitialPathname(pathname: string) {
@@ -173,26 +171,29 @@ function appendCachedRouteQuery(
 
 export default function App({
   initialPathname = DEFAULT_DEMO_ROUTE_PATH,
+  initialLocation: initialLocationProp,
 }: AppProps) {
   const initialPath = typeof window === "undefined"
     ? resolveInitialPathname(initialPathname)
     : getRoutePathFromBrowserUrl();
+  const initialLocation = initialLocationProp || initialPath;
   const [pathname, setPathname] = useState(initialPath);
   const currentUrl = useSyncExternalStore(
     subscribeToLocationChange,
     getBrowserLocation,
-    () => initialPath,
+    () => initialLocation,
   );
   const [presenters, setPresenters] = useState<PresenterRecord[]>([]);
   const [modals, setModals] = useState<ModalRecord[]>([]);
-  const [modalTelemetry, setModalTelemetry] =
-    useState<ModalLifecycleTelemetry | null>(null);
   const [inspectionMode, setInspectionMode] =
     useState<InspectionMode>("off");
   const [agentPlaybackMode, setAgentPlaybackMode] =
     useState<AgentPlaybackMode>("paced");
   const [guideOpen, setGuideOpen] = useState(false);
   const [agentOpenRequest, setAgentOpenRequest] = useState(0);
+  const embedded = new URL(currentUrl, "http://localhost").searchParams.get(
+    "embed",
+  ) === "1";
   const [leavingPresenterPath, setLeavingPresenterPath] = useState<
     string | null
   >(null);
@@ -200,6 +201,7 @@ export default function App({
     string | null
   >(null);
   const [leavingModalId, setLeavingModalId] = useState<number | null>(null);
+  const [modalFocusSequence, setModalFocusSequence] = useState(0);
 
   const routeStack = useMemo(() => buildRouteStack(pathname), [pathname]);
   const currentRoute = routeStack[routeStack.length - 1];
@@ -222,7 +224,8 @@ export default function App({
   const pendingModalDepthRef = useRef<number | null>(null);
   const pendingModalHistoryStepsRef = useRef(0);
   const modalCloseCameFromPopRef = useRef(false);
-  const modalTelemetrySequenceRef = useRef(0);
+  const pendingModalFocusIdRef = useRef<number | null>(null);
+  const modalFocusSequenceRef = useRef(0);
   const ignoreNextOverlayPopRef = useRef(false);
   const previousPresenterCountRef = useRef(presenterCount);
   const previousInspectionModeRef =
@@ -260,6 +263,11 @@ export default function App({
   }, [pathname]);
 
   useEffect(() => {
+    if (embedded) {
+      const timer = window.setTimeout(() => setGuideOpen(false), 0);
+      return () => window.clearTimeout(timer);
+    }
+
     const params = new URLSearchParams(window.location.search);
     const shouldOpen = params.get("guide") === "1" || (
       params.get("agent_demo") !== "1" &&
@@ -269,7 +277,7 @@ export default function App({
     if (!shouldOpen) return;
     const timer = window.setTimeout(() => setGuideOpen(true), 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [embedded]);
 
   useEffect(() => {
     presentersRef.current = presenters;
@@ -277,12 +285,25 @@ export default function App({
 
   useEffect(() => {
     modalsRef.current = modals;
+    if (!modals.length) {
+      pendingModalFocusIdRef.current = null;
+    }
   }, [modals]);
+
+  const resetModalClosePlan = useCallback(() => {
+    leavingModalIdRef.current = null;
+    pendingModalDepthRef.current = null;
+    pendingModalHistoryStepsRef.current = 0;
+    modalCloseCameFromPopRef.current = false;
+    pendingModalFocusIdRef.current = null;
+    setLeavingModalId(null);
+  }, []);
 
   const commitNavigation = useCallback(
     (target: string, mode: NavigationMode = "push") => {
       const route = resolveRoute(target);
       if (!route) return;
+      resetModalClosePlan();
       const targetUrl = new URL(target, window.location.href);
       const targetLocation = createBrowserLocation(
         `${route.path}${targetUrl.search}`,
@@ -310,13 +331,14 @@ export default function App({
 
       presentersRef.current = [];
       modalsRef.current = [];
+      pendingModalFocusIdRef.current = null;
       pendingFocusedRouteRef.current = null;
       pathnameRef.current = route.path;
       setPresenters([]);
       setModals([]);
       setPathname(route.path);
     },
-    [],
+    [resetModalClosePlan],
   );
 
   const startPresenterLeave = useCallback(
@@ -509,9 +531,6 @@ export default function App({
       ...currentModals,
       createModalRecord(currentModals),
     ];
-    if (nextModals.length === 2) {
-      setModalTelemetry(null);
-    }
     window.history.pushState(null, "", currentBrowserLocation());
     modalsRef.current = nextModals;
     setModals(nextModals);
@@ -520,7 +539,19 @@ export default function App({
   const startModalLeave = useCallback(
     (targetDepth?: number, cameFromPop = false) => {
       const currentModals = modalsRef.current;
-      if (!currentModals.length || leavingModalIdRef.current) return;
+      if (!currentModals.length) return;
+
+      if (leavingModalIdRef.current) {
+        if (!cameFromPop) return;
+        pendingModalDepthRef.current = Math.max(
+          0,
+          targetDepth ?? currentModals.length - 1,
+        );
+        pendingModalHistoryStepsRef.current = 0;
+        modalCloseCameFromPopRef.current = true;
+        pendingModalFocusIdRef.current = null;
+        return;
+      }
 
       const depth = Math.max(
         0,
@@ -543,16 +574,25 @@ export default function App({
     startModalLeave(undefined, false);
   }, [startModalLeave]);
 
-  const recordModalLifecycle = useCallback((
-    telemetry: Omit<ModalLifecycleTelemetry, "sequence">,
-  ) => {
-    if (telemetry.modalIndex !== 1) return;
+  const selectModal = useCallback(
+    (id: number) => {
+      if (leavingModalIdRef.current) return;
 
-    setModalTelemetry({
-      ...telemetry,
-      sequence: ++modalTelemetrySequenceRef.current,
-    });
-  }, []);
+      const currentModals = modalsRef.current;
+      const targetIndex = currentModals.findIndex((modal) => modal.id === id);
+      if (targetIndex === -1) return;
+
+      if (targetIndex === currentModals.length - 1) {
+        pendingModalFocusIdRef.current = null;
+        setModalFocusSequence(++modalFocusSequenceRef.current);
+        return;
+      }
+
+      pendingModalFocusIdRef.current = id;
+      startModalLeave(targetIndex + 1, false);
+    },
+    [startModalLeave],
+  );
 
   const finishModalLeave = useCallback((id: number) => {
     if (leavingModalIdRef.current !== id) return;
@@ -561,10 +601,6 @@ export default function App({
     const targetDepth =
       pendingModalDepthRef.current ?? Math.max(0, remaining.length);
     const cameFromPop = modalCloseCameFromPopRef.current;
-
-    if (!remaining.length) {
-      setModalTelemetry(null);
-    }
 
     modalsRef.current = remaining;
     leavingModalIdRef.current = null;
@@ -580,6 +616,18 @@ export default function App({
 
     pendingModalDepthRef.current = null;
     modalCloseCameFromPopRef.current = false;
+
+    const focusedModalId = pendingModalFocusIdRef.current;
+    const topModal = remaining[remaining.length - 1];
+    if (focusedModalId !== null && topModal?.id === focusedModalId) {
+      pendingModalFocusIdRef.current = null;
+      setModalFocusSequence(++modalFocusSequenceRef.current);
+    } else if (
+      focusedModalId !== null &&
+      !remaining.some((modal) => modal.id === focusedModalId)
+    ) {
+      pendingModalFocusIdRef.current = null;
+    }
 
     const historySteps = pendingModalHistoryStepsRef.current;
     pendingModalHistoryStepsRef.current = 0;
@@ -937,19 +985,21 @@ export default function App({
               <code>{currentRoute.path}</code>
             </div>
             <div className="bar-actions" aria-label="Layer controls">
-              <button
-                type="button"
-                className={`guide-trigger ${guideOpen ? "active" : ""}`}
-                aria-expanded={guideOpen}
-                aria-controls="experience-guide"
-                onClick={() => {
-                  if (guideOpen) closeGuide();
-                  else setGuideOpen(true);
-                }}
-              >
-                <span>Guide</span>
-                <kbd>2 min</kbd>
-              </button>
+              {!embedded && (
+                <button
+                  type="button"
+                  className={`guide-trigger ${guideOpen ? "active" : ""}`}
+                  aria-expanded={guideOpen}
+                  aria-controls="experience-guide"
+                  onClick={() => {
+                    if (guideOpen) closeGuide();
+                    else setGuideOpen(true);
+                  }}
+                >
+                  <span>Guide</span>
+                  <kbd>2 min</kbd>
+                </button>
+              )}
               <button type="button" onClick={pushNext}>
                 <span>Push page</span>
                 <kbd>⇧ N</kbd>
@@ -983,23 +1033,25 @@ export default function App({
             </div>
           </header>
 
-          <ExperienceGuide
-            open={guideOpen}
-            routePath={currentRoute.path}
-            routeDepth={routeStack.length}
-            temporaryPresenterDepth={presenters.length}
-            modalDepth={modals.length}
-            inspectionMode={inspectionMode}
-            canAdvanceRoute={Boolean(currentRoute.nextPath)}
-            onClose={closeGuide}
-            onAdvanceRoute={() => {
-              if (currentRoute.nextPath) navigate(currentRoute.nextPath);
-            }}
-            onPushTemporaryPresenter={pushPresenter}
-            onOpenModal={openModal}
-            onCycleInspection={cycleInspectionMode}
-            onOpenAgent={openAgentFromGuide}
-          />
+          {!embedded && (
+            <ExperienceGuide
+              open={guideOpen}
+              routePath={currentRoute.path}
+              routeDepth={routeStack.length}
+              temporaryPresenterDepth={presenters.length}
+              modalDepth={modals.length}
+              inspectionMode={inspectionMode}
+              canAdvanceRoute={Boolean(currentRoute.nextPath)}
+              onClose={closeGuide}
+              onAdvanceRoute={() => {
+                if (currentRoute.nextPath) navigate(currentRoute.nextPath);
+              }}
+              onPushTemporaryPresenter={pushPresenter}
+              onOpenModal={openModal}
+              onCycleInspection={cycleInspectionMode}
+              onOpenAgent={openAgentFromGuide}
+            />
+          )}
 
           <div
             className="stage"
@@ -1074,7 +1126,7 @@ export default function App({
                 modal={modal}
                 index={modal.index}
                 total={modals.length}
-                modalStack={modals}
+                modalPrefix={modals.slice(0, index + 1)}
                 leaving={modal.id === leavingModalId}
                 leavingIndex={leavingModalIndex}
                 showMask={index === 0 || Boolean(modals[index - 1]?.full)}
@@ -1084,10 +1136,10 @@ export default function App({
                     : { width: modal.width, height: modal.height }
                 }
                 isTop={index === modals.length - 1}
-                observedModal={index === 0 ? modalTelemetry : null}
+                focusSequence={modalFocusSequence}
                 onClose={closeTopModal}
+                onSelectModal={selectModal}
                 onDidLeave={finishModalLeave}
-                onLifecycleEvent={recordModalLifecycle}
               />
             ))}
 
@@ -1101,7 +1153,7 @@ export default function App({
         </section>
         <AgentDemoOverlay
           openRequest={agentOpenRequest}
-          onOpenGuide={() => setGuideOpen(true)}
+          onOpenGuide={embedded ? undefined : () => setGuideOpen(true)}
         />
       </main>
     </AppContext.Provider>

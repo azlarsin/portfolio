@@ -1,45 +1,44 @@
-import type { RefObject } from 'react'
-import type { ResolvedRoute } from '../../app/router'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type PointerEvent,
+  type RefObject,
+} from 'react'
 import { getLocalizedProfile } from '../../data/localized'
+import type { ResolvedRoute } from '../../app/router'
 import { AppLink } from '../common/AppLink'
 import { LanguageToggle } from '../common/LanguageToggle'
 import { ThemeToggle } from '../common/ThemeToggle'
 import { useLanguage } from '../../i18n/LanguageContext'
+
+const selectedWork = [
+  { to: '/work/meican-platform', index: '01', labelIndex: 0 },
+  { to: '/work/baidu-map-workbench', index: '02', labelIndex: 1 },
+  { to: '/work/baijiahao-editor', index: '03', labelIndex: 2 },
+  { to: '/work/layered-agent', index: '04', labelIndex: 3 },
+] as const
 
 function isCurrent(route: ResolvedRoute, to: string) {
   if (to === '/archive') return route.pathname.startsWith('/archive')
   return route.pathname === to
 }
 
-export function Sidebar({
+export function PortfolioNavigationContent({
   route,
-  open,
-  isMobile,
   firstLinkRef,
   onNavigate,
 }: {
   route: ResolvedRoute
-  open: boolean
-  isMobile: boolean
-  firstLinkRef: RefObject<HTMLAnchorElement | null>
+  firstLinkRef?: RefObject<HTMLAnchorElement | null>
   onNavigate: () => void
 }) {
   const { copy, language } = useLanguage()
   const localizedProfile = getLocalizedProfile(language)
-  const selectedWork = [
-    { to: '/work/meican-platform', index: '01', label: copy.navigation.selectedCases[0] },
-    { to: '/work/baidu-map-workbench', index: '02', label: copy.navigation.selectedCases[1] },
-    { to: '/work/baijiahao-editor', index: '03', label: copy.navigation.selectedCases[2] },
-    { to: '/work/layered-agent', index: '04', label: copy.navigation.selectedCases[3] },
-  ]
 
   return (
-    <aside
-      id="site-navigation"
-      className={`site-sidebar ${open ? 'is-open' : ''}`}
-      aria-hidden={isMobile && !open ? true : undefined}
-      inert={isMobile && !open ? true : undefined}
-    >
+    <>
       <div className="sidebar-identity">
         <AppLink to="/" onClick={onNavigate} ref={firstLinkRef}>
           <strong>{localizedProfile.name}</strong>
@@ -69,7 +68,7 @@ export function Sidebar({
               className="nav-case"
             >
               <small>{item.index}</small>
-              <span>{item.label}</span>
+              <span>{copy.navigation.selectedCases[item.labelIndex]}</span>
             </AppLink>
           ))}
         </div>
@@ -110,6 +109,212 @@ export function Sidebar({
           <ThemeToggle />
         </div>
       </footer>
+    </>
+  )
+}
+
+export function Sidebar({
+  route,
+  open,
+  isMobile,
+  firstLinkRef,
+  onNavigate,
+}: {
+  route: ResolvedRoute
+  open: boolean
+  isMobile: boolean
+  firstLinkRef: RefObject<HTMLAnchorElement | null>
+  onNavigate: () => void
+}) {
+  return (
+    <aside
+      id="site-navigation"
+      className={`site-sidebar ${open ? 'is-open' : ''}`}
+      aria-hidden={isMobile && !open ? true : undefined}
+      inert={isMobile && !open ? true : undefined}
+    >
+      <PortfolioNavigationContent
+        route={route}
+        firstLinkRef={firstLinkRef}
+        onNavigate={onNavigate}
+      />
     </aside>
   )
+}
+
+interface GuidePosition {
+  x: number
+  y: number
+}
+
+function clampGuidePosition(position: GuidePosition, element: HTMLElement): GuidePosition {
+  const margin = 16
+  const maxX = Math.max(margin, window.innerWidth - element.offsetWidth - margin)
+  const maxY = Math.max(margin, window.innerHeight - element.offsetHeight - margin)
+  return {
+    x: Math.min(Math.max(margin, position.x), maxX),
+    y: Math.min(Math.max(margin, position.y), maxY),
+  }
+}
+
+export function DemoNavigationDrawer({
+  route,
+  open,
+  firstLinkRef,
+  onClose,
+}: {
+  route: ResolvedRoute
+  open: boolean
+  firstLinkRef: RefObject<HTMLAnchorElement | null>
+  onClose: () => void
+}) {
+  const { copy } = useLanguage()
+
+  return (
+    <>
+      <button
+        type="button"
+        className={`demo-drawer-backdrop ${open ? 'is-visible' : ''}`}
+        aria-label={copy.demo.player.closeMenu}
+        tabIndex={open ? 0 : -1}
+        onClick={onClose}
+      />
+      <aside
+        id="demo-navigation"
+        className={`demo-navigation-drawer ${open ? 'is-open' : ''}`}
+        aria-hidden={!open}
+        inert={!open ? true : undefined}
+      >
+        <PortfolioNavigationContent route={route} firstLinkRef={firstLinkRef} onNavigate={onClose} />
+      </aside>
+    </>
+  )
+}
+
+interface GuideDrag {
+  handle: HTMLElement
+  pointerId: number
+  offsetX: number
+  offsetY: number
+}
+
+const defaultGuidePosition: GuidePosition = { x: 24, y: 78 }
+
+function releaseGuidePointer(dragRef: MutableRefObject<GuideDrag | null>) {
+  const drag = dragRef.current
+  if (!drag) return
+  dragRef.current = null
+  if (!drag.handle.hasPointerCapture(drag.pointerId)) return
+  try {
+    drag.handle.releasePointerCapture(drag.pointerId)
+  } catch {
+    // The browser may release capture before a cancellation or unmount cleanup runs.
+  }
+}
+
+export function useDesktopGuidePosition(active: boolean, experienceId: string) {
+  const guideRef = useRef<HTMLElement>(null)
+  const [position, setPosition] = useState<GuidePosition>(defaultGuidePosition)
+  const dragRef = useRef<GuideDrag | null>(null)
+
+  useEffect(() => {
+    releaseGuidePointer(dragRef)
+    setPosition(defaultGuidePosition)
+  }, [experienceId])
+
+  useEffect(() => {
+    if (!active) {
+      releaseGuidePointer(dragRef)
+      setPosition(defaultGuidePosition)
+      return
+    }
+
+    const clampToViewport = () => {
+      const element = guideRef.current
+      if (!element) return
+      setPosition((current) => clampGuidePosition(current, element))
+    }
+
+    const element = guideRef.current
+    if (!element) return
+    const observer =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(clampToViewport) : null
+    observer?.observe(element)
+    window.addEventListener('resize', clampToViewport)
+    return () => {
+      releaseGuidePointer(dragRef)
+      observer?.disconnect()
+      window.removeEventListener('resize', clampToViewport)
+    }
+  }, [active, experienceId])
+
+  const onPointerDown = (event: PointerEvent<HTMLElement>) => {
+    if (
+      !active ||
+      event.button !== 0 ||
+      !event.isPrimary ||
+      event.pointerType === 'touch' ||
+      window.matchMedia('(max-width: 760px)').matches
+    ) {
+      return
+    }
+
+    const guide = guideRef.current
+    if (!guide) return
+
+    const handle = event.currentTarget
+    if (!handle.isConnected) return
+    releaseGuidePointer(dragRef)
+    const rect = guide.getBoundingClientRect()
+    dragRef.current = {
+      handle,
+      pointerId: event.pointerId,
+      offsetX: event.clientX - rect.left,
+      offsetY: event.clientY - rect.top,
+    }
+    try {
+      handle.setPointerCapture(event.pointerId)
+    } catch {
+      dragRef.current = null
+    }
+  }
+
+  const onPointerMove = (event: PointerEvent<HTMLElement>) => {
+    const drag = dragRef.current
+    const element = guideRef.current
+    if (
+      !active ||
+      !drag ||
+      drag.handle !== event.currentTarget ||
+      drag.pointerId !== event.pointerId ||
+      !element ||
+      !event.isPrimary
+    ) {
+      return
+    }
+    setPosition(
+      clampGuidePosition(
+        { x: event.clientX - drag.offsetX, y: event.clientY - drag.offsetY },
+        element,
+      ),
+    )
+  }
+
+  const releasePointer = (event: PointerEvent<HTMLElement>) => {
+    const drag = dragRef.current
+    if (!drag || drag.handle !== event.currentTarget || drag.pointerId !== event.pointerId) return
+    releaseGuidePointer(dragRef)
+  }
+
+  return {
+    guideRef,
+    position,
+    dragHandlers: {
+      onPointerDown,
+      onPointerMove,
+      onPointerUp: releasePointer,
+      onPointerCancel: releasePointer,
+      onLostPointerCapture: releasePointer,
+    },
+  }
 }

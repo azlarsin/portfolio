@@ -28,6 +28,8 @@ export const portfolioProjectBySlug = new Map(
 )
 
 export { archiveProjects }
+export { demoExperiences, demoPlayerPath, getDemoExperience } from './demoExperiences'
+export type { DemoExperience, DemoExperienceGuide } from './demoExperiences'
 export { cocoWalletProject } from './cocoWallet'
 export { baijiahaoEditorProject } from './featured/baijiahaoEditor'
 export { baiduMapWorkbenchProject } from './featured/baiduMapWorkbench'
@@ -40,6 +42,7 @@ export { meicanPlatformProject } from './featured/meicanPlatform'
 export { projectNavigation, projectNavigationBySlug } from './navigation'
 export type {
   CaseChapter,
+  DemoExperienceId,
   DemoPosterVariant,
   DemoSpec,
   PortfolioProject,
@@ -48,6 +51,7 @@ export type {
   ProjectNavigationGroup,
   ProjectNavigationItem,
   ProjectProvenance,
+  ProjectProvenanceDisplay,
   ProjectTier,
   VisualKind,
   VisualSpec,

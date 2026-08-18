@@ -1,18 +1,9 @@
 import { behaviorManifest } from '../../../../../layered-route-lab/src/agent/generated/behaviorManifest'
-import operationsAgentGraph from '../../assets/operations-agent-actiongraph.html?url'
 import operationsAgentArchitecture from '../../assets/operations-agent-architecture.html?url'
-import { createLayeredRouteLabUrl } from '../../app/layeredRouteLabUrl'
+import { demoExperiences } from '../demoExperiences'
 import type { PortfolioProject } from '../types'
 
-const layeredRouteLabUrl = (
-  import.meta.env.VITE_LAYERED_ROUTE_LAB_URL || 'http://localhost:3000'
-).replace(/\/$/, '')
-
-const operationsAgentDemoUrl = createLayeredRouteLabUrl(
-  layeredRouteLabUrl,
-  '/products',
-  { agent_demo: '1' },
-)
+const operationsAgentDemoUrl = demoExperiences['layered-route-agent'].source
 
 export const layeredAgentManifestStats = {
   routeSchemas: behaviorManifest.routeSchemas.length,
@@ -76,19 +67,8 @@ export const layeredAgentProject = {
       value: `${layeredAgentManifestStats.runtimeExploredPages} 页 · 当前清单由静态源码分析生成`,
     },
   ],
-  links: [
-    {
-      label: 'Layered Route Lab',
-      url: layeredRouteLabUrl,
-      note: '独立交互实验 · 建议电脑端体验',
-    },
-    {
-      label: 'Agent Demo',
-      url: operationsAgentDemoUrl,
-      note: '本地规划 · 类型化命令 · 合成数据',
-    },
-  ],
   demo: {
+    experienceId: 'layered-route-agent',
     source: operationsAgentDemoUrl,
     title: 'Operations Agent × Layered Route Lab',
     description:
@@ -113,7 +93,8 @@ export const layeredAgentProject = {
     },
     {
       id: 'agent-action-graph',
-      source: operationsAgentGraph,
+      experienceId: 'layered-agent-action-graph',
+      source: demoExperiences['layered-agent-action-graph'].source,
       kind: 'html-frame',
       title: '行为图：页面状态与可执行动作',
       description:

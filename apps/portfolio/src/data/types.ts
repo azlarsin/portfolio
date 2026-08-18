@@ -6,6 +6,11 @@ export type ProjectProvenance =
 
 export type ProjectTier = 'featured' | 'archive'
 
+export interface ProjectProvenanceDisplay {
+  label: string
+  description: string
+}
+
 export interface CaseChapter {
   id: string
   title: string
@@ -21,8 +26,20 @@ export type DemoPosterVariant =
   | 'data-observatory'
   | 'motion-lab'
   | 'easing-picker'
+  | 'irregular-geometry'
+
+/** Finite, trusted player entries. Runtime data resolves these IDs through the registry only. */
+export type DemoExperienceId =
+  | 'layered-route-agent'
+  | 'layered-agent-action-graph'
+  | 'poke-prototype-editor'
+  | 'dataview-observatory'
+  | 'turntable-motion-lab'
+  | 'bezier-easing-picker'
+  | 'irregular-shape-arrangement'
 
 export interface DemoSpec {
+  experienceId: DemoExperienceId
   source: string
   title: string
   description: string
@@ -34,8 +51,6 @@ export interface DemoSpec {
   posterVariant?: DemoPosterVariant
   ctaLabel?: string
   desktopPreferred?: boolean
-  allow?: string
-  sandbox?: string
 }
 
 export type VisualKind = 'html-frame' | 'elpis-product-flow'
@@ -45,6 +60,7 @@ export interface VisualSpec {
   title: string
   description: string
   kind: VisualKind
+  experienceId?: DemoExperienceId
   source?: string
   provenanceLabel?: string
 }
@@ -65,6 +81,7 @@ export interface PortfolioProject {
   order: number
   tier: ProjectTier
   provenance: ProjectProvenance
+  provenanceDisplay?: ProjectProvenanceDisplay
   title: string
   shortTitle: string
   eyebrow: string

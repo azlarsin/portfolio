@@ -1,0 +1,272 @@
+import bezierPickerLab from '../assets/bezier-picker-lab.html?url'
+import dataviewObservatoryDemo from '../assets/dataview-observatory-demo.html?url'
+import irregularShapeLayoutLab from '../assets/irregular-shape-layout-lab.html?url'
+import operationsAgentGraph from '../assets/operations-agent-actiongraph.html?url'
+import pokeEditorDemo from '../assets/poke-editor-demo.html?url'
+import turntableMotionLab from '../assets/turntable-motion-lab.html?url'
+import { createLayeredRouteLabUrl } from '../app/layeredRouteLabUrl'
+import type { DemoExperienceId, DemoPosterVariant, ProjectProvenance } from './types'
+
+export interface DemoExperienceGuide {
+  duration: number
+  summary: string
+  boundary: string
+  steps: readonly string[]
+}
+
+export interface DemoExperience {
+  id: DemoExperienceId
+  name: {
+    zh: string
+    en: string
+  }
+  source: string
+  sandbox: string
+  allow: string
+  casePath: string
+  provenance: ProjectProvenance
+  status: string
+  posterVariant: DemoPosterVariant
+  guide: {
+    zh: DemoExperienceGuide
+    en: DemoExperienceGuide
+  }
+}
+
+const layeredRouteLabUrl = (
+  import.meta.env.VITE_LAYERED_ROUTE_LAB_URL || 'http://localhost:3000'
+).replace(/\/$/, '')
+
+const layeredRouteAgentSource = createLayeredRouteLabUrl(layeredRouteLabUrl, '/products', {
+  agent_demo: '1',
+  embed: '1',
+})
+
+const localSandbox = 'allow-scripts'
+const routeLabSandbox =
+  'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox'
+const standardAllow = 'clipboard-write; fullscreen'
+
+export const demoExperiences = {
+  'layered-route-agent': {
+    id: 'layered-route-agent',
+    name: {
+      zh: 'Layered Route × Agent',
+      en: 'Layered Route × Agent',
+    },
+    source: layeredRouteAgentSource,
+    sandbox: routeLabSandbox,
+    allow: standardAllow,
+    casePath: '/work/layered-agent',
+    provenance: 'public-reconstruction',
+    status: 'ROUTE AST · LOCAL PLANNER · TYPED BRIDGE',
+    posterVariant: 'agent-console',
+    guide: {
+      zh: {
+        duration: 4,
+        summary: '从自然语言任务到受约束规划、逐步执行和结果验证的公开研究演示。',
+        boundary: '全部数据为合成数据；播放器不读取 Lab DOM，也不与其交换消息。',
+        steps: [
+          '从预设任务开始，观察行为检索与计划。',
+          '逐步执行动作，留意 URL、页面层级与结果检查。',
+          '使用 Lab 内置控件探索深层路由和检查模式。',
+        ],
+      },
+      en: {
+        duration: 4,
+        summary: 'A public research demo from natural-language task to constrained planning, execution, and verification.',
+        boundary: 'All data is synthetic. The player neither reads the Lab DOM nor exchanges messages with it.',
+        steps: [
+          'Start with a preset task and observe retrieval and planning.',
+          'Run actions step by step; watch the URL, layer stack, and verification.',
+          'Use the Lab controls to explore deep routes and inspection mode.',
+        ],
+      },
+    },
+  },
+  'layered-agent-action-graph': {
+    id: 'layered-agent-action-graph',
+    name: {
+      zh: '行为动作图',
+      en: 'Behavior Action Graph',
+    },
+    source: operationsAgentGraph,
+    sandbox: localSandbox,
+    allow: standardAllow,
+    casePath: '/work/layered-agent',
+    provenance: 'public-reconstruction',
+    status: 'GENERATED ACTION GRAPH · SYNTHETIC DATA',
+    posterVariant: 'agent-console',
+    guide: {
+      zh: {
+        duration: 2,
+        summary: '行为图的交互查看器，用于检查页面状态、可执行动作及其来源和覆盖信息。',
+        boundary: '图中数据来自公开 Lab 的合成研究资料，不代表任何生产系统。',
+        steps: ['拖拽画布浏览状态关系。', '缩放并选择节点查看动作详情。', '切换来源与覆盖信息理解动作边界。'],
+      },
+      en: {
+        duration: 2,
+        summary: 'An interactive behavior-graph viewer for inspecting page states, executable actions, provenance, and coverage.',
+        boundary: 'Its synthetic research data comes from the public Lab and does not represent a production system.',
+        steps: ['Pan across the state graph.', 'Zoom and select nodes to inspect action details.', 'Switch provenance and coverage views to understand boundaries.'],
+      },
+    },
+  },
+  'poke-prototype-editor': {
+    id: 'poke-prototype-editor',
+    name: {
+      zh: 'Poke 原型编辑器',
+      en: 'Poke Prototype Editor',
+    },
+    source: pokeEditorDemo,
+    sandbox: localSandbox,
+    allow: standardAllow,
+    casePath: '/archive/poke-prototype-editor',
+    provenance: 'personal-product',
+    status: 'OFFLINE RECONSTRUCTION · SYNTHETIC CONTENT',
+    posterVariant: 'prototype-editor',
+    guide: {
+      zh: {
+        duration: 3,
+        summary: '离线重建的原型编辑工作台，包含画布、图层、属性和交互设置。',
+        boundary: '使用虚构项目，不连接历史 Poke 服务或用户内容。',
+        steps: ['在画布中选择元素。', '通过图层和属性面板调整内容。', '配置交互后进入预览检查结果。'],
+      },
+      en: {
+        duration: 3,
+        summary: 'An offline reconstruction of a prototyping workspace with canvas, layers, properties, and interactions.',
+        boundary: 'It uses a fictitious project and never connects to historical Poke services or user content.',
+        steps: ['Select an element on the canvas.', 'Adjust content through the layers and properties panels.', 'Configure an interaction, then enter preview to check it.'],
+      },
+    },
+  },
+  'dataview-observatory': {
+    id: 'dataview-observatory',
+    name: {
+      zh: 'DataView 观测台',
+      en: 'DataView Observatory',
+    },
+    source: dataviewObservatoryDemo,
+    sandbox: localSandbox,
+    allow: standardAllow,
+    casePath: '/archive/dataview-observatory',
+    provenance: 'production',
+    status: 'OFFLINE VISUALIZATION · SYNTHETIC DATA',
+    posterVariant: 'data-observatory',
+    guide: {
+      zh: {
+        duration: 3,
+        summary: '面向超宽屏场景的离线监测大屏重建，包含场景切换、筛选与联动。',
+        boundary: '仅使用合成离线数据，不请求原项目接口或呈现客户指标。',
+        steps: ['在不同监测场景间切换。', '修改时间或节点筛选条件。', '打开节点详情，观察相关视图的联动。'],
+      },
+      en: {
+        duration: 3,
+        summary: 'An offline reconstruction of an ultra-wide monitoring wall with scenes, filters, and linked views.',
+        boundary: 'It uses synthetic offline data only—no historical APIs or client metrics are requested or shown.',
+        steps: ['Switch among monitoring scenes.', 'Change the time or node filters.', 'Open node detail and observe linked views update.'],
+      },
+    },
+  },
+  'turntable-motion-lab': {
+    id: 'turntable-motion-lab',
+    name: {
+      zh: 'Turntable 动效实验',
+      en: 'Turntable Motion Lab',
+    },
+    source: turntableMotionLab,
+    sandbox: localSandbox,
+    allow: standardAllow,
+    casePath: '/archive/turntable-motion-lab',
+    provenance: 'experiment',
+    status: 'SVG · SPRING · DATA-DRIVEN',
+    posterVariant: 'motion-lab',
+    guide: {
+      zh: {
+        duration: 2,
+        summary: '以 SVG 几何和弹簧模型表现数据重组时连续扇区运动的实验。',
+        boundary: '这是独立动效实验，不是抽奖或交易产品。',
+        steps: ['改变数据组合观察扇区重排。', '悬停扇区查看聚焦状态。', '按住 S 以慢速检查连续运动。'],
+      },
+      en: {
+        duration: 2,
+        summary: 'An SVG-geometry and spring-motion study of continuous sector movement during data reordering.',
+        boundary: 'This is an independent motion experiment, not a prize-draw or transaction product.',
+        steps: ['Change the data composition to reorder sectors.', 'Hover a sector to inspect focus state.', 'Hold S to study continuous motion in slow motion.'],
+      },
+    },
+  },
+  'bezier-easing-picker': {
+    id: 'bezier-easing-picker',
+    name: {
+      zh: 'Bezier 缓动选择器',
+      en: 'Bezier Easing Picker',
+    },
+    source: bezierPickerLab,
+    sandbox: localSandbox,
+    allow: standardAllow,
+    casePath: '/archive/bezier-easing-picker',
+    provenance: 'experiment',
+    status: 'SVG · DRAG · CUBIC-BEZIER',
+    posterVariant: 'easing-picker',
+    guide: {
+      zh: {
+        duration: 2,
+        summary: '将 cubic-bezier 参数变为曲线、控制点和运动预览的可操作组件。',
+        boundary: '公开演示仅保留组件交互，不包含旧编辑器项目内容。',
+        steps: ['从预设曲线开始。', '拖动控制点调整曲线。', '对照参数和运动预览查看变化。'],
+      },
+      en: {
+        duration: 2,
+        summary: 'A manipulable component that turns cubic-bezier parameters into a curve, control points, and motion preview.',
+        boundary: 'The public demo retains component interaction only, not content from the older editor project.',
+        steps: ['Start from an easing preset.', 'Drag control points to adjust the curve.', 'Compare the parameters with the live motion preview.'],
+      },
+    },
+  },
+  'irregular-shape-arrangement': {
+    id: 'irregular-shape-arrangement',
+    name: {
+      zh: '不规则形状布局实验',
+      en: 'Irregular Shape Layout Lab',
+    },
+    source: irregularShapeLayoutLab,
+    sandbox: localSandbox,
+    allow: standardAllow,
+    casePath: '/archive/irregular-shape-layout',
+    provenance: 'public-reconstruction',
+    status: 'SAMPLED SVG · BOUNDED SEARCH · SYNTHETIC BLOBS',
+    posterVariant: 'irregular-geometry',
+    guide: {
+      zh: {
+        duration: 3,
+        summary: '以确定性合成 SVG 形状检查采样边界距离、径向搜索和邻角细化的公开重建实验。',
+        boundary: '仅保留本人实现的计算探索；并非精确装箱、全局最优，也不包含上游形状或产品算法。',
+        steps: [
+          '调整形状数量、种子、目标间隙和边界采样密度。',
+          '点击“编排”，对照实测最小间隙、迭代数和收敛状态。',
+          '开启调试叠层，检查采样点、最近点对、径向界限与裁切信息。',
+        ],
+      },
+      en: {
+        duration: 3,
+        summary: 'A public reconstruction that studies sampled SVG-boundary distances, radial search, and neighboring-angle refinement with deterministic synthetic shapes.',
+        boundary: 'It retains only my calculation exploration; it is neither exact packing nor a global optimum, and excludes upstream shape and product algorithms.',
+        steps: [
+          'Adjust shape count, seed, target gap, and boundary sample density.',
+          'Arrange, then compare measured minimum gap, iteration count, and convergence status.',
+          'Enable debug overlay to inspect samples, the nearest pair, radial bounds, and crop information.',
+        ],
+      },
+    },
+  },
+} as const satisfies Record<DemoExperienceId, DemoExperience>
+
+export function getDemoExperience(id: string | null | undefined): DemoExperience | null {
+  if (!id || !Object.prototype.hasOwnProperty.call(demoExperiences, id)) return null
+  return demoExperiences[id as DemoExperienceId]
+}
+
+export function demoPlayerPath(experienceId: DemoExperienceId) {
+  return `/demo?experience=${encodeURIComponent(experienceId)}`
+}

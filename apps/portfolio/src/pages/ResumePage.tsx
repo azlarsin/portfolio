@@ -1,13 +1,21 @@
+import { useEffect, useState } from 'react'
+import type { ResolvedRoute } from '../app/router'
 import { flattenExperienceHighlights } from '../data/profile'
 import { resumeDocument } from '../data/resume'
 import { useMediaQuery } from '../components/common/useMediaQuery'
 import { getLocalizedProfile } from '../data/localized'
 import { useLanguage } from '../i18n/LanguageContext'
 
-export function ResumePage() {
+export function ResumePage({ route }: { route: ResolvedRoute }) {
   const { language, copy } = useLanguage()
   const profile = getLocalizedProfile(language)
   const isMobile = useMediaQuery('(max-width: 760px)')
+  const shouldExpandPreview = route.anchor === 'pdf-preview'
+  const [isPreviewOpen, setIsPreviewOpen] = useState(shouldExpandPreview)
+
+  useEffect(() => {
+    setIsPreviewOpen(shouldExpandPreview)
+  }, [shouldExpandPreview])
 
   return (
     <main className="page page-standard resume-page">
@@ -35,6 +43,44 @@ export function ResumePage() {
           </a>
         </div>
       </header>
+
+      <div id="pdf-preview" className="pdf-preview-anchor" aria-hidden="true" />
+
+      {!isMobile ? (
+        <section className="pdf-preview" aria-labelledby="pdf-preview-title">
+          <header>
+            <div>
+              <h2 id="pdf-preview-title">{copy.resume.pdfPreview}</h2>
+              <span>{copy.resume.pdfDetails}</span>
+            </div>
+            <button
+              type="button"
+              className="pdf-preview-toggle"
+              aria-expanded={isPreviewOpen}
+              aria-controls="pdf-preview-content"
+              onClick={() => setIsPreviewOpen((current) => !current)}
+            >
+              {isPreviewOpen
+                ? copy.resume.collapsePdfPreview
+                : copy.resume.expandPdfPreview}
+            </button>
+          </header>
+          <div id="pdf-preview-content" hidden={!isPreviewOpen}>
+            {isPreviewOpen ? (
+              <object
+                data={`${resumeDocument.source}#zoom=page-width`}
+                type="application/pdf"
+                aria-label={copy.resume.pdfAria}
+              >
+                <p>
+                  {copy.resume.pdfFallbackBefore}
+                  <a href={resumeDocument.source} target="_blank" rel="noreferrer">{copy.resume.pdfFallbackLink}</a>。
+                </p>
+              </object>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       <section className="resume-summary" aria-labelledby="resume-summary-title">
         <div>
@@ -83,25 +129,6 @@ export function ResumePage() {
           </div>
         ))}
       </section>
-
-      {!isMobile ? (
-        <section className="pdf-preview" aria-labelledby="pdf-preview-title">
-          <header>
-            <h2 id="pdf-preview-title">{copy.resume.pdfPreview}</h2>
-            <span>{copy.resume.pdfDetails}</span>
-          </header>
-          <object
-            data={`${resumeDocument.source}#zoom=page-width`}
-            type="application/pdf"
-            aria-label={copy.resume.pdfAria}
-          >
-            <p>
-              {copy.resume.pdfFallbackBefore}
-              <a href={resumeDocument.source} target="_blank" rel="noreferrer">{copy.resume.pdfFallbackLink}</a>。
-            </p>
-          </object>
-        </section>
-      ) : null}
 
       <section className="resume-website" aria-label="Portfolio website">
         <span>Portfolio</span>

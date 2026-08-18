@@ -9,6 +9,7 @@ export function DemoPoster({ variant }: { variant: DemoPosterVariant }) {
     'data-observatory': copy.demo.posters.data,
     'motion-lab': copy.demo.posters.motion,
     'easing-picker': copy.demo.posters.easing,
+    'irregular-geometry': copy.demo.posters.irregularGeometry,
   } satisfies Record<DemoPosterVariant, readonly [string, readonly string[]]>
   const [title, items] = contentByVariant[variant]
   return (

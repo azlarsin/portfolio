@@ -1,4 +1,5 @@
 import { layeredAgentProject } from '../../data'
+import { demoPlayerPath } from '../../data/demoExperiences'
 import { getLocalizedProfile, getLocalizedProject } from '../../data/localized'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { AppLink } from '../common/AppLink'
@@ -20,20 +21,18 @@ export function HomeHero() {
         {copy.home.intro.replace('{name}', profile.name)}
       </p>
       <div className="hero-actions">
-        <a
+        <AppLink
           className="button button-primary"
-          href={agentProject.demo?.source}
-          target="_blank"
-          rel="noreferrer"
+          to={demoPlayerPath(agentProject.demo?.experienceId || 'layered-route-agent')}
         >
           {copy.home.openAgentDemo} <span aria-hidden="true">↗</span>
-        </a>
+        </AppLink>
         <AppLink className="button button-secondary" to="/work/meican-platform">
           {copy.home.viewSelectedCase}
         </AppLink>
-        <a className="button button-secondary" href="https://me.azlar.cc/resume">
+        <AppLink className="button button-secondary" to="/resume#pdf-preview">
           {copy.home.downloadResume}
-        </a>
+        </AppLink>
       </div>
       <p className="availability-line">
         <span aria-hidden="true" />

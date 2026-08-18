@@ -15,6 +15,7 @@ import { ExperiencePage } from '../pages/ExperiencePage'
 import { HomePage } from '../pages/HomePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { ResumePage } from '../pages/ResumePage'
+import { DemoPlayerPage } from '../pages/DemoPlayerPage'
 import {
   getSavedScrollPosition,
   replace,
@@ -33,6 +34,8 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
     getLocalizedProject(project, language)
 
   switch (route.id) {
+    case ROUTES.DEMO.id:
+      return <DemoPlayerPage route={route} />
     case ROUTES.HOME.id:
       return <HomePage />
     case ROUTES.MEICAN_PLATFORM.id:
@@ -52,7 +55,7 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
     case ROUTES.ARCHIVE_COCO_WALLET.id:
       return <CaseStudyPage project={localized(cocoWalletProject)} pathname={route.pathname} />
     case ROUTES.RESUME.id:
-      return <ResumePage />
+      return <ResumePage route={route} />
     case ROUTES.ARCHIVE_POKE_PROTOTYPE_EDITOR.id:
       return (
         <CaseStudyPage
@@ -78,6 +81,20 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
       return (
         <CaseStudyPage
           project={localized(portfolioProjectBySlug.get('bezier-easing-picker')!)}
+          pathname={route.pathname}
+        />
+      )
+    case ROUTES.ARCHIVE_MERCHANT_COMMERCE.id:
+      return (
+        <CaseStudyPage
+          project={localized(portfolioProjectBySlug.get('merchant-commerce')!)}
+          pathname={route.pathname}
+        />
+      )
+    case ROUTES.ARCHIVE_IRREGULAR_SHAPE_LAYOUT.id:
+      return (
+        <CaseStudyPage
+          project={localized(portfolioProjectBySlug.get('irregular-shape-layout')!)}
           pathname={route.pathname}
         />
       )
@@ -124,6 +141,10 @@ export function App() {
       window.cancelAnimationFrame(nestedFrame)
     }
   }, [route.href])
+
+  if (route.id === ROUTES.DEMO.id) {
+    return <RoutePage route={route} />
+  }
 
   return (
     <AppShell route={route}>
