@@ -538,7 +538,9 @@
             const group = createSvg('g', { transform: `translate(${shape.x} ${shape.y}) rotate(${shape.rotation})` })
             group.append(createSvg('path', { d: shape.d, class: 'shape', fill: shape.color, stroke: 'rgba(237,242,255,.82)' }))
             layers.shapes.append(group)
-            layers.labels.append(createSvg('text', { x: shape.x, y: shape.y + 4, 'text-anchor': 'middle', class: 'shape-label' })).textContent = String(shape.id + 1)
+            const label = createSvg('text', { x: shape.x, y: shape.y + 4, 'text-anchor': 'middle', class: 'shape-label' })
+            label.textContent = String(shape.id + 1)
+            layers.labels.append(label)
             if (settings.debug && shape.id > 0) {
               const endpoint = { x: shape.x, y: shape.y }
               layers.rays.append(createSvg('line', { x1: VIEW.center.x, y1: VIEW.center.y, x2: endpoint.x, y2: endpoint.y, class: 'debug-ray' }))
