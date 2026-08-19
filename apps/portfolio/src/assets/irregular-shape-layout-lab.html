@@ -28,21 +28,21 @@
         font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       }
 
-      button, input { font: inherit; }
+      button, input, select { font: inherit; }
 
       button, input[type="range"] { accent-color: var(--accent); }
 
-      button {
+      button, select {
         min-height: 36px;
         border: 1px solid var(--line);
         border-radius: 7px;
         background: var(--surface-raised);
         color: var(--ink);
-        cursor: pointer;
       }
 
+      button { cursor: pointer; }
       button:hover { border-color: var(--accent); }
-      button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
       .lab {
         display: grid;
@@ -72,11 +72,12 @@
       .field { display: grid; gap: 6px; }
       .field label { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 650; }
       output { color: var(--accent); font-variant-numeric: tabular-nums; }
-      .field input { width: 100%; }
+      .field input, .field select { width: 100%; }
 
       .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .actions button:first-child { border-color: var(--accent); background: var(--accent); color: #0a1120; font-weight: 750; }
-      .toggle { display: flex; align-items: center; gap: 8px; min-height: 36px; color: var(--muted); font-size: 12px; }
+      .toggle { display: flex; align-items: center; gap: 8px; min-height: 28px; color: var(--muted); font-size: 12px; }
+      .playback-note { margin: -5px 0 0; color: var(--muted); font-size: 11px; }
 
       .status-card {
         display: grid;
@@ -118,14 +119,30 @@
       .debug-link { stroke: #f5cd7a; stroke-width: 1.25; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
       .debug-ray { stroke: #5e759f; stroke-width: 1; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
       .debug-bound { fill: none; stroke: #8294b2; stroke-width: 1; stroke-dasharray: 3 4; vector-effect: non-scaling-stroke; opacity: .6; }
-      .center-mark { fill: #a9bbdf; }
+      .search-ray { stroke: #8bb1ff; stroke-width: 1.5; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; opacity: .9; }
+      .search-bound { stroke: #f4c56b; stroke-width: 2; vector-effect: non-scaling-stroke; opacity: .88; }
+      .search-candidate { fill: #f4c56b; stroke: #0d1524; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+      .search-candidate.is-valid { fill: var(--good); }
+      .search-candidate.is-blocked { fill: var(--bad); }
+      .search-angle { fill: none; stroke: #85a7ff; stroke-width: 1.5; vector-effect: non-scaling-stroke; opacity: .88; }
       .legend { padding: 0 18px 16px; color: var(--muted); font-size: 12px; }
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
 
       @media (max-width: 760px) {
         .lab { grid-template-columns: 1fr; }
         .panel { border-right: 0; border-bottom: 1px solid var(--line); }
         .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-        .actions, .toggle, .status-card, .method { grid-column: 1 / -1; }
+        .actions, .toggle, .playback-note, .status-card, .method { grid-column: 1 / -1; }
         .workspace { min-height: 500px; }
       }
 
@@ -145,7 +162,7 @@
 
         <div class="controls" id="controls">
           <div class="field">
-            <label for="count">Shape count <output id="count-output"></output></label>
+            <label for="count">Total shape count <output id="count-output"></output></label>
             <input id="count" type="range" min="3" max="8" value="5" />
           </div>
           <div class="field">
@@ -160,32 +177,54 @@
             <label for="density">Boundary samples <output id="density-output"></output></label>
             <input id="density" type="range" min="16" max="64" step="4" value="32" />
           </div>
+          <div class="field">
+            <label for="center-shape">Center shape</label>
+            <select id="center-shape">
+              <option value="circle" selected>Circle</option>
+              <option value="ellipse">Ellipse — fish platter</option>
+              <option value="petal">Petal</option>
+              <option value="square">Square</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="playback-speed">Playback speed</label>
+            <select id="playback-speed">
+              <option value="0.5">0.5×</option>
+              <option value="1" selected>1×</option>
+              <option value="2">2×</option>
+              <option value="4">4×</option>
+            </select>
+          </div>
           <div class="actions">
             <button type="button" id="arrange">Arrange</button>
             <button type="button" id="reset">Reset</button>
           </div>
+          <label class="toggle" for="animate-search"><input id="animate-search" type="checkbox" /> Animate optional search playback</label>
           <label class="toggle" for="debug"><input id="debug" type="checkbox" /> Show sampled-geometry debug overlay</label>
+          <p class="playback-note">Animation is optional. Playback speed changes only presentation, never the search or its deterministic result.</p>
         </div>
 
-        <section class="status-card" aria-live="polite" aria-atomic="true">
+        <section class="status-card" aria-label="Measured result and search progress">
           <p class="caption">Measured result</p>
           <p class="status-line">Status: <strong id="status">Ready</strong></p>
+          <p class="status-line">Search: <strong id="search-progress">Idle</strong></p>
           <p class="status-line">Minimum gap: <strong id="measured-gap">—</strong></p>
           <p class="status-line">Iterations: <strong id="iterations">—</strong></p>
-          <p class="status-line">Elapsed: <strong id="elapsed">—</strong></p>
+          <p class="status-line">Compute time: <strong id="elapsed">—</strong></p>
         </section>
 
         <section class="method">
           <p class="caption">Method and boundary</p>
           <ul>
-            <li>Samples use SVG path length APIs, then explicit shape transforms place points in world coordinates.</li>
+            <li>Every center preset and outer blob is an SVG path sampled through path-length APIs, then explicitly transformed into world coordinates.</li>
             <li>Sampled minimum distance is guarded by segment intersections and point-in-polygon containment; overlap is invalid, not a positive gap.</li>
-            <li>Angle refinement first rejects overlap and target-gap deficits, then prefers a smaller sum of sampled gaps between adjacent indexed shapes; it is not a global packing objective.</li>
+            <li>Angle refinement prefers valid candidates, then minimizes overlap and target-gap deficits before compacting adjacent outer shapes; it is not a global packing objective.</li>
+            <li>This clean-room playback visualization exposes the same bounded search checkpoints without changing the computed arrangement.</li>
           </ul>
         </section>
       </aside>
 
-      <section class="workspace" aria-label="Irregular shape layout viewport">
+      <section class="workspace" id="workspace" aria-label="Irregular shape layout viewport" aria-busy="false">
         <header class="workspace-header">
           <strong>Seeded synthetic geometry · local-only</strong>
           <span class="viewport-info" id="viewport-info">Viewport —</span>
@@ -195,12 +234,14 @@
             <defs id="defs"></defs>
             <g id="rays"></g>
             <g id="shapes"></g>
+            <g id="search-layer"></g>
             <g id="debug-layer"></g>
             <g id="labels"></g>
           </svg>
         </div>
         <p class="legend">Debug: final placement rays, radial-search bounds on their original search rays, transformed sample points, nearest sampled pair, and current SVG viewport/crop information.</p>
       </section>
+      <p class="visually-hidden" id="search-announcement" aria-live="polite" aria-atomic="true"></p>
     </main>
 
     <script>
@@ -210,17 +251,45 @@
         const $ = (id) => document.getElementById(id)
         const scene = $('scene')
         const defs = $('defs')
-        const layers = { rays: $('rays'), shapes: $('shapes'), debug: $('debug-layer'), labels: $('labels') }
+        const workspace = $('workspace')
+        const layers = {
+          rays: $('rays'),
+          shapes: $('shapes'),
+          search: $('search-layer'),
+          debug: $('debug-layer'),
+          labels: $('labels'),
+        }
         const inputs = ['count', 'seed', 'gap', 'density'].map($)
         const NS = scene.namespaceURI
         const VIEW = { width: 900, height: 620, center: { x: 450, y: 310 } }
+        const TAU = Math.PI * 2
         const MAX_RADIAL_STEPS = 13
         const MAX_ANGLE_ROUNDS = 3
         const MAX_ANGLE_STEPS = 7
         const RADIAL_CAP = 360
-        const MIN_RADIUS = 44
-        const MAX_RADIUS = 104
-        const state = { shapes: [], settings: null, result: null }
+        const MIN_RADIUS = 48
+        const MAX_RADIUS = 94
+        const PLAYBACK_CHECKPOINTS_PER_SECOND = 30
+        const MAX_PLAYBACK_CREDIT = 6
+        const MAX_PLAYBACK_STEPS_PER_FRAME = 6
+        const PLAYBACK_CPU_BUDGET_MS = 8
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const state = {
+          shapes: [],
+          settings: null,
+          result: null,
+          run: null,
+          checkpoint: null,
+          runToken: 0,
+          raf: 0,
+        }
+
+        const CENTER_PATHS = {
+          circle: 'M 0 -68 A 68 68 0 1 1 0 68 A 68 68 0 1 1 0 -68 Z',
+          ellipse: 'M -112 0 C -82 -48 55 -57 118 0 C 55 57 -82 48 -112 0 Z',
+          petal: 'M 0 -88 C 67 -77 96 -19 0 94 C -96 -19 -67 -77 0 -88 Z',
+          square: 'M -60 -60 H 60 V 60 H -60 Z',
+        }
 
         function createSvg(name, attributes = {}) {
           const node = document.createElementNS(NS, name)
@@ -241,68 +310,128 @@
           }
         }
 
+        function outerSeed(seed, outerIndex) {
+          let value = (seed >>> 0) ^ Math.imul(outerIndex + 1, 0x9E3779B9)
+          value ^= value >>> 16
+          value = Math.imul(value, 0x85EBCA6B)
+          value ^= value >>> 13
+          value = Math.imul(value, 0xC2B2AE35)
+          return (value ^ (value >>> 16)) >>> 0
+        }
+
         function readSettings() {
           return {
             count: Number($('count').value),
             seed: Number($('seed').value),
             targetGap: Number($('gap').value),
             density: Number($('density').value),
+            centerShape: $('center-shape').value,
+            animate: $('animate-search').checked,
             debug: $('debug').checked,
           }
         }
 
         function updateOutputs() {
-          $('count-output').value = $('count').value
+          $('count-output').value = `${$('count').value} total`
           $('seed-output').value = $('seed').value
           $('gap-output').value = `${$('gap').value}px`
           $('density-output').value = `${$('density').value} pts`
         }
 
+        function midpoint(first, second) {
+          return { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 }
+        }
+
         function blobPath(random, radius) {
-          const count = 9
-          const points = []
-          for (let index = 0; index < count; index += 1) {
-            const angle = (Math.PI * 2 * index) / count - Math.PI / 2
-            const variation = 0.72 + random() * 0.42
-            const squash = 0.82 + random() * 0.32
-            points.push({
-              x: Math.cos(angle) * radius * variation,
-              y: Math.sin(angle) * radius * variation * squash,
+          const vertexCount = 7 + Math.floor(random() * 7)
+          const angularJitter = .13 + random() * .12
+          const aspect = .72 + random() * .64
+          const lobeCount = 1 + Math.floor(random() * 4)
+          const lobeAmplitude = .06 + random() * .15
+          const secondaryAmplitude = .025 + random() * .075
+          const phase = random() * TAU
+          const secondaryPhase = random() * TAU
+          const rawPoints = []
+
+          for (let index = 0; index < vertexCount; index += 1) {
+            const jitter = (random() * 2 - 1) * angularJitter
+            const angle = -Math.PI / 2 + ((index + jitter) * TAU) / vertexCount
+            const lobe = Math.cos(angle * lobeCount + phase) * lobeAmplitude
+            const secondary = Math.sin(angle * (lobeCount + 1) + secondaryPhase) * secondaryAmplitude
+            const localVariation = .9 + random() * .2
+            const radial = (.84 + lobe + secondary) * localVariation
+            rawPoints.push({
+              x: Math.cos(angle) * radial * aspect,
+              y: Math.sin(angle) * radial / aspect,
             })
           }
-          let d = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`
-          for (let index = 0; index < count; index += 1) {
-            const current = points[index]
-            const next = points[(index + 1) % count]
-            const midpoint = { x: (current.x + next.x) / 2, y: (current.y + next.y) / 2 }
-            d += ` Q ${current.x.toFixed(2)} ${current.y.toFixed(2)} ${midpoint.x.toFixed(2)} ${midpoint.y.toFixed(2)}`
+
+          const maximum = Math.max(...rawPoints.map((point) => Math.hypot(point.x, point.y)))
+          const points = rawPoints.map((point) => ({ x: (point.x * radius) / maximum, y: (point.y * radius) / maximum }))
+          const start = midpoint(points[points.length - 1], points[0])
+          let d = `M ${start.x.toFixed(2)} ${start.y.toFixed(2)}`
+
+          for (let index = 0; index < points.length; index += 1) {
+            const point = points[index]
+            const next = points[(index + 1) % points.length]
+            const end = midpoint(point, next)
+            d += ` Q ${point.x.toFixed(2)} ${point.y.toFixed(2)} ${end.x.toFixed(2)} ${end.y.toFixed(2)}`
           }
-          return `${d} Z`
+
+          return { d: `${d} Z`, vertexCount, aspect, lobeCount }
+        }
+
+        function makeCenterShape(settings) {
+          const d = CENTER_PATHS[settings.centerShape] || CENTER_PATHS.circle
+          const path = createSvg('path', { d })
+          defs.append(path)
+          return {
+            id: 0,
+            role: 'center',
+            path,
+            d,
+            radius: 0,
+            rotation: 0,
+            angle: 0,
+            x: VIEW.center.x,
+            y: VIEW.center.y,
+            color: 'hsl(219 52% 44%)',
+            samples: [],
+            polygon: [],
+            radialBounds: { low: 0, high: 0, searchAngle: 0 },
+          }
         }
 
         function makeShapes(settings) {
           clear(defs)
-          const random = mulberry32(settings.seed)
-          return Array.from({ length: settings.count }, (_, index) => {
+          const center = makeCenterShape(settings)
+          const outerCount = settings.count - 1
+          const outers = Array.from({ length: outerCount }, (_, outerIndex) => {
+            const random = mulberry32(outerSeed(settings.seed, outerIndex))
             const radius = MIN_RADIUS + random() * (MAX_RADIUS - MIN_RADIUS)
-            const path = createSvg('path', { d: blobPath(random, radius) })
+            const profile = blobPath(random, radius)
+            const path = createSvg('path', { d: profile.d })
             defs.append(path)
-            const fillHue = Math.round(194 + index * 24 + random() * 10)
+            const fillHue = Math.round(174 + outerIndex * 31 + random() * 18)
+            const angle = -Math.PI / 2 + (TAU * outerIndex) / outerCount
             return {
-              id: index,
+              id: outerIndex + 1,
+              role: 'outer',
               path,
-              d: path.getAttribute('d'),
+              d: profile.d,
               radius,
-              rotation: Math.round(random() * 28 - 14),
-              angle: -Math.PI / 2 + (Math.PI * 2 * index) / settings.count,
+              rotation: Math.round(random() * 70 - 35),
+              angle,
               x: VIEW.center.x,
               y: VIEW.center.y,
-              color: `hsl(${fillHue} 58% ${45 + (index % 2) * 8}%)`,
+              color: `hsl(${fillHue} 58% ${43 + (outerIndex % 3) * 6}%)`,
               samples: [],
               polygon: [],
-              radialBounds: { low: 0, high: 0, searchAngle: -Math.PI / 2 },
+              radialBounds: { low: 0, high: 0, searchAngle: angle },
+              profile,
             }
           })
+          return [center, ...outers]
         }
 
         function localToWorld(point, shape) {
@@ -396,44 +525,6 @@
           shape.y = VIEW.center.y + Math.sin(angle) * distance
         }
 
-        function arrangeRadially(shapes, settings, metrics) {
-          const placed = []
-          shapes.forEach((shape, index) => {
-            sampleShape(shape, settings.density)
-            if (index === 0) {
-              setPolar(shape, -Math.PI / 2, 0)
-              shape.radialBounds = { low: 0, high: 0, searchAngle: shape.angle }
-              placed.push(shape)
-              return
-            }
-            const searchAngle = shape.angle
-            let low = Math.max(0, shape.radius * .35)
-            let high = RADIAL_CAP
-            const candidate = () => {
-              sampleShape(shape, settings.density)
-              return layoutScore([...placed, shape], settings.targetGap).valid
-            }
-            setPolar(shape, searchAngle, high)
-            metrics.iterations += 1
-            if (!candidate()) {
-              shape.radialBounds = { low, high, searchAngle }
-              placed.push(shape)
-              return
-            }
-            for (let step = 0; step < MAX_RADIAL_STEPS; step += 1) {
-              const middle = (low + high) / 2
-              setPolar(shape, searchAngle, middle)
-              metrics.iterations += 1
-              if (candidate()) high = middle
-              else low = middle
-            }
-            setPolar(shape, searchAngle, high)
-            sampleShape(shape, settings.density)
-            shape.radialBounds = { low, high, searchAngle }
-            placed.push(shape)
-          })
-        }
-
         function localNeighbors(left, right, count) {
           if (left === 0 || right === 0) return false
           return Math.abs(left - right) === 1 || (left === 1 && right === count - 1)
@@ -481,14 +572,109 @@
           return candidateAngle < bestAngle - epsilon
         }
 
-        function refineAngles(shapes, settings, metrics) {
+        function* searchIterator(shapes, settings, metrics) {
+          const center = shapes[0]
+          const outers = shapes.slice(1)
+          const placed = [center]
+          yield {
+            phase: 'radial',
+            event: 'center-ready',
+            placedCount: placed.length,
+            outerCount: outers.length,
+          }
+
+          for (let outerIndex = 0; outerIndex < outers.length; outerIndex += 1) {
+            const shape = outers[outerIndex]
+            const searchAngle = shape.angle
+            let low = Math.max(0, shape.radius * .35)
+            let high = RADIAL_CAP
+            const testCandidate = () => {
+              sampleShape(shape, settings.density)
+              return layoutScore([...placed, shape], settings.targetGap).valid
+            }
+
+            setPolar(shape, searchAngle, high)
+            metrics.iterations += 1
+            let candidateValid = testCandidate()
+            yield {
+              phase: 'radial',
+              event: 'candidate',
+              placedCount: placed.length,
+              outerCount: outers.length,
+              outerIndex,
+              low,
+              high,
+              searchAngle,
+              candidateDistance: high,
+              candidateValid,
+            }
+
+            if (!candidateValid) {
+              shape.radialBounds = { low, high, searchAngle }
+              placed.push(shape)
+              yield {
+                phase: 'radial',
+                event: 'placed',
+                placedCount: placed.length,
+                outerCount: outers.length,
+                outerIndex,
+                low,
+                high,
+                searchAngle,
+                candidateDistance: high,
+                candidateValid: false,
+              }
+              continue
+            }
+
+            for (let step = 0; step < MAX_RADIAL_STEPS; step += 1) {
+              const middle = (low + high) / 2
+              setPolar(shape, searchAngle, middle)
+              metrics.iterations += 1
+              candidateValid = testCandidate()
+              if (candidateValid) high = middle
+              else low = middle
+              yield {
+                phase: 'radial',
+                event: 'candidate',
+                placedCount: placed.length,
+                outerCount: outers.length,
+                outerIndex,
+                low,
+                high,
+                searchAngle,
+                candidateDistance: middle,
+                candidateValid,
+              }
+            }
+
+            setPolar(shape, searchAngle, high)
+            sampleShape(shape, settings.density)
+            shape.radialBounds = { low, high, searchAngle }
+            placed.push(shape)
+            yield {
+              phase: 'radial',
+              event: 'placed',
+              placedCount: placed.length,
+              outerCount: outers.length,
+              outerIndex,
+              low,
+              high,
+              searchAngle,
+              candidateDistance: high,
+              candidateValid: true,
+            }
+          }
+
           let stepSize = Math.PI / 7
           for (let round = 0; round < MAX_ANGLE_ROUNDS; round += 1) {
-            for (let index = 1; index < shapes.length; index += 1) {
-              const shape = shapes[index]
+            for (let shapeIndex = 1; shapeIndex < shapes.length; shapeIndex += 1) {
+              const shape = shapes[shapeIndex]
+              const outerIndex = shapeIndex - 1
               const original = shape.angle
               const radialDistance = Math.hypot(shape.x - VIEW.center.x, shape.y - VIEW.center.y)
-              let best = { angle: original, objective: placementObjective(shapes, settings.targetGap) }
+              let best = { angle: original, objective: placementObjective(shapes, settings.targetGap), step: 0 }
+
               for (let step = -MAX_ANGLE_STEPS; step <= MAX_ANGLE_STEPS; step += 1) {
                 const angle = original + step * (stepSize / MAX_ANGLE_STEPS)
                 setPolar(shape, angle, radialDistance)
@@ -496,11 +682,38 @@
                 const objective = placementObjective(shapes, settings.targetGap)
                 metrics.iterations += 1
                 if (isBetterPlacement(objective, best.objective, angle, best.angle, original)) {
-                  best = { angle, objective }
+                  best = { angle, objective, step }
+                }
+                yield {
+                  phase: 'angle',
+                  event: 'candidate',
+                  round,
+                  outerIndex,
+                  outerCount: outers.length,
+                  candidateStep: step,
+                  candidateValid: objective.valid,
+                  bestStep: best.step,
+                  bestValid: best.objective.valid,
+                  candidateAngle: angle,
+                  bestAngle: best.angle,
                 }
               }
+
               setPolar(shape, best.angle, radialDistance)
               sampleShape(shape, settings.density)
+              yield {
+                phase: 'angle',
+                event: 'committed',
+                round,
+                outerIndex,
+                outerCount: outers.length,
+                candidateStep: best.step,
+                candidateValid: best.objective.valid,
+                bestStep: best.step,
+                bestValid: best.objective.valid,
+                candidateAngle: best.angle,
+                bestAngle: best.angle,
+              }
             }
             stepSize /= 2
           }
@@ -510,72 +723,297 @@
           return shape.samples.every((point) => point.x >= 8 && point.x <= VIEW.width - 8 && point.y >= 8 && point.y <= VIEW.height - 8)
         }
 
-        function arrange() {
+        function isCurrentRun(run) {
+          return state.run === run && state.runToken === run.token && !run.cancelled
+        }
+
+        function updateAnnouncement(run, checkpoint) {
+          if (checkpoint.phase === 'radial' && checkpoint.event === 'placed' && run.announcedOuter !== checkpoint.outerIndex) {
+            run.announcedOuter = checkpoint.outerIndex
+            $('search-announcement').textContent = `Radial placement: outer shape ${checkpoint.outerIndex + 1} of ${checkpoint.outerCount} placed.`
+            return
+          }
+          if (checkpoint.phase === 'angle' && checkpoint.round !== run.announcedRound) {
+            run.announcedRound = checkpoint.round
+            $('search-announcement').textContent = `Angle refinement: round ${checkpoint.round + 1} of ${MAX_ANGLE_ROUNDS} started.`
+          }
+        }
+
+        function advanceRun(run) {
+          if (!isCurrentRun(run)) return true
           const started = performance.now()
-          const settings = readSettings()
-          state.settings = settings
-          state.shapes = makeShapes(settings)
-          const metrics = { iterations: 0 }
-          arrangeRadially(state.shapes, settings, metrics)
-          refineAngles(state.shapes, settings, metrics)
-          const score = layoutScore(state.shapes, settings.targetGap)
+          const next = run.iterator.next()
+          run.computeTime += performance.now() - started
+          if (!isCurrentRun(run)) return true
+          if (next.done) return true
+          state.checkpoint = next.value
+          updateAnnouncement(run, next.value)
+          return false
+        }
+
+        function finishRun(run) {
+          if (!isCurrentRun(run)) return
+          const started = performance.now()
+          const score = layoutScore(state.shapes, state.settings.targetGap)
           const cropped = state.shapes.some((shape) => !withinViewport(shape))
-          const elapsed = performance.now() - started
-          state.result = { ...score, cropped, elapsed, iterations: metrics.iterations }
+          run.computeTime += performance.now() - started
+          state.result = { ...score, cropped, computeTime: run.computeTime, iterations: run.metrics.iterations }
+          state.checkpoint = { phase: 'complete' }
+          state.run = null
+          state.raf = 0
+          workspace.setAttribute('aria-busy', 'false')
+          $('search-announcement').textContent = 'Arrangement complete.'
           render()
+        }
+
+        function drainRun(run) {
+          while (isCurrentRun(run)) {
+            if (advanceRun(run)) {
+              finishRun(run)
+              return
+            }
+          }
+        }
+
+        function playbackSpeed() {
+          return Number($('playback-speed').value)
+        }
+
+        function scheduleFrame(run) {
+          if (!isCurrentRun(run) || document.hidden || reducedMotion.matches || !$('animate-search').checked || state.raf) return
+          state.raf = requestAnimationFrame((timestamp) => {
+            state.raf = 0
+            if (!isCurrentRun(run)) return
+            if (document.hidden) {
+              run.paused = true
+              run.lastFrameTime = null
+              $('search-announcement').textContent = 'Search playback paused while this page is hidden.'
+              return
+            }
+            if (reducedMotion.matches || !$('animate-search').checked) {
+              drainRun(run)
+              return
+            }
+
+            const previousFrameTime = run.lastFrameTime ?? timestamp
+            const elapsedSeconds = Math.min((timestamp - previousFrameTime) / 1000, .2)
+            run.lastFrameTime = timestamp
+            run.paused = false
+            run.frameBudget = Math.min(
+              MAX_PLAYBACK_CREDIT,
+              run.frameBudget + elapsedSeconds * PLAYBACK_CHECKPOINTS_PER_SECOND * playbackSpeed(),
+            )
+
+            const deadline = performance.now() + PLAYBACK_CPU_BUDGET_MS
+            let steps = 0
+            let advanced = false
+            while (run.frameBudget >= 1 && steps < MAX_PLAYBACK_STEPS_PER_FRAME && performance.now() < deadline && isCurrentRun(run)) {
+              run.frameBudget -= 1
+              steps += 1
+              advanced = true
+              if (advanceRun(run)) {
+                finishRun(run)
+                return
+              }
+            }
+            if (advanced) render()
+            scheduleFrame(run)
+          })
+        }
+
+        function cancelRun() {
+          state.runToken += 1
+          if (state.raf) cancelAnimationFrame(state.raf)
+          state.raf = 0
+          if (state.run) state.run.cancelled = true
+          state.run = null
+          state.checkpoint = null
+          workspace.setAttribute('aria-busy', 'false')
+        }
+
+        function arrange({ immediate = false } = {}) {
+          cancelRun()
+          const settings = readSettings()
+          const setupStarted = performance.now()
+          const shapes = makeShapes(settings)
+          const center = shapes[0]
+          sampleShape(center, settings.density)
+          const run = {
+            token: ++state.runToken,
+            iterator: null,
+            metrics: { iterations: 0 },
+            computeTime: 0,
+            frameBudget: 0,
+            lastFrameTime: null,
+            paused: document.hidden,
+            announcedOuter: null,
+            announcedRound: null,
+            cancelled: false,
+          }
+          run.iterator = searchIterator(shapes, settings, run.metrics)
+          run.computeTime += performance.now() - setupStarted
+          state.settings = settings
+          state.shapes = shapes
+          state.result = null
+          state.checkpoint = { phase: 'radial', event: 'starting', placedCount: 1, outerCount: settings.count - 1 }
+          state.run = run
+          workspace.setAttribute('aria-busy', 'true')
+
+          if (immediate || !settings.animate || reducedMotion.matches) {
+            drainRun(run)
+            return
+          }
+
+          $('search-announcement').textContent = 'Optional search playback started.'
+          render()
+          scheduleFrame(run)
+        }
+
+        function displayedShapes() {
+          if (!state.run || state.checkpoint?.phase !== 'radial') return state.shapes
+          const { event, outerIndex, placedCount = 1 } = state.checkpoint
+          const visibleCount = event === 'candidate' && outerIndex !== undefined
+            ? Math.max(placedCount, outerIndex + 2)
+            : placedCount
+          return state.shapes.slice(0, visibleCount)
+        }
+
+        function pointOnRay(angle, distance) {
+          return {
+            x: VIEW.center.x + Math.cos(angle) * distance,
+            y: VIEW.center.y + Math.sin(angle) * distance,
+          }
+        }
+
+        function renderSearchLayer(checkpoint) {
+          if (!checkpoint || checkpoint.phase === 'complete') return
+          if (checkpoint.phase === 'radial' && checkpoint.searchAngle !== undefined) {
+            const low = pointOnRay(checkpoint.searchAngle, checkpoint.low)
+            const high = pointOnRay(checkpoint.searchAngle, checkpoint.high)
+            const candidate = pointOnRay(checkpoint.searchAngle, checkpoint.candidateDistance)
+            layers.search.append(createSvg('line', { x1: VIEW.center.x, y1: VIEW.center.y, x2: candidate.x, y2: candidate.y, class: 'search-ray' }))
+            layers.search.append(createSvg('line', { x1: low.x, y1: low.y, x2: high.x, y2: high.y, class: 'search-bound' }))
+            const candidateClass = checkpoint.candidateValid ? 'search-candidate is-valid' : 'search-candidate is-blocked'
+            layers.search.append(createSvg('circle', { cx: candidate.x, cy: candidate.y, r: 4, class: candidateClass }))
+          }
+          if (checkpoint.phase === 'angle' && checkpoint.candidateAngle !== undefined) {
+            const shape = state.shapes[checkpoint.outerIndex + 1]
+            const radialDistance = Math.hypot(shape.x - VIEW.center.x, shape.y - VIEW.center.y)
+            const candidate = pointOnRay(checkpoint.candidateAngle, radialDistance)
+            layers.search.append(createSvg('circle', { cx: candidate.x, cy: candidate.y, r: 5, class: 'search-angle' }))
+          }
+        }
+
+        function renderDebug(shapes) {
+          shapes.forEach((shape) => {
+            if (shape.role !== 'outer') return
+            const endpoint = { x: shape.x, y: shape.y }
+            layers.rays.append(createSvg('line', { x1: VIEW.center.x, y1: VIEW.center.y, x2: endpoint.x, y2: endpoint.y, class: 'debug-ray' }))
+            const bounds = shape.radialBounds
+            const low = pointOnRay(bounds.searchAngle, bounds.low)
+            const high = pointOnRay(bounds.searchAngle, bounds.high)
+            layers.rays.append(createSvg('line', { x1: low.x, y1: low.y, x2: high.x, y2: high.y, class: 'debug-bound' }))
+          })
+          shapes.forEach((shape) => shape.samples.forEach((point) => layers.debug.append(createSvg('circle', { cx: point.x, cy: point.y, r: 1.65, class: 'debug-point' }))))
+          if (state.result?.closest?.pair) {
+            const [first, second] = state.result.closest.pair
+            layers.debug.append(createSvg('line', { x1: first.x, y1: first.y, x2: second.x, y2: second.y, class: 'debug-link' }))
+          }
+        }
+
+        function signedStep(step) {
+          return step > 0 ? `+${step}` : String(step)
+        }
+
+        function searchText(run, checkpoint) {
+          if (!checkpoint) return 'Preparing search'
+          const paused = run?.paused ? ' · playback paused' : ''
+          if (checkpoint.phase === 'radial') {
+            if (checkpoint.event === 'starting' || checkpoint.event === 'center-ready') {
+              return `Radial placement · center fixed · 0/${checkpoint.outerCount} outer${paused}`
+            }
+            const validity = checkpoint.candidateValid ? 'valid' : 'blocked'
+            const bounds = `${checkpoint.low.toFixed(1)}–${checkpoint.high.toFixed(1)}px`
+            if (checkpoint.event === 'placed') {
+              return `Radial placement · outer ${checkpoint.outerIndex + 1}/${checkpoint.outerCount} placed · bounds ${bounds}${paused}`
+            }
+            return `Radial placement · outer ${checkpoint.outerIndex + 1}/${checkpoint.outerCount} · candidate ${validity} · bounds ${bounds}${paused}`
+          }
+          if (checkpoint.phase === 'angle') {
+            const candidate = checkpoint.candidateValid ? 'valid' : 'guarded'
+            const best = checkpoint.bestValid ? 'valid' : 'guarded'
+            return `Angle refinement · round ${checkpoint.round + 1}/${MAX_ANGLE_ROUNDS} · outer ${checkpoint.outerIndex + 1}/${checkpoint.outerCount} · candidate ${signedStep(checkpoint.candidateStep)} ${candidate} · best ${signedStep(checkpoint.bestStep)} ${best}${paused}`
+          }
+          return 'Complete'
+        }
+
+        function renderStatus() {
+          const { result, run, checkpoint } = state
+          const statusElement = $('status')
+          if (run) {
+            statusElement.textContent = run.paused ? 'Playback paused' : 'Search playback running'
+            statusElement.className = 'warn'
+            $('search-progress').textContent = searchText(run, checkpoint)
+            $('measured-gap').textContent = '—'
+            $('iterations').textContent = String(run.metrics.iterations)
+            $('elapsed').textContent = `${run.computeTime.toFixed(1)} ms`
+            return
+          }
+          if (!result) return
+
+          const status = result.overlap ? ['Overlap guard triggered', 'bad'] : result.valid ? ['Converged to target gap', 'good'] : ['Bounded search stopped short', 'warn']
+          if (result.cropped && !result.overlap) status[0] += ' · crop warning'
+          statusElement.textContent = status[0]
+          statusElement.className = status[1]
+          $('search-progress').textContent = 'Complete · final score'
+          $('measured-gap').textContent = result.overlap ? 'invalid / overlap' : `${result.minGap.toFixed(1)}px`
+          $('iterations').textContent = String(result.iterations)
+          $('elapsed').textContent = `${result.computeTime.toFixed(1)} ms`
         }
 
         function render() {
           clear(layers.rays)
           clear(layers.shapes)
+          clear(layers.search)
           clear(layers.debug)
           clear(layers.labels)
-          const { settings, shapes, result } = state
-          if (!settings || !result) return
+          const { settings } = state
+          if (!settings) return
 
-          layers.shapes.append(createSvg('circle', { cx: VIEW.center.x, cy: VIEW.center.y, r: 3, class: 'center-mark' }))
+          const shapes = displayedShapes()
           shapes.forEach((shape) => {
             const group = createSvg('g', { transform: `translate(${shape.x} ${shape.y}) rotate(${shape.rotation})` })
             group.append(createSvg('path', { d: shape.d, class: 'shape', fill: shape.color, stroke: 'rgba(237,242,255,.82)' }))
             layers.shapes.append(group)
+
             const label = createSvg('text', { x: shape.x, y: shape.y + 4, 'text-anchor': 'middle', class: 'shape-label' })
             label.textContent = String(shape.id + 1)
             layers.labels.append(label)
-            if (settings.debug && shape.id > 0) {
-              const endpoint = { x: shape.x, y: shape.y }
-              layers.rays.append(createSvg('line', { x1: VIEW.center.x, y1: VIEW.center.y, x2: endpoint.x, y2: endpoint.y, class: 'debug-ray' }))
-              const bounds = shape.radialBounds
-              const low = { x: VIEW.center.x + Math.cos(bounds.searchAngle) * bounds.low, y: VIEW.center.y + Math.sin(bounds.searchAngle) * bounds.low }
-              const high = { x: VIEW.center.x + Math.cos(bounds.searchAngle) * bounds.high, y: VIEW.center.y + Math.sin(bounds.searchAngle) * bounds.high }
-              layers.rays.append(createSvg('line', { x1: low.x, y1: low.y, x2: high.x, y2: high.y, class: 'debug-bound' }))
-            }
-            if (settings.debug) shape.samples.forEach((point) => layers.debug.append(createSvg('circle', { cx: point.x, cy: point.y, r: 1.65, class: 'debug-point' })))
           })
-          if (settings.debug && result.closest?.pair) {
-            const [first, second] = result.closest.pair
-            layers.debug.append(createSvg('line', { x1: first.x, y1: first.y, x2: second.x, y2: second.y, class: 'debug-link' }))
-          }
 
-          const status = result.overlap ? ['Overlap guard triggered', 'bad'] : result.valid ? ['Converged to target gap', 'good'] : ['Bounded search stopped short', 'warn']
-          if (result.cropped && !result.overlap) status[0] += ' · crop warning'
-          const statusElement = $('status')
-          statusElement.textContent = status[0]
-          statusElement.className = status[1]
-          $('measured-gap').textContent = result.overlap ? 'invalid / overlap' : `${result.minGap.toFixed(1)}px`
-          $('iterations').textContent = String(result.iterations)
-          $('elapsed').textContent = `${result.elapsed.toFixed(1)} ms`
-          $('viewport-info').textContent = `SVG ${VIEW.width} × ${VIEW.height} · crop ${result.cropped ? 'warning' : 'clear'} · ${settings.density} boundary samples / shape`
+          renderSearchLayer(state.checkpoint)
+          if (settings.debug) renderDebug(shapes)
+          renderStatus()
+
+          if (state.run) {
+            $('viewport-info').textContent = `SVG ${VIEW.width} × ${VIEW.height} · search playback · ${settings.density} boundary samples / shape`
+          } else if (state.result) {
+            $('viewport-info').textContent = `SVG ${VIEW.width} × ${VIEW.height} · crop ${state.result.cropped ? 'warning' : 'clear'} · ${settings.density} boundary samples / shape`
+          }
         }
 
-        $('arrange').addEventListener('click', arrange)
+        $('arrange').addEventListener('click', () => arrange())
         $('reset').addEventListener('click', () => {
           $('count').value = '5'
           $('seed').value = '19'
           $('gap').value = '28'
           $('density').value = '32'
+          $('center-shape').value = 'circle'
+          $('animate-search').checked = false
+          $('playback-speed').value = '1'
           $('debug').checked = false
           updateOutputs()
-          arrange()
+          arrange({ immediate: true })
         })
         inputs.forEach((input) => input.addEventListener('input', updateOutputs))
         $('debug').addEventListener('change', () => {
@@ -583,8 +1021,39 @@
           state.settings = { ...state.settings, debug: $('debug').checked }
           render()
         })
+        $('animate-search').addEventListener('change', () => {
+          if (state.settings) state.settings = { ...state.settings, animate: $('animate-search').checked }
+          if (state.run && !$('animate-search').checked) drainRun(state.run)
+        })
+        $('playback-speed').addEventListener('change', () => {
+          if (state.run) render()
+        })
+        document.addEventListener('visibilitychange', () => {
+          const run = state.run
+          if (!run) return
+          if (document.hidden) {
+            run.paused = true
+            run.lastFrameTime = null
+            if (state.raf) cancelAnimationFrame(state.raf)
+            state.raf = 0
+            $('search-announcement').textContent = 'Search playback paused while this page is hidden.'
+            render()
+            return
+          }
+          run.paused = false
+          run.lastFrameTime = null
+          $('search-announcement').textContent = 'Search playback resumed.'
+          render()
+          scheduleFrame(run)
+        })
+        const handleReducedMotion = (event) => {
+          if (event.matches && state.run) drainRun(state.run)
+        }
+        if (reducedMotion.addEventListener) reducedMotion.addEventListener('change', handleReducedMotion)
+        else reducedMotion.addListener(handleReducedMotion)
+
         updateOutputs()
-        arrange()
+        arrange({ immediate: true })
       })()
     </script>
   </body>

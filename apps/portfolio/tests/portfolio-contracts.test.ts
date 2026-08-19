@@ -356,6 +356,47 @@ describe('portfolio acceptance contracts', () => {
       posterVariant: 'irregular-geometry',
     })
     expect(demoExperiences['irregular-shape-arrangement'].source).not.toHaveLength(0)
+
+    const centerSelect = source.match(
+      /<select\b[^>]*\bid=["']center-shape["'][^>]*>([\s\S]*?)<\/select>/i,
+    )?.[1] ?? ''
+    const centerOptions = [...centerSelect.matchAll(/<option\b[^>]*\bvalue=["']([^"']+)["'][^>]*>/gi)]
+      .map(([, value]) => value)
+    const animationInput = source.match(/<input\b[^>]*\bid=["']animate-search["'][^>]*>/i)?.[0] ?? ''
+    const playbackSpeedSelect = source.match(
+      /<select\b[^>]*\bid=["']playback-speed["'][^>]*>([\s\S]*?)<\/select>/i,
+    )?.[1] ?? ''
+    const playbackSpeeds = [...playbackSpeedSelect.matchAll(/<option\b[^>]*\bvalue=["']([^"']+)["'][^>]*>/gi)]
+      .map(([, value]) => value)
+    const debugInput = source.match(/<input\b[^>]*\bid=["']debug["'][^>]*>/i)?.[0] ?? ''
+
+    expect(source).toMatch(/<div\b[^>]*\bid=["']controls["'][^>]*>/i)
+    expect(source).not.toMatch(/<form\b[^>]*\bid=["']controls["'][^>]*>/i)
+    expect(source).toMatch(/<button\b(?=[^>]*\bid=["']arrange["'])(?=[^>]*\btype=["']button["'])[^>]*>/i)
+    expect(source).toMatch(/<button\b(?=[^>]*\bid=["']reset["'])(?=[^>]*\btype=["']button["'])[^>]*>/i)
+
+    expect(centerOptions).toEqual(['circle', 'ellipse', 'petal', 'square'])
+    expect(centerSelect).toMatch(
+      /<option\b(?=[^>]*\bvalue=["']circle["'])(?=[^>]*\bselected\b)[^>]*>/i,
+    )
+    expect(source).toMatch(/<label\b[^>]*\bfor=["']count["'][^>]*>\s*Total shape count\b/i)
+    expect(source).toContain('const outerCount = settings.count - 1')
+    expect(source).toContain('center fixed')
+
+    expect(debugInput).toMatch(/\btype=["']checkbox["']/i)
+    expect(debugInput).not.toContain('debug-layer')
+    expect(source).toMatch(/<g\b[^>]*\bid=["']debug-layer["'][^>]*>/i)
+    expect(source).toMatch(
+      /label\.textContent\s*=\s*String\(shape\.id\s*\+\s*1\)\s*;?\s*layers\.labels\.append\(label\)/,
+    )
+
+    expect(animationInput).toMatch(/\btype=["']checkbox["']/i)
+    expect(animationInput).not.toMatch(/\bchecked\b/i)
+    expect(playbackSpeeds).toEqual(['0.5', '1', '2', '4'])
+    expect(playbackSpeedSelect).toMatch(
+      /<option\b(?=[^>]*\bvalue=["']1["'])(?=[^>]*\bselected\b)[^>]*>/i,
+    )
+
     expect(source).toContain('placementObjective')
     expect(source).toContain('localExcessGap')
     expect(source).toContain('getTotalLength()')
@@ -367,8 +408,97 @@ describe('portfolio acceptance contracts', () => {
     expect(source).toContain('MAX_ANGLE_STEPS')
     expect(source).toContain('localToWorld')
     expect(source).toContain('mulberry32')
+    expect(source).toMatch(/function outerSeed\(seed, outerIndex\)/)
+    expect(source).toMatch(
+      /const random\s*=\s*mulberry32\(outerSeed\(settings\.seed,\s*outerIndex\)\)/,
+    )
+    expect(source).not.toMatch(/\bMath\.random\s*\(/)
     expect(source).not.toMatch(/https?:\/\//)
     expect(source).not.toMatch(/\b(fetch|XMLHttpRequest|WebSocket)\b/)
+
+    expect(source).toMatch(/function\*\s+searchIterator\s*\(/)
+    expect(source.match(/\bsearchIterator\s*\(/g)).toHaveLength(2)
+    expect(source).toMatch(
+      /run\.iterator\s*=\s*searchIterator\(\s*(?:state\.)?shapes,\s*settings,\s*run\.metrics\)/,
+    )
+    expect(source).toContain('const next = run.iterator.next()')
+    expect(source).toMatch(/function drainRun\(run\)[\s\S]*?advanceRun\(run\)/)
+    expect(source).toMatch(/function scheduleFrame\(run\)[\s\S]*?advanceRun\(run\)/)
+    expect(source).toMatch(
+      /if\s*\(\s*immediate\s*\|\|\s*!settings\.animate\s*\|\|\s*reducedMotion\.matches\s*\)\s*\{\s*drainRun\(run\)/,
+    )
+    expect(source).toMatch(
+      /function cancelRun\(\)\s*\{\s*state\.runToken\s*\+=\s*1\s*if\s*\(state\.raf\)\s*cancelAnimationFrame\(state\.raf\)\s*state\.raf\s*=\s*0\s*if\s*\(state\.run\)\s*state\.run\.cancelled\s*=\s*true\s*state\.run\s*=\s*null/s,
+    )
+    expect(source).toMatch(/function arrange\([\s\S]*?cancelRun\(\)\s*const settings\s*=\s*readSettings\(\)/)
+    expect(source).toMatch(
+      /document\.addEventListener\(['"]visibilitychange['"],[\s\S]*?document\.hidden[\s\S]*?cancelAnimationFrame\(state\.raf\)[\s\S]*?scheduleFrame\(run\)/,
+    )
+    expect(source).toContain("window.matchMedia('(prefers-reduced-motion: reduce)')")
+    expect(source).toMatch(
+      /const\s+handleReducedMotion\s*=\s*\(event\)\s*=>\s*\{[\s\S]*?event\.matches\s*&&\s*state\.run\)\s*drainRun\(state\.run\)/,
+    )
+
+    // Playback is time-based, rather than one evaluation per display frame. It must
+    // still protect the UI with both a work-item cap and a compute-time deadline.
+    expect(source).toMatch(
+      /\b(?:const|let)\s+[A-Za-z_$][\w$]*(?:checkpoints|evaluations)[\w$]*_per_second\s*=\s*30\b/i,
+    )
+    expect(source).toMatch(
+      /requestAnimationFrame\([\s\S]{0,1800}?(?:\bperformance\.now\(\)|\b(?:timestamp|now|time)\b)[\s\S]{0,1800}?run\.\w*Budget\s*\+=/,
+    )
+    expect(source).toMatch(
+      /\b(?:const|let)\s+[A-Za-z_$][\w$]*(?:(?:steps|evaluations)[\w$]*(?:frame|tick)|(?:frame|tick)[\w$]*(?:steps|evaluations))[\w$]*\s*=\s*[1-9]\d*\b/i,
+    )
+    expect(source).toMatch(
+      /\b(?:const|let)\s+[A-Za-z_$][\w$]*(?:frame|tick|cpu|compute)[\w$]*(?:deadline|budget|ms)[\w$]*\s*=\s*[1-9]\d*(?:\.\d+)?\b/i,
+    )
+    expect(source).toMatch(
+      /while\s*\([\s\S]{0,500}?(?:(?:steps|evaluations)[\w.]*\s*<|\bMAX_[A-Z_]*(?:STEPS|EVALUATIONS))[\s\S]{0,500}?advanceRun\(run\)/i,
+    )
+    expect(source).toMatch(
+      /while\s*\([\s\S]{0,500}?(?:performance\.now\(\)\s*<[\s\S]{0,100}?(?:deadline|budget)|(?:deadline|budget)[\w.]*\s*[><=])[\s\S]{0,500}?advanceRun\(run\)/i,
+    )
+
+    // Geometry settings are staged until Arrange; they do not restart an active
+    // search as a side effect. The debug overlay remains visible during playback.
+    const geometryInputBinding = source.match(
+      /inputs\.forEach\([\s\S]*?(?=\$\(['"]debug['"]\)\.addEventListener)/,
+    )?.[0] ?? ''
+    expect(geometryInputBinding).toContain('addEventListener')
+    expect(geometryInputBinding).not.toMatch(/\barrange\s*\(/)
+    expect(source).not.toMatch(
+      /\$\(['"]center-shape['"]\)\.addEventListener\(\s*['"](?:input|change)['"][\s\S]{0,300}?\barrange\s*\(/,
+    )
+    expect(source).toMatch(/if\s*\(\s*settings\.debug\s*\)\s*renderDebug\(shapes\)/)
+
+    expect(source).toMatch(/<g\b[^>]*\bid=["']search-layer["'][^>]*>/i)
+    expect(source).toMatch(
+      /function displayedShapes\(\)[\s\S]*?event\s*===\s*['"]candidate['"][\s\S]*?outerIndex\s*\+\s*2[\s\S]*?state\.shapes\.slice\(0,\s*visibleCount\)/,
+    )
+    expect(source).toMatch(/\bid=["']search-progress["']/i)
+    expect(source).toContain('Measured result and search progress')
+    expect(source).toContain('Compute time')
+
+    const guide = demoExperiences['irregular-shape-arrangement'].guide
+    expect(guide.zh.summary).toContain('原始用途')
+    expect(guide.zh.summary).toContain('餐盘与异形食品包装')
+    expect(guide.zh.summary).toContain('当前 Lab 仅')
+    expect(guide.en.summary).toContain('original project intent')
+    expect(guide.en.summary).toContain('plates and irregular food packaging')
+    expect(guide.en.summary).toContain('this Lab demonstrates only')
+    expect(guide.zh.steps.join('')).toContain('可选开启计算 / 搜索动画')
+    expect(guide.en.steps.join(' ')).toContain('Optionally enable calculation/search playback')
+    expect(guide.zh.steps.join('')).toContain('动画与即时模式共享同一确定性计算与结果')
+    expect(guide.en.steps.join(' ')).toContain(
+      'animated and immediate modes share the same deterministic calculation and result',
+    )
+    expect(guide.zh.boundary).toContain('clean-room')
+    expect(guide.zh.boundary).toContain('不复现或还原历史内部代码、界面、节奏或速度')
+    expect(guide.en.boundary).toContain('clean-room')
+    expect(guide.en.boundary).toContain(
+      'not a reproduction or restoration of historical internal code, UI, timing, or speed',
+    )
   })
 
   it('keeps Merchant as a redacted, text-only independent full-stack project archive', () => {

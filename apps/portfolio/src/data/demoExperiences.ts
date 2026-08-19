@@ -240,22 +240,24 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 3,
-        summary: '以确定性合成 SVG 形状检查采样边界距离、径向搜索和邻角细化的公开重建实验。',
-        boundary: '仅保留本人实现的计算探索；并非精确装箱、全局最优，也不包含上游形状或产品算法。',
+        summary: '项目原始用途是根据餐盘与异形食品包装的轮廓进行自动摆放，为食品宣传图建立整洁、美观的构图基础；当前 Lab 仅以中心预设和种子化合成外轮廓展示这项采样几何研究。',
+        boundary:
+          '这是 clean-room 采样几何研究，仅用中心预设和种子化合成外轮廓；并非精确装箱或全局最优，不包含上游裁切、模型实现或产品算法。动画是对当前公开算法的全新 clean-room 可视化，不复现或还原历史内部代码、界面、节奏或速度。',
         steps: [
-          '调整形状数量、种子、目标间隙和边界采样密度。',
-          '点击“编排”，对照实测最小间隙、迭代数和收敛状态。',
-          '开启调试叠层，检查采样点、最近点对、径向界限与裁切信息。',
+          '选择中心形状预设，再设置总数、外轮廓种子、目标间隙和边界采样密度。',
+          '可选开启计算 / 搜索动画，并选择回放速度。',
+          '点击“编排”，检查最终状态、计算耗时和调试信息；动画与即时模式共享同一确定性计算与结果。',
         ],
       },
       en: {
         duration: 3,
-        summary: 'A public reconstruction that studies sampled SVG-boundary distances, radial search, and neighboring-angle refinement with deterministic synthetic shapes.',
-        boundary: 'It retains only my calculation exploration; it is neither exact packing nor a global optimum, and excludes upstream shape and product algorithms.',
+        summary: 'The original project intent was to arrange plates and irregular food packaging by contour as a tidy, visually appealing composition foundation for food promotional imagery; this Lab demonstrates only that sampled-geometry study with center presets and seeded synthetic outer contours.',
+        boundary:
+          'This is a clean-room sampled-geometry study using only selected center presets and seeded synthetic outer contours. It is not exact packing or a global optimum and excludes upstream cut-out, model implementation, and product algorithms. Its animation is a new clean-room visualization of the current public algorithm, not a reproduction or restoration of historical internal code, UI, timing, or speed.',
         steps: [
-          'Adjust shape count, seed, target gap, and boundary sample density.',
-          'Arrange, then compare measured minimum gap, iteration count, and convergence status.',
-          'Enable debug overlay to inspect samples, the nearest pair, radial bounds, and crop information.',
+          'Choose a center shape preset, then set total count, outer seed, target gap, and boundary-sample density.',
+          'Optionally enable calculation/search playback and choose its speed.',
+          'Arrange and inspect the final status, compute time, and debug overlay; animated and immediate modes share the same deterministic calculation and result.',
         ],
       },
     },

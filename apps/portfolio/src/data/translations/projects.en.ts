@@ -785,7 +785,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       source: '',
       title: 'Irregular Shape Layout · Clean-room Lab',
       description:
-        'Adjust synthetic shapes, target gap, and sampling density to inspect sampled distances, overlap guards, bounded radial search, and neighboring-angle refinement. Results are approximate geometry, not exact packing or a global optimum.',
+        'Choose a center-shape preset and set total count, outer-contour seed, target gap, and sampling density; optionally reveal and pace the bounded search. The original project intent was to arrange plates and irregular food packaging by contour as a tidy, visually appealing composition foundation for food promotional imagery; this Lab demonstrates only that sampled-geometry study with synthetic contours. Playback and immediate calculation yield the same deterministic approximate result, not exact packing or a global optimum.',
       provenanceLabel: 'CLEAN-ROOM PUBLIC RECONSTRUCTION · SYNTHETIC GEOMETRY',
       statusLabel: 'SAMPLED SVG · BOUNDED SEARCH',
       toolbar: 'Irregular Shape Layout · Sampled Geometry Lab',
@@ -801,7 +801,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Problem and input contract',
         paragraphs: [
           'The original concept expected an upstream model layer to provide cut-out SVG paths, after which the calculation layer would arrange those contours. I implemented and explored only the latter; upstream cut-out, the model layer, and a complete UX or product algorithm are not claimed as my work.',
-          'The public version uses abstract SVG contours generated deterministically from a seed. It preserves the research structure of path input, boundary calculation, and layout diagnostics without importing historical material, interfaces, or implementation detail.',
+          'Starting from a center-shape preset, the public Lab deterministically generates synthetic irregular outer contours from an outer seed solely to demonstrate the sampled-geometry and placement study described above. It does not present those abstract contours as actual plates or packaging and does not generate final promotional images. It excludes upstream cut-out, model implementation, and product algorithms, and does not reproduce historical material, UI, or code.',
         ],
         phase: 'Calculation exploration / public reconstruction',
       },
@@ -827,7 +827,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         id: 'angle-refinement',
         title: 'Coarse-to-fine neighboring-angle refinement',
         paragraphs: [
-          'After radial placement, later shapes try angles in a bounded neighborhood around their own radius. The search first rejects overlap and target-gap deficits, then reduces the summed sampled gaps among adjacent indexed shapes in valid candidates; it begins with a coarse step, shrinks it by round, and uses deterministic tie-breaking so identical input produces identical results.',
+          'After radial placement, later shapes try angles in a bounded neighborhood around their own radius. The search prefers valid candidates; if none exists within budget, it minimizes overlap and target-gap deficit in order and reports non-convergence honestly. Valid candidates are then compared by summed sampled gaps among adjacent indexed shapes. The search starts coarse, shrinks by round, and uses deterministic tie-breaking so identical input produces identical results.',
           'It improves local neighboring relationships within a limited budget only; it does not solve a global optimum or exact irregular-shape packing.',
         ],
         phase: 'Local improvement',
@@ -837,7 +837,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Diagnostics and public reconstruction',
         paragraphs: [
           'The lab reports measured minimum gap, iteration count, elapsed time, and an honest convergence status. Its debug overlay shows boundary samples, the nearest pair, radial rays and bounds, plus SVG viewport and crop hints.',
-          'The current lab is a fully self-contained clean-room public work: it makes no network requests, loads no external assets, and generates every shape and color through a deterministic local process.',
+          'Calculation/search playback can optionally reveal search checkpoints at the selected speed. It is a new clean-room visualization of the current public algorithm; it shares the same deterministic calculation and result as immediate mode and does not reproduce or restore historical internal code, UI, timing, or speed.',
         ],
         phase: 'Public lab',
       },
