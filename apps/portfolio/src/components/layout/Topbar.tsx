@@ -39,10 +39,6 @@ export function Topbar({
 
   return (
     <header className="mobile-topbar" inert={expanded ? true : undefined}>
-      <AppLink to="/" className="mobile-wordmark" aria-label={copy.shell.home}>
-        {profile.name}
-      </AppLink>
-      <span>{routeLabels[route.id] || 'Portfolio'}</span>
       <button
         ref={menuButtonRef}
         type="button"
@@ -55,6 +51,10 @@ export function Topbar({
         <span />
         <span />
       </button>
+      <span>{routeLabels[route.id] || 'Portfolio'}</span>
+      <AppLink to="/" className="mobile-wordmark" aria-label={copy.shell.home}>
+        {profile.name}
+      </AppLink>
     </header>
   )
 }
