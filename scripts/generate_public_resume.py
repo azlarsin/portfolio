@@ -432,7 +432,7 @@ def build_resume() -> None:
         f"Phone: {plain_text(contact['phone'])}"
         f" &nbsp;|&nbsp; Email: {plain_text(contact['email'])}"
         f" &nbsp;|&nbsp; GitHub: {plain_text(contact['github'])}"
-        f" &nbsp;|&nbsp; Website: {plain_text(contact['website'])}"
+        f" &nbsp;|&nbsp; More: {plain_text(contact['website'])}"
     )
     story.extend([Spacer(1, 5), Paragraph(contact_text, styles["note"])])
 
