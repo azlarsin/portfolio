@@ -168,6 +168,24 @@ describe('portfolio acceptance contracts', () => {
     expect(layeredSource).toContain("source: demoExperiences['layered-agent-action-graph'].source")
   })
 
+  it('keeps player chrome outside the embedded demo interaction area', () => {
+    const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
+    const playerCss = readFileSync(`${sourceRoot}/styles/demo-player.css`, 'utf8')
+
+    expect(playerCss).toMatch(
+      /\.demo-player-content \{[\s\S]*?grid-template-rows: auto minmax\(0, 1fr\)/,
+    )
+    expect(playerCss).toMatch(
+      /\.demo-player-stage \{[\s\S]*?position: relative[\s\S]*?grid-row: 2/,
+    )
+    expect(playerCss).toMatch(
+      /\.demo-player-chrome \{[\s\S]*?position: relative[\s\S]*?grid-row: 1/,
+    )
+    expect(playerCss).toMatch(
+      /@media \(max-width: 760px\)[\s\S]*?\.demo-player-chrome \{[\s\S]*?margin: 0/,
+    )
+  })
+
   it('1c. directs contextual résumé entry to an anchored, accessible preview', () => {
     const homeHeroPath = fileURLToPath(
       new URL('../src/components/home/HomeHero.tsx', import.meta.url),
