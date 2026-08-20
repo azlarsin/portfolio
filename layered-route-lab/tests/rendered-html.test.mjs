@@ -734,3 +734,23 @@ test("each modal handle owns diagnostics, relative navigation, and focus recover
     /\.modal-card-full \{[\s\S]*?calc\(100% - 32px\)/,
   );
 });
+
+test("modal content fills the card and scrolls from its first row", async () => {
+  const css = await readFile(
+    new URL("../src/layered-route-lab.css", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(
+    css,
+    /\.modal-card-focus \{[^}]*width: 100%;[^}]*height: 100%;[^}]*grid-template-rows: 52px minmax\(0, 1fr\)/,
+  );
+  assert.match(
+    css,
+    /\.modal-body \{[^}]*min-height: 0;[^}]*justify-content: flex-start;[^}]*overflow: auto;[^}]*overscroll-behavior: contain;[^}]*-webkit-overflow-scrolling: touch;/,
+  );
+  assert.doesNotMatch(
+    css,
+    /\.modal-card \{[^}]*grid-template-rows: 52px minmax\(0, 1fr\)/,
+  );
+});
