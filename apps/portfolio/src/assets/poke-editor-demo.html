@@ -162,9 +162,50 @@
     .preview-back { width: max-content; margin-bottom: 34px; border: 0; color: #2e67dd; background: transparent; cursor: pointer; font-size: 9px; }
     .pulse { animation: pulse 650ms ease; }
     @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(47,121,237,.18); } }
+    .mobile-pc-notice { display: none; }
+    @media (max-width: 779px) {
+      html, body { min-width: 0; height: 100%; overflow: hidden; }
+      .archive-bar, .app { display: none; }
+      .mobile-pc-notice {
+        position: fixed;
+        display: grid;
+        min-height: 100%;
+        place-content: center;
+        gap: 14px;
+        padding: 32px;
+        color: #e9efff;
+        background:
+          radial-gradient(circle at 50% 30%, rgba(66, 104, 221, .26), transparent 34%),
+          #111722;
+        text-align: center;
+        inset: 0;
+      }
+      .mobile-pc-notice::before {
+        display: grid;
+        width: 64px;
+        height: 52px;
+        place-items: center;
+        justify-self: center;
+        border: 1px solid rgba(135, 163, 239, .5);
+        border-radius: 10px;
+        color: #91abf5;
+        background: rgba(55, 83, 157, .18);
+        box-shadow: 0 15px 38px rgba(0,0,0,.24);
+        content: "PC";
+        font: 800 14px ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .mobile-pc-notice small { color: #71809e; font: 9px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .13em; }
+      .mobile-pc-notice h1 { margin: 0; font-size: clamp(24px, 8vw, 34px); letter-spacing: -.035em; }
+      .mobile-pc-notice p { max-width: 330px; margin: 0; color: #9ca9c1; font-size: 13px; line-height: 1.75; }
+    }
   </style>
 </head>
 <body>
+  <section class="mobile-pc-notice" role="note" aria-label="桌面端体验提示">
+    <small>POKE PROTOTYPE EDITOR</small>
+    <h1>请在 PC 平台体验</h1>
+    <p>该演示保留了多面板编辑器、画布拖拽与右键菜单，需要桌面级指针和更宽视口才能完整操作。</p>
+  </section>
   <div class="archive-bar"><span>POKE 0.9 · SOURCE-DRIVEN ARCHIVE RECONSTRUCTION</span><span>SYNTHETIC PROJECT · LOCAL ONLY · NO NETWORK</span></div>
   <main class="app">
     <header class="topbar">

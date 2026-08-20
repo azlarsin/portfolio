@@ -152,6 +152,10 @@
   cursor: wait;
 }
 
+.agent-running-compact {
+  display: none;
+}
+
 .agent-status-strip {
   display: flex;
   flex-wrap: wrap;
@@ -1392,5 +1396,89 @@
   .agent-code-flow > i {
     justify-self: center;
     transform: rotate(90deg);
+  }
+
+  .agent-overlay[data-running="true"] .agent-scrim {
+    background: transparent;
+    pointer-events: none;
+    backdrop-filter: none;
+  }
+
+  .agent-overlay[data-running="true"] .agent-panel {
+    top: auto;
+    right: 8px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: 8px;
+    width: auto;
+    height: 72px;
+    border-color: rgba(200, 255, 96, 0.42);
+    border-radius: 14px;
+    background: rgba(17, 19, 30, 0.96);
+    box-shadow: 0 18px 54px rgba(8, 8, 15, 0.42);
+    animation: agent-running-dock-enter 220ms cubic-bezier(0.22, 1, 0.36, 1);
+    backdrop-filter: blur(18px);
+  }
+
+  .agent-overlay[data-running="true"] .agent-panel > :not(.agent-running-compact) {
+    display: none;
+  }
+
+  .agent-overlay[data-running="true"] .agent-running-compact {
+    min-width: 0;
+    display: grid;
+    flex: 1;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .agent-running-compact .agent-step-status {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+  }
+
+  .agent-running-compact > div {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .agent-running-compact small {
+    color: var(--signal);
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .agent-running-compact strong {
+    overflow: hidden;
+    color: #f0f2fb;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .agent-running-compact > code {
+    padding: 5px 7px;
+    border: 1px solid #353a4f;
+    border-radius: 7px;
+    color: #959db5;
+    background: #1b1e2c;
+    font-size: 10px;
+  }
+}
+
+@keyframes agent-running-dock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-panel,
+  .agent-step-status.is-running {
+    animation-duration: 1ms !important;
   }
 }

@@ -20,22 +20,25 @@ const selectedWork = [
   { to: '/work/layered-agent', index: '04', labelIndex: 3 },
 ] as const
 
-function isCurrent(route: ResolvedRoute, to: string) {
-  if (to === '/archive') return route.pathname.startsWith('/archive')
-  return route.pathname === to
+function isCurrent(pathname: string, to: string) {
+  if (to === '/archive') return pathname.startsWith('/archive')
+  return pathname === to
 }
 
 export function PortfolioNavigationContent({
   route,
+  activePath,
   firstLinkRef,
   onNavigate,
 }: {
   route: ResolvedRoute
+  activePath?: string
   firstLinkRef?: RefObject<HTMLAnchorElement | null>
   onNavigate: () => void
 }) {
   const { copy, language } = useLanguage()
   const localizedProfile = getLocalizedProfile(language)
+  const currentPath = activePath || route.pathname
 
   return (
     <>
@@ -51,7 +54,7 @@ export function PortfolioNavigationContent({
         <AppLink
           to="/"
           onClick={onNavigate}
-          aria-current={isCurrent(route, '/') ? 'page' : undefined}
+          aria-current={isCurrent(currentPath, '/') ? 'page' : undefined}
           className="nav-primary"
         >
           {copy.navigation.overview}
@@ -64,7 +67,7 @@ export function PortfolioNavigationContent({
               key={item.to}
               to={item.to}
               onClick={onNavigate}
-              aria-current={isCurrent(route, item.to) ? 'page' : undefined}
+              aria-current={isCurrent(currentPath, item.to) ? 'page' : undefined}
               className="nav-case"
             >
               <small>{item.index}</small>
@@ -76,7 +79,7 @@ export function PortfolioNavigationContent({
         <AppLink
           to="/experience"
           onClick={onNavigate}
-          aria-current={isCurrent(route, '/experience') ? 'page' : undefined}
+          aria-current={isCurrent(currentPath, '/experience') ? 'page' : undefined}
           className="nav-primary"
         >
           {copy.navigation.experience}
@@ -84,7 +87,7 @@ export function PortfolioNavigationContent({
         <AppLink
           to="/archive"
           onClick={onNavigate}
-          aria-current={isCurrent(route, '/archive') ? 'page' : undefined}
+          aria-current={isCurrent(currentPath, '/archive') ? 'page' : undefined}
           className="nav-primary"
         >
           {copy.navigation.projects}
@@ -92,7 +95,7 @@ export function PortfolioNavigationContent({
         <AppLink
           to="/resume"
           onClick={onNavigate}
-          aria-current={isCurrent(route, '/resume') ? 'page' : undefined}
+          aria-current={isCurrent(currentPath, '/resume') ? 'page' : undefined}
           className="nav-primary"
         >
           {copy.navigation.resume}
@@ -159,11 +162,13 @@ function clampGuidePosition(position: GuidePosition, element: HTMLElement): Guid
 
 export function DemoNavigationDrawer({
   route,
+  activePath,
   open,
   firstLinkRef,
   onClose,
 }: {
   route: ResolvedRoute
+  activePath: string
   open: boolean
   firstLinkRef: RefObject<HTMLAnchorElement | null>
   onClose: () => void
@@ -185,7 +190,12 @@ export function DemoNavigationDrawer({
         aria-hidden={!open}
         inert={!open ? true : undefined}
       >
-        <PortfolioNavigationContent route={route} firstLinkRef={firstLinkRef} onNavigate={onClose} />
+        <PortfolioNavigationContent
+          route={route}
+          activePath={activePath}
+          firstLinkRef={firstLinkRef}
+          onNavigate={onClose}
+        />
       </aside>
     </>
   )

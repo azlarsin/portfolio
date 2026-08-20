@@ -51,7 +51,21 @@
     .copy:hover { background: #184ec8; }
     .note { margin: auto 0 0; color: #838c9a; font-size: 10px; line-height: 1.7; }
     @media (max-width: 840px) { header { align-items: flex-start; flex-direction: column; } .workspace { grid-template-columns: 150px 1fr; } .preview { grid-column: 1 / -1; border-top: 1px solid #dfe3e9; border-left: 0; } }
-    @media (max-width: 560px) { .workspace { grid-template-columns: 1fr; } .presets { border-right: 0; } .preset-list { grid-template-columns: repeat(2,1fr); } .board-wrap { padding: 22px; } }
+    @media (max-width: 560px) {
+      .shell { width: 100%; min-width: 0; overflow-x: hidden; }
+      header, .workspace, .presets, .board-wrap, .preview { width: 100%; min-width: 0; }
+      header { gap: 10px; padding: 17px 16px 14px; }
+      h1 { font-size: 25px; }
+      .live-value { width: 100%; min-width: 0; max-width: 100%; padding: 7px 9px; font-size: 9px; }
+      .workspace { grid-template-columns: 1fr; }
+      .presets { padding: 11px 14px 12px; border-right: 0; border-bottom: 1px solid #dfe3e9; }
+      .presets .panel-title { margin-bottom: 8px; }
+      .preset-list { display: flex; gap: 6px; padding-bottom: 2px; overflow-x: auto; scrollbar-width: thin; }
+      .preset { min-height: 36px; flex: 0 0 auto; padding-inline: 9px; }
+      .board-wrap { padding: 14px; }
+      .board-card { width: min(360px, 100%); padding: 16px; }
+      .preview { gap: 16px; padding: 20px 18px; }
+    }
   </style>
 </head>
 <body>

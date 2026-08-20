@@ -83,6 +83,11 @@
   border-radius: 10px;
 }
 
+.route-rail-menu-toggle,
+.route-rail-menu-scrim {
+  display: none;
+}
+
 .route-composition {
   min-width: 0;
   display: grid;
@@ -1456,14 +1461,13 @@
 
   .route-rail {
     display: grid;
-    grid-template-areas:
-      "brand current"
-      "routes routes";
-    grid-template-columns: minmax(128px, 0.7fr) minmax(0, 1.3fr);
-    grid-template-rows: auto 58px;
-    gap: 8px 10px;
-    padding: 10px;
-    overflow: hidden;
+    height: 64px;
+    grid-template-areas: "brand current menu";
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-rows: 44px;
+    gap: 8px;
+    padding: 9px 10px 10px;
+    overflow: visible;
     border-right: 0;
     border-bottom: 1px solid #33342c;
   }
@@ -1472,39 +1476,46 @@
     grid-area: brand;
   }
 
-  .route-rail-brand strong {
-    overflow: visible;
-    line-height: 1.05;
-    text-overflow: clip;
-    white-space: normal;
+  .route-rail-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 9px;
   }
 
-  .route-rail-brand > div span {
+  .route-rail-brand > div {
     display: none;
   }
 
   .route-rail-current {
     min-width: 0;
     grid-area: current;
-    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    padding: 6px 10px;
     overflow: hidden;
+    border-radius: 9px;
   }
 
   .route-rail-current .route-rail-section-label,
-  .route-rail nav > .route-rail-section-label {
+  .route-composition-path span {
     display: none;
   }
 
   .route-composition {
-    gap: 3px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    overflow: hidden;
   }
 
   .route-composition-path {
-    gap: 1px;
+    flex: 1 1 auto;
+    overflow: hidden;
   }
 
   .route-composition-path code {
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .route-composition-plus {
@@ -1512,31 +1523,168 @@
   }
 
   .route-presenter-array {
-    min-height: 22px;
+    min-width: 0;
+    flex: 0 1 auto;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
 
-  .route-presenter-array button {
-    padding-block: 3px;
+  .route-presenter-array > span,
+  .route-presenter-array button:not(:last-of-type) {
+    display: none;
+  }
+
+  .route-presenter-array button:last-of-type {
+    max-width: 86px;
+    padding: 4px 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .route-rail-menu-toggle {
+    grid-area: menu;
+    display: grid;
+    min-width: 78px;
+    height: 44px;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 2px 7px;
+    padding: 6px 9px;
+    border: 1px solid #414338;
+    border-radius: 9px;
+    color: #dedfd5;
+    background: #272920;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .route-rail-menu-toggle span {
+    color: #a4a69a;
+    font-size: 10px;
+    font-weight: 750;
+  }
+
+  .route-rail-menu-toggle strong {
+    color: var(--signal);
+    font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .route-rail-menu-toggle i {
+    position: relative;
+    grid-column: 1 / -1;
+    width: 100%;
+    height: 1px;
+    background: #55574c;
+  }
+
+  .route-rail-menu-toggle i::before,
+  .route-rail-menu-toggle i::after {
+    position: absolute;
+    right: 0;
+    width: 70%;
+    height: 1px;
+    background: inherit;
+    content: "";
+  }
+
+  .route-rail-menu-toggle i::before {
+    top: -4px;
+  }
+
+  .route-rail-menu-toggle i::after {
+    top: 4px;
+  }
+
+  .route-rail-menu-toggle[aria-expanded="true"] {
+    color: #202218;
+    border-color: var(--signal);
+    background: var(--signal);
+  }
+
+  .route-rail-menu-toggle[aria-expanded="true"] span,
+  .route-rail-menu-toggle[aria-expanded="true"] strong {
+    color: #202218;
+  }
+
+  .route-rail-menu-scrim {
+    position: fixed;
+    z-index: 101;
+    inset: 64px 0 0;
+    display: block;
+    visibility: hidden;
+    padding: 0;
+    border: 0;
+    background: rgba(10, 11, 8, 0.54);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease, visibility 180ms ease;
+    backdrop-filter: blur(2px);
+  }
+
+  .route-rail.is-menu-open .route-rail-menu-scrim {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .route-rail nav {
-    min-width: 0;
-    grid-area: routes;
+    position: fixed;
+    z-index: 102;
+    top: 72px;
+    right: 8px;
+    left: 8px;
+    display: flex;
+    max-height: calc(100dvh - 88px);
+    padding: 14px;
+    overflow: hidden;
+    border: 1px solid #414338;
+    border-radius: 14px;
+    background: #171812;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.44);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.985);
+    transform-origin: top center;
+    visibility: hidden;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+  }
+
+  .route-rail.is-menu-open nav {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+
+  .route-rail nav > .route-rail-section-label {
+    display: block;
+    margin-bottom: 11px;
+    color: var(--signal);
   }
 
   .lab-route-list {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding-bottom: 2px;
+    padding-right: 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .lab-route-link {
     --route-indent: 0px !important;
-    width: 172px;
-    flex: 0 0 auto;
-    padding: 7px 8px;
+    width: 100%;
+    min-height: 58px;
+    padding: 8px;
+  }
+
+  .lab-route-link strong {
+    font-size: 12px;
+  }
+
+  .lab-route-link code {
+    font-size: 9px;
   }
 
   .route-rail-stats {

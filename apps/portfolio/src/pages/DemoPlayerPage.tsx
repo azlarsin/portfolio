@@ -28,12 +28,10 @@ function ExperienceGuide({
   experience,
   dismissed,
   onDismiss,
-  onReopen,
 }: {
   experience: DemoExperience
   dismissed: boolean
   onDismiss: () => void
-  onReopen: () => void
 }) {
   const { language, copy } = useLanguage()
   const { guideRef, position, dragHandlers } = useDesktopGuidePosition(
@@ -42,13 +40,7 @@ function ExperienceGuide({
   )
   const guide = experience.guide[language]
 
-  if (dismissed) {
-    return (
-      <button type="button" className="demo-guide-reopen" onClick={onReopen}>
-        {copy.demo.player.reopenGuide}
-      </button>
-    )
-  }
+  if (dismissed) return null
 
   return (
     <aside
@@ -215,8 +207,14 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
             <strong>{title}</strong>
           </div>
           <div className="demo-player-actions">
-            <button type="button" className="demo-guide-toggle" onClick={() => setGuideDismissed(false)}>
-              {copy.demo.player.guide}
+            <button
+              type="button"
+              className="demo-guide-toggle"
+              aria-label={copy.demo.player.guide}
+              onClick={() => setGuideDismissed(false)}
+            >
+              <span className="demo-guide-toggle-label">{copy.demo.player.guide}</span>
+              <span className="demo-guide-toggle-icon" aria-hidden="true">?</span>
             </button>
             <AppLink className="demo-player-back" to={experience.casePath}>
               ← {copy.demo.player.backToCase}
@@ -228,7 +226,6 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
           experience={experience}
           dismissed={guideDismissed}
           onDismiss={() => setGuideDismissed(true)}
-          onReopen={() => setGuideDismissed(false)}
         />
 
         {timedOut ? (
@@ -245,6 +242,7 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
 
       <DemoNavigationDrawer
         route={route}
+        activePath={experience.casePath}
         open={drawerOpen}
         firstLinkRef={firstLinkRef}
         onClose={() => setDrawerOpen(false)}

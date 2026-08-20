@@ -99,10 +99,9 @@
 
       .workspace { display: grid; min-width: 0; grid-template-rows: auto minmax(340px, 1fr) auto; }
       .workspace-header {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         align-items: center;
-        justify-content: space-between;
         gap: 8px 16px;
         padding: 14px 18px;
         border-bottom: 1px solid var(--line);
@@ -110,6 +109,34 @@
       }
       .workspace-header strong { font-size: 13px; }
       .viewport-info { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+      .process-readout {
+        min-width: 0;
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: auto minmax(0, 1fr);
+        align-items: center;
+        gap: 7px 9px;
+        padding-top: 9px;
+        border-top: 1px solid rgba(133, 167, 255, .15);
+      }
+      .process-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(132, 214, 173, .1); }
+      .process-readout[aria-busy="true"] .process-dot { background: var(--warn); animation: process-pulse 900ms ease-in-out infinite; }
+      .process-readout > strong { overflow: hidden; color: #dfe8fa; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+      .process-log {
+        display: flex;
+        grid-column: 1 / -1;
+        gap: 6px;
+        margin: 0;
+        padding: 0 0 2px;
+        overflow-x: auto;
+        list-style: none;
+        scrollbar-width: thin;
+      }
+      .process-log li { flex: 0 0 auto; max-width: min(420px, 76vw); padding: 5px 7px; overflow: hidden; border: 1px solid #273653; border-radius: 6px; color: #8090ad; background: #101a2b; font: 10px ui-monospace, SFMono-Regular, Menlo, monospace; text-overflow: ellipsis; white-space: nowrap; }
+      .process-log li.is-current { border-color: rgba(244, 197, 107, .48); color: var(--warn); }
+      .process-log li.is-done { color: #73839f; }
+      @keyframes process-pulse { 50% { opacity: .38; transform: scale(.72); } }
 
       .canvas-wrap { position: relative; min-height: 0; padding: 16px; }
       svg { display: block; width: 100%; height: 100%; min-height: 340px; border: 1px solid var(--line); border-radius: 10px; background: radial-gradient(circle at 50% 48%, #192941 0, #0c1422 68%); }
@@ -143,7 +170,10 @@
         .panel { border-right: 0; border-bottom: 1px solid var(--line); }
         .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
         .actions, .toggle, .playback-note, .status-card, .method { grid-column: 1 / -1; }
-        .workspace { min-height: 500px; }
+        .workspace { min-height: 500px; scroll-margin-top: 0; outline: none; }
+        .workspace-header { grid-template-columns: 1fr; }
+        .viewport-info { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .process-log li { max-width: 82vw; }
       }
 
       @media (max-width: 480px) {
@@ -224,10 +254,15 @@
         </section>
       </aside>
 
-      <section class="workspace" id="workspace" aria-label="Irregular shape layout viewport" aria-busy="false">
+      <section class="workspace" id="workspace" aria-label="Irregular shape layout viewport" aria-busy="false" tabindex="-1">
         <header class="workspace-header">
           <strong>Seeded synthetic geometry · local-only</strong>
           <span class="viewport-info" id="viewport-info">Viewport —</span>
+          <div class="process-readout" id="process-readout" aria-busy="false">
+            <span class="process-dot" aria-hidden="true"></span>
+            <strong id="process-status" role="status" aria-live="polite">等待编排</strong>
+            <ol class="process-log" id="process-log" aria-label="元素计算与移动状态"></ol>
+          </div>
         </header>
         <div class="canvas-wrap">
           <svg id="scene" viewBox="0 0 900 620" role="img" aria-label="Approximate arrangement of synthetic irregular shapes">
@@ -252,6 +287,9 @@
         const scene = $('scene')
         const defs = $('defs')
         const workspace = $('workspace')
+        const processReadout = $('process-readout')
+        const processStatus = $('process-status')
+        const processLog = $('process-log')
         const layers = {
           rays: $('rays'),
           shapes: $('shapes'),
@@ -336,6 +374,36 @@
           $('seed-output').value = $('seed').value
           $('gap-output').value = `${$('gap').value}px`
           $('density-output').value = `${$('density').value} pts`
+        }
+
+        function resetProcessReadout() {
+          processLog.replaceChildren()
+          processStatus.textContent = '准备计算元素位置…'
+          processReadout.setAttribute('aria-busy', 'true')
+        }
+
+        function pushProcessMessage(message) {
+          processLog.querySelector('.is-current')?.classList.replace('is-current', 'is-done')
+          const item = document.createElement('li')
+          item.className = 'is-current'
+          item.textContent = message
+          processLog.append(item)
+          while (processLog.children.length > 12) processLog.firstElementChild?.remove()
+          processStatus.textContent = message
+          processLog.scrollLeft = processLog.scrollWidth
+        }
+
+        function updateProcessReadout(run, checkpoint) {
+          if (checkpoint.phase !== 'radial' || checkpoint.outerIndex === undefined) return
+          const elementNumber = checkpoint.outerIndex + 2
+          if (run.calculatingOuter !== checkpoint.outerIndex) {
+            run.calculatingOuter = checkpoint.outerIndex
+            pushProcessMessage(`开始计算 element-${elementNumber} 与 element-1（中心元素）位置…`)
+          }
+          if (checkpoint.event === 'placed' && run.movedOuter !== checkpoint.outerIndex) {
+            run.movedOuter = checkpoint.outerIndex
+            pushProcessMessage(`开始移动 element-${elementNumber} 至目标位置…`)
+          }
         }
 
         function midpoint(first, second) {
@@ -748,6 +816,7 @@
           if (next.done) return true
           state.checkpoint = next.value
           updateAnnouncement(run, next.value)
+          updateProcessReadout(run, next.value)
           return false
         }
 
@@ -762,6 +831,9 @@
           state.run = null
           state.raf = 0
           workspace.setAttribute('aria-busy', 'false')
+          processReadout.setAttribute('aria-busy', 'false')
+          pushProcessMessage(`计算结束 · ${state.shapes.length} 个元素已定位`)
+          processLog.querySelector('.is-current')?.classList.replace('is-current', 'is-done')
           $('search-announcement').textContent = 'Arrangement complete.'
           render()
         }
@@ -829,11 +901,13 @@
           state.run = null
           state.checkpoint = null
           workspace.setAttribute('aria-busy', 'false')
+          processReadout.setAttribute('aria-busy', 'false')
         }
 
         function arrange({ immediate = false } = {}) {
           cancelRun()
           const settings = readSettings()
+          resetProcessReadout()
           const setupStarted = performance.now()
           const shapes = makeShapes(settings)
           const center = shapes[0]
@@ -848,6 +922,8 @@
             paused: document.hidden,
             announcedOuter: null,
             announcedRound: null,
+            calculatingOuter: null,
+            movedOuter: null,
             cancelled: false,
           }
           run.iterator = searchIterator(shapes, settings, run.metrics)
@@ -867,6 +943,17 @@
           $('search-announcement').textContent = 'Optional search playback started.'
           render()
           scheduleFrame(run)
+        }
+
+        function focusWorkspaceOnMobile() {
+          if (!window.matchMedia('(max-width: 760px)').matches) return
+          requestAnimationFrame(() => {
+            workspace.scrollIntoView({
+              block: 'start',
+              behavior: reducedMotion.matches ? 'auto' : 'smooth',
+            })
+            workspace.focus({ preventScroll: true })
+          })
         }
 
         function displayedShapes() {
@@ -1002,7 +1089,10 @@
           }
         }
 
-        $('arrange').addEventListener('click', () => arrange())
+        $('arrange').addEventListener('click', () => {
+          arrange()
+          focusWorkspaceOnMobile()
+        })
         $('reset').addEventListener('click', () => {
           $('count').value = '5'
           $('seed').value = '19'

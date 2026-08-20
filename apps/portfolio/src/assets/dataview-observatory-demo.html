@@ -263,10 +263,12 @@
     .flow-stage svg { width: 100%; height: 100%; }
     .flow-edge { fill: none; stroke: rgba(54, 137, 237, .35); stroke-width: 2; stroke-dasharray: 5 8; animation: dash 3s linear infinite; }
     .flow-edge.active { stroke: var(--cyan); filter: drop-shadow(0 0 5px var(--cyan)); }
+    .flow-edge.is-current { stroke-width: 3; animation-duration: .65s; }
     .flow-node circle { fill: #0a265b; stroke: rgba(74, 149, 244, .6); stroke-width: 1.4; transition: fill 220ms ease, stroke 220ms ease; }
     .flow-node text { fill: #849dc1; font: 8px Inter, sans-serif; text-anchor: middle; }
     .flow-node.active circle { fill: #1557a6; stroke: var(--cyan); filter: drop-shadow(0 0 11px rgba(66, 223, 245, .7)); }
     .flow-node.active text { fill: #e0f8ff; }
+    .flow-node.is-current circle { animation: flow-current 900ms ease-in-out infinite; }
     .packet { fill: var(--cyan); filter: drop-shadow(0 0 6px var(--cyan)); }
     .flow-caption { display: grid; grid-template-columns: 150px 1fr; gap: 12px; padding: 12px; border-top: 1px solid rgba(75, 134, 221, .16); }
     .flow-caption strong { color: #d8edff; font-size: 10px; }
@@ -285,8 +287,10 @@
     .offline-proof b { color: #4dd6b4; font-weight: 600; }
     .footer { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-top: 1px solid rgba(70, 130, 220, .26); color: #536b92; background: rgba(3, 10, 28, .95); font: 7px ui-monospace, monospace; letter-spacing: .03em; }
     .footer strong { color: #6ed8c3; font-weight: 500; }
-    .tour-status { color: #7d98c1; }
+    .tour-status { --tour-progress: 0%; display: inline-grid; min-width: 190px; grid-template-columns: auto 74px; align-items: center; gap: 9px; color: #7d98c1; text-align: right; }
+    .tour-status::after { width: 74px; height: 2px; border-radius: 99px; background: linear-gradient(90deg, var(--cyan) var(--tour-progress), rgba(83,112,158,.3) var(--tour-progress)); content: ""; transition: background 220ms ease; }
     .tour-status.running { color: var(--cyan); }
+    body[data-tour="running"] .view.active .panel { animation: tour-panel-in 520ms cubic-bezier(.2,.8,.2,1) both; }
     .toast { position: absolute; z-index: 100; right: 14px; bottom: 37px; padding: 8px 10px; border: 1px solid rgba(67, 196, 235, .35); border-radius: 4px; color: #cdefff; background: rgba(4, 18, 48, .96); box-shadow: 0 14px 36px rgba(0, 0, 0, .3); font-size: 7px; opacity: 0; pointer-events: none; transform: translateY(6px); transition: 180ms ease; }
     .toast.show { opacity: 1; transform: none; }
     @keyframes view-in { from { opacity: 0; transform: translateY(4px); } }
@@ -295,6 +299,8 @@
     @keyframes pulse { 50% { opacity: .4; } }
     @keyframes node-pulse { 0%, 100% { r: 7; opacity: .6; } 50% { r: 12; opacity: 0; } }
     @keyframes dash { to { stroke-dashoffset: -26; } }
+    @keyframes flow-current { 50% { stroke-width: 3; filter: drop-shadow(0 0 18px rgba(66, 223, 245, .9)); } }
+    @keyframes tour-panel-in { from { opacity: .62; transform: translateY(6px); } }
     @media (max-width: 1000px) {
       .topbar { grid-template-columns: 180px minmax(0,1fr) auto; padding: 0 9px; }
       .brand span, .live { display: none; }
@@ -482,15 +488,26 @@ networkRequests: 0</code></div>
         {title:'03 · 节点共识',description:'十二个模拟节点按固定序列返回确认；流动粒子、节点高亮与事件日志消费同一状态，不依赖独立的时间轴脚本。',latency:'63 ms'},
         {title:'04 · 归档完成',description:'最终记录进入本地归档视图，指标、事件表和流程状态同时收敛，完整展示“数据—视图模型—动态图形”的前端闭环。',latency:'81 ms'}
       ];
-      let state = {view:'overview',tick:0,period:'day',live:true,families:new Set(['alpha','beta','gamma']),mapMode:'family',selectedNode:'NODE-A01',profile:'alpha',flowStep:0,touring:false};
+      let state = {view:'overview',tick:0,period:'day',live:true,families:new Set(['alpha','beta','gamma']),mapMode:'family',selectedNode:'NODE-A01',profile:'alpha',flowStep:0,touring:false,tourComplete:false};
       let liveTimer = null;
       let tourTimer = null;
       let flowTimer = null;
       let clockTimer = null;
       let toastTimer = null;
+      let autoTourTimer = null;
       let tourIndex = 0;
       let flowPlaying = false;
-      const tourViews = ['overview','map','profile','flow'];
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const tourTimeline = [
+        {view:'overview',label:'载入运行快照',tick:1},
+        {view:'map',label:'定位风险节点',mapMode:'risk',selectedNode:'NODE-B05'},
+        {view:'map',label:'收束 Network β',families:['beta']},
+        {view:'profile',label:'打开网络画像',profile:'beta'},
+        {view:'flow',label:'提交请求',flowStep:0},
+        {view:'flow',label:'策略验证',flowStep:1},
+        {view:'flow',label:'节点共识',flowStep:2},
+        {view:'flow',label:'归档完成',flowStep:3}
+      ];
 
       function fmt(value) {
         if (typeof value !== 'number') return value;
@@ -582,8 +599,8 @@ networkRequests: 0</code></div>
       function renderFlow() {
         const step = flowSteps[state.flowStep];
         document.querySelectorAll('[data-flow-step]').forEach(function(button){button.classList.toggle('active',Number(button.dataset.flowStep)===state.flowStep);});
-        document.querySelectorAll('[data-flow-node]').forEach(function(node){node.classList.toggle('active',Number(node.dataset.flowNode)<=state.flowStep);});
-        document.querySelectorAll('[data-edge]').forEach(function(edge){edge.classList.toggle('active',Number(edge.dataset.edge)<state.flowStep);});
+        document.querySelectorAll('[data-flow-node]').forEach(function(node){const index=Number(node.dataset.flowNode);node.classList.toggle('active',index<=state.flowStep);node.classList.toggle('is-current',index===state.flowStep);});
+        document.querySelectorAll('[data-edge]').forEach(function(edge){const index=Number(edge.dataset.edge);edge.classList.toggle('active',index<state.flowStep);edge.classList.toggle('is-current',state.flowStep>0&&index===state.flowStep-1);});
         document.querySelector('#flowStatus').textContent = step.title;
         document.querySelector('#flowDescription').textContent = step.description;
         document.querySelector('#flowLatency').textContent = step.latency;
@@ -591,13 +608,30 @@ networkRequests: 0</code></div>
         document.querySelector('#flowRound').textContent = '#'+String(28+state.tick).padStart(3,'0');
         document.querySelector('#eventLog').innerHTML = flowSteps.slice(0,state.flowStep+1).reverse().map(function(item,index){return '<div class="event-line"><time>10:'+String(21-index).padStart(2,'0')+'</time><span>'+item.title.replace(/^\d+ · /,'')+' · LOCAL_STATE_OK</span></div>';}).join('');
       }
+      function syncControlState() {
+        document.querySelectorAll('[data-map-mode]').forEach(function(button){button.classList.toggle('active',button.dataset.mapMode===state.mapMode);});
+        document.querySelectorAll('[data-family]').forEach(function(button){button.classList.toggle('active',state.families.has(button.dataset.family));});
+        document.querySelectorAll('[data-profile]').forEach(function(button){button.classList.toggle('active',button.dataset.profile===state.profile);});
+      }
+      function renderTourStatus() {
+        const status = document.querySelector('#tourStatus');
+        if (state.touring) {
+          const step = tourTimeline[tourIndex];
+          status.textContent = 'AUTO '+String(tourIndex+1).padStart(2,'0')+'/'+String(tourTimeline.length).padStart(2,'0')+' · '+step.label;
+          status.style.setProperty('--tour-progress',((tourIndex+1)/tourTimeline.length*100).toFixed(0)+'%');
+        } else {
+          status.textContent = (state.tourComplete?'AUTO DEMO COMPLETE':'MANUAL MODE')+' · TICK '+String(state.tick+1).padStart(2,'0');
+          status.style.setProperty('--tour-progress',state.tourComplete?'100%':'0%');
+        }
+        status.classList.toggle('running',state.touring);
+      }
       function renderAll() {
         renderOverview();
         renderMap();
         renderProfile();
         renderFlow();
-        document.querySelector('#tourStatus').textContent = (state.touring?'TOUR RUNNING':'MANUAL MODE')+' · TICK '+String(state.tick+1).padStart(2,'0');
-        document.querySelector('#tourStatus').classList.toggle('running',state.touring);
+        syncControlState();
+        renderTourStatus();
       }
       function setView(view) {
         state.view = view;
@@ -623,38 +657,67 @@ networkRequests: 0</code></div>
         clearInterval(tourTimer);
         tourTimer = null;
         state.touring = false;
+        state.tourComplete = true;
+        document.body.removeAttribute('data-tour');
         document.querySelector('#runTour').classList.remove('active');
-        document.querySelector('#runTour').textContent = '完整巡演';
+        document.querySelector('#runTour').textContent = '↻ 再次演示';
         renderAll();
-        flash('四个纯前端场景巡演完成');
+        flash('八段流程演示完成 · 全程 0 requests');
+      }
+      function applyTourStep() {
+        const step = tourTimeline[tourIndex];
+        if (step.tick !== undefined) state.tick = step.tick;
+        if (step.mapMode) state.mapMode = step.mapMode;
+        if (step.selectedNode) state.selectedNode = step.selectedNode;
+        if (step.families) state.families = new Set(step.families);
+        if (step.profile) state.profile = step.profile;
+        if (step.flowStep !== undefined) state.flowStep = step.flowStep;
+        setView(step.view);
+        document.querySelector('#runTour').textContent = '演示 '+(tourIndex+1)+' / '+tourTimeline.length;
+        renderAll();
       }
       function advanceTour() {
         tourIndex += 1;
-        if (tourIndex >= tourViews.length) {
+        if (tourIndex >= tourTimeline.length) {
           finishTour();
           return;
         }
-        if (tourViews[tourIndex]==='profile') state.profile='beta';
-        if (tourViews[tourIndex]==='flow') state.flowStep=3;
-        setView(tourViews[tourIndex]);
-        document.querySelector('#runTour').textContent = '巡演中 '+(tourIndex+1)+' / 4';
-        renderAll();
+        applyTourStep();
       }
       function resetTourTimer() {
         clearInterval(tourTimer);
         tourTimer = null;
         if (state.touring && !document.hidden) {
-          tourTimer = setInterval(advanceTour,1500);
+          tourTimer = setInterval(advanceTour,1300);
         }
       }
+      function stopTourForManual() {
+        if (!state.touring) return;
+        clearInterval(tourTimer);
+        tourTimer = null;
+        state.touring = false;
+        state.tourComplete = false;
+        document.body.removeAttribute('data-tour');
+        document.querySelector('#runTour').classList.remove('active');
+        document.querySelector('#runTour').textContent = '完整巡演';
+        renderTourStatus();
+      }
       function runTour() {
-        if (state.touring) return;
+        clearTimeout(autoTourTimer);
+        autoTourTimer = null;
+        if (state.touring) {
+          stopTourForManual();
+          return;
+        }
+        clearInterval(flowTimer);
+        flowTimer = null;
+        flowPlaying = false;
         state.touring = true;
+        state.tourComplete = false;
         tourIndex = 0;
-        setView(tourViews[tourIndex]);
+        document.body.dataset.tour = 'running';
         document.querySelector('#runTour').classList.add('active');
-        document.querySelector('#runTour').textContent = '巡演中 1 / 4';
-        renderAll();
+        applyTourStep();
         resetTourTimer();
       }
       function advanceFlow() {
@@ -717,6 +780,13 @@ networkRequests: 0</code></div>
         clearTimeout(toastTimer);
         toastTimer = setTimeout(function(){toast.classList.remove('show');},1500);
       }
+      document.addEventListener('pointerdown',function(event){
+        const interactive = event.target.closest('button,[data-node]');
+        if (!interactive || interactive.id === 'runTour') return;
+        clearTimeout(autoTourTimer);
+        autoTourTimer = null;
+        stopTourForManual();
+      },true);
       document.querySelectorAll('[data-view-button]').forEach(function(button){button.addEventListener('click',function(){setView(button.dataset.viewButton);});});
       document.querySelectorAll('[data-period]').forEach(function(button){button.addEventListener('click',function(){state.period=button.dataset.period;document.querySelectorAll('[data-period]').forEach(function(item){item.classList.toggle('active',item===button);});renderOverview();});});
       document.querySelectorAll('[data-map-mode]').forEach(function(button){button.addEventListener('click',function(){state.mapMode=button.dataset.mapMode;document.querySelectorAll('[data-map-mode]').forEach(function(item){item.classList.toggle('active',item===button);});renderMap();flash('地图着色已切换为'+button.textContent);});});
@@ -735,6 +805,14 @@ networkRequests: 0</code></div>
       });
       resumeIntervals();
       renderAll();
+      if (reducedMotion.matches) {
+        state.flowStep = 3;
+        state.tourComplete = true;
+        setView('flow');
+        renderAll();
+      } else {
+        autoTourTimer = setTimeout(runTour,320);
+      }
     }());
   </script>
 </body>

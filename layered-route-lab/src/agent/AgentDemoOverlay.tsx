@@ -566,6 +566,19 @@ export default function AgentDemoOverlay({
               >×</button>
             </header>
 
+            {running && plan ? (
+              <div className="agent-running-compact" role="status" aria-live="polite">
+                <span className="agent-step-status is-running">••</span>
+                <div>
+                  <small>
+                    正在执行 {Math.max(activeStep + 1, 1)} / {plan.steps.length}
+                  </small>
+                  <strong>{plan.steps[activeStep]?.label || "准备执行计划"}</strong>
+                </div>
+                <code>{completedCount}/{plan.steps.length}</code>
+              </div>
+            ) : null}
+
             <div className="agent-status-strip">
               <span><i /> ROUTE INDEX READY</span>
               <span>APP BRIDGE READY</span>

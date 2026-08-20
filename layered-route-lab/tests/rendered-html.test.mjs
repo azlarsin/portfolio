@@ -46,10 +46,12 @@ test("server-renders the route lab shell", async () => {
 });
 
 test("the onboarding guide connects route layers to the constrained Agent loop", async () => {
-  const [app, guide, overlay] = await Promise.all([
+  const [app, guide, overlay, rootPage, catchAllPage] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/ExperienceGuide.tsx", import.meta.url), "utf8"),
     readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/[...path]/page.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.match(app, /GUIDE_SESSION_KEY/);
@@ -62,7 +64,7 @@ test("the onboarding guide connects route layers to the constrained Agent loop",
   assert.match(app, /pendingModalFocusIdRef\.current = null/);
   assert.match(app, /if \(leavingModalIdRef\.current\)[\s\S]*?if \(!cameFromPop\) return/);
   assert.match(app, /onOpenGuide=\{embedded \? undefined : \(\) => setGuideOpen\(true\)\}/);
-  assert.match(app, /initialLocation=\{createInitialLocation/);
+  assert.match(`${rootPage}\n${catchAllPage}`, /initialLocation=\{createInitialLocation/);
   assert.match(app, /<ExperienceGuide/);
   assert.match(app, /onPushTemporaryPresenter=\{pushPresenter\}/);
   assert.match(app, /onOpenAgent=\{openAgentFromGuide\}/);
@@ -587,7 +589,7 @@ test("route rail combines route navigation with route-less presenters", async ()
   assert.match(app, /<RouteRail/);
   assert.match(app, /temporaryPresenters=\{temporaryPresenterLayers\}/);
   assert.match(app, /onCloseUntilUid=\{closeUntilUid\}/);
-  assert.match(routeRail, /<aside className="route-rail"/);
+  assert.match(routeRail, /className=\{`route-rail /);
   assert.match(routeRail, /className="route-composition-path"/);
   assert.match(routeRail, /className="route-presenter-array"/);
   assert.match(routeRail, /flattenDemoRouteTree\(\)/);
@@ -643,6 +645,35 @@ test("mobile layout keeps controls, content, and the Agent launcher in bounds", 
   assert.match(overlay, /aria-label="打开 Agent Demo"/);
 });
 
+test("mobile route selection expands as an overlay and running Agent collapses to one line", async () => {
+  const [routeRail, css, overlay, agentCss] = await Promise.all([
+    readFile(new URL("../src/RouteRail.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/layered-route-lab.css", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/agent-demo.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(routeRail, /className="route-rail-menu-toggle"/);
+  assert.match(routeRail, /aria-controls="route-rail-routes"/);
+  assert.match(routeRail, /className="route-rail-menu-scrim"/);
+  assert.match(
+    css,
+    /@media \(max-width: 720px\)[\s\S]*?\.route-rail \{[\s\S]*?height: 64px[\s\S]*?\.route-rail nav \{[\s\S]*?position: fixed/,
+  );
+  assert.match(css, /\.lab-route-list \{[\s\S]*?grid-template-columns: repeat\(2/);
+
+  assert.match(overlay, /className="agent-running-compact"/);
+  assert.match(overlay, /正在执行 \{Math\.max\(activeStep \+ 1, 1\)\}/);
+  assert.match(
+    agentCss,
+    /\.agent-overlay\[data-running="true"\] \.agent-panel \{[\s\S]*?top: auto[\s\S]*?height: 72px/,
+  );
+  assert.match(
+    agentCss,
+    /\.agent-panel > :not\(\.agent-running-compact\) \{[\s\S]*?display: none/,
+  );
+});
+
 test("each modal handle owns diagnostics, relative navigation, and focus recovery", async () => {
   const [app, modal, css] = await Promise.all([
     readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
@@ -663,7 +694,7 @@ test("each modal handle owns diagnostics, relative navigation, and focus recover
   );
   assert.match(app, /lastSize=/);
   assert.match(app, /const selectModal = useCallback/);
-  assert.match(app, /modalsRef\.current\.findIndex\(\(modal\) => modal\.id === id\)/);
+  assert.match(app, /currentModals\.findIndex\(\(modal\) => modal\.id === id\)/);
   assert.match(app, /startModalLeave\(targetIndex \+ 1, false\)/);
   assert.match(app, /pendingModalFocusIdRef\.current = null;[\s\S]*?setModalFocusSequence\(\+\+modalFocusSequenceRef\.current\)/);
   assert.match(app, /!remaining\.some\(\(modal\) => modal\.id === focusedModalId\)/);

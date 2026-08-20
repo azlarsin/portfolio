@@ -153,7 +153,7 @@ describe('portfolio acceptance contracts', () => {
     expect(playerPage).not.toContain('const names: Record<DemoExperience')
     expect(deferredFrame).toContain('to={demoPlayerPath(demo.experienceId)}')
     expect(deferredFrame).toContain('to={demoPlayerPath(visual.experienceId)}')
-    expect(deferredFrame).toContain('!visual.experienceId ?')
+    expect(deferredFrame).toContain('visual.experienceId ?')
     expect(deferredFrame).not.toContain('href={demo.source}')
     expect(demoDirectory).toContain('to={demoPlayerPath(project.demo.experienceId)}')
     expect(homeHero).toContain("demoPlayerPath(agentProject.demo?.experienceId || 'layered-route-agent')")
@@ -465,7 +465,7 @@ describe('portfolio acceptance contracts', () => {
       /\b(?:const|let)\s+[A-Za-z_$][\w$]*(?:checkpoints|evaluations)[\w$]*_per_second\s*=\s*30\b/i,
     )
     expect(source).toMatch(
-      /requestAnimationFrame\([\s\S]{0,1800}?(?:\bperformance\.now\(\)|\b(?:timestamp|now|time)\b)[\s\S]{0,1800}?run\.\w*Budget\s*\+=/,
+      /requestAnimationFrame\([\s\S]{0,1800}?(?:\bperformance\.now\(\)|\b(?:timestamp|now|time)\b)[\s\S]{0,1800}?run\.\w*Budget\s*=\s*Math\.min\([\s\S]{0,300}?run\.\w*Budget\s*\+/,
     )
     expect(source).toMatch(
       /\b(?:const|let)\s+[A-Za-z_$][\w$]*(?:(?:steps|evaluations)[\w$]*(?:frame|tick)|(?:frame|tick)[\w$]*(?:steps|evaluations))[\w$]*\s*=\s*[1-9]\d*\b/i,
@@ -935,5 +935,49 @@ describe('portfolio acceptance contracts', () => {
       expect(statSync(assetPath).size, asset).toBeGreaterThan(0)
       expect(readFileSync(assetPath, 'utf8'), asset).toMatch(/<!doctype html|<html/i)
     }
+  })
+
+  it('14. keeps mobile demos focused, legible, and explicit about desktop-only interaction', () => {
+    const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
+    const player = readFileSync(`${sourceRoot}/pages/DemoPlayerPage.tsx`, 'utf8')
+    const playerCss = readFileSync(`${sourceRoot}/styles/demo-player.css`, 'utf8')
+    const irregular = readFileSync(
+      `${sourceRoot}/assets/irregular-shape-layout-lab.html`,
+      'utf8',
+    )
+    const turntable = readFileSync(
+      `${sourceRoot}/assets/turntable-motion-lab.html`,
+      'utf8',
+    )
+    const poke = readFileSync(`${sourceRoot}/assets/poke-editor-demo.html`, 'utf8')
+    const dataview = readFileSync(
+      `${sourceRoot}/assets/dataview-observatory-demo.html`,
+      'utf8',
+    )
+    const bezier = readFileSync(`${sourceRoot}/assets/bezier-picker-lab.html`, 'utf8')
+
+    expect(player).toContain('activePath={experience.casePath}')
+    expect(player).toContain('if (dismissed) return null')
+    expect(playerCss).toContain('--text: #1d1e19')
+    expect(playerCss).toContain('--accent-soft: #20211b')
+
+    expect(irregular).toContain('开始计算 element-${elementNumber} 与 element-1（中心元素）位置…')
+    expect(irregular).toContain('开始移动 element-${elementNumber} 至目标位置…')
+    expect(irregular).toContain('计算结束 · ${state.shapes.length} 个元素已定位')
+    expect(irregular).toContain("workspace.scrollIntoView({")
+    expect(irregular).toContain("workspace.focus({ preventScroll: true })")
+
+    expect(turntable).toMatch(
+      /@media \(max-width: 760px\)[\s\S]*?\.panel \{[\s\S]*?position: absolute[\s\S]*?\.controls \{ grid-template-columns: repeat\(3/,
+    )
+    expect(poke).toContain('请在 PC 平台体验')
+    expect(poke).toContain('class="mobile-pc-notice"')
+
+    expect(dataview).toContain('const tourTimeline = [')
+    expect(dataview).toContain('autoTourTimer = setTimeout(runTour,320)')
+    expect(dataview).toContain("{view:'flow',label:'归档完成',flowStep:3}")
+    expect(bezier).toMatch(
+      /@media \(max-width: 560px\)[\s\S]*?\.shell \{[^}]*overflow-x: hidden/,
+    )
   })
 })
