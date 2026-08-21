@@ -940,6 +940,10 @@ describe('portfolio acceptance contracts', () => {
   it('14. keeps mobile demos focused, legible, and explicit about desktop-only interaction', () => {
     const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
     const player = readFileSync(`${sourceRoot}/pages/DemoPlayerPage.tsx`, 'utf8')
+    const sidebar = readFileSync(
+      `${sourceRoot}/components/layout/Sidebar.tsx`,
+      'utf8',
+    )
     const playerCss = readFileSync(`${sourceRoot}/styles/demo-player.css`, 'utf8')
     const irregular = readFileSync(
       `${sourceRoot}/assets/irregular-shape-layout-lab.html`,
@@ -960,6 +964,10 @@ describe('portfolio acceptance contracts', () => {
     expect(player).toContain('if (dismissed) return null')
     expect(playerCss).toContain('--text: #1d1e19')
     expect(playerCss).toContain('--accent-soft: #20211b')
+    expect(sidebar).toContain('archiveProjects.filter((project) => Boolean(project.demo))')
+    expect(sidebar).toContain('className="nav-projects-toggle"')
+    expect(sidebar).toContain('className="nav-demo"')
+    expect(sidebar).toContain('to={demoPlayerPath(demo.experienceId)}')
 
     expect(irregular).toContain('开始计算 element-${elementNumber} 与 element-1（中心元素）位置…')
     expect(irregular).toContain('开始移动 element-${elementNumber} 至目标位置…')
@@ -970,6 +978,10 @@ describe('portfolio acceptance contracts', () => {
     expect(turntable).toMatch(
       /@media \(max-width: 760px\)[\s\S]*?\.panel \{[\s\S]*?position: absolute[\s\S]*?\.controls \{ grid-template-columns: repeat\(3/,
     )
+    expect(turntable).toContain('id="equalize"')
+    expect(turntable).toContain('id="randomSpace"')
+    expect(turntable).toContain('function equalize()')
+    expect(turntable).toContain('function randomizeSpace()')
     expect(poke).toContain('请在 PC 平台体验')
     expect(poke).toContain('class="mobile-pc-notice"')
 

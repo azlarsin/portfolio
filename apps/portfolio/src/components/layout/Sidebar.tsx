@@ -6,7 +6,8 @@ import {
   type PointerEvent,
   type RefObject,
 } from 'react'
-import { getLocalizedProfile } from '../../data/localized'
+import { archiveProjects, demoPlayerPath } from '../../data'
+import { getLocalizedProfile, getLocalizedProjects } from '../../data/localized'
 import type { ResolvedRoute } from '../../app/router'
 import { AppLink } from '../common/AppLink'
 import { LanguageToggle } from '../common/LanguageToggle'
@@ -39,6 +40,15 @@ export function PortfolioNavigationContent({
   const { copy, language } = useLanguage()
   const localizedProfile = getLocalizedProfile(language)
   const currentPath = activePath || route.pathname
+  const [projectDemosOpen, setProjectDemosOpen] = useState(true)
+  const currentExperienceId =
+    route.pathname === '/demo'
+      ? new URLSearchParams(route.search).get('experience')
+      : null
+  const demoProjects = getLocalizedProjects(
+    archiveProjects.filter((project) => Boolean(project.demo)),
+    language,
+  )
 
   return (
     <>
@@ -84,14 +94,55 @@ export function PortfolioNavigationContent({
         >
           {copy.navigation.experience}
         </AppLink>
-        <AppLink
-          to="/archive"
-          onClick={onNavigate}
-          aria-current={isCurrent(currentPath, '/archive') ? 'page' : undefined}
-          className="nav-primary"
-        >
-          {copy.navigation.projects}
-        </AppLink>
+        <div className="nav-projects">
+          <div className="nav-projects-heading">
+            <AppLink
+              to="/archive"
+              onClick={onNavigate}
+              aria-current={
+                !currentExperienceId && isCurrent(currentPath, '/archive')
+                  ? 'page'
+                  : undefined
+              }
+              className="nav-primary"
+            >
+              {copy.navigation.projects}
+            </AppLink>
+            <button
+              type="button"
+              className="nav-projects-toggle"
+              aria-label={copy.navigation.demoShortcuts}
+              aria-expanded={projectDemosOpen}
+              aria-controls="personal-project-demos"
+              onClick={() => setProjectDemosOpen((value) => !value)}
+            >
+              <span aria-hidden="true" />
+            </button>
+          </div>
+          {projectDemosOpen ? (
+            <div className="nav-demo-list" id="personal-project-demos">
+              <span>{copy.navigation.demos}</span>
+              {demoProjects.map((project, index) => {
+                const demo = project.demo
+                if (!demo) return null
+                const isActive = currentExperienceId === demo.experienceId
+                return (
+                  <AppLink
+                    key={demo.experienceId}
+                    to={demoPlayerPath(demo.experienceId)}
+                    onClick={onNavigate}
+                    aria-current={isActive ? 'page' : undefined}
+                    className="nav-demo"
+                  >
+                    <small>{String(index + 1).padStart(2, '0')}</small>
+                    <span>{project.shortTitle}</span>
+                    <i aria-hidden="true">↗</i>
+                  </AppLink>
+                )
+              })}
+            </div>
+          ) : null}
+        </div>
         <AppLink
           to="/resume"
           onClick={onNavigate}

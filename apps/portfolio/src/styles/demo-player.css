@@ -339,7 +339,8 @@
 }
 
 .demo-navigation-drawer .nav-primary[aria-current='page'],
-.demo-navigation-drawer .nav-case[aria-current='page'] {
+.demo-navigation-drawer .nav-case[aria-current='page'],
+.demo-navigation-drawer .nav-demo[aria-current='page'] {
   background: #20211b;
   color: #f7f2e2;
 }

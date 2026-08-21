@@ -24,6 +24,8 @@ export const siteCopy = {
       selectedWork: '精选案例',
       experience: '职业经历',
       projects: '个人项目',
+      demos: '交互 Demo',
+      demoShortcuts: '展开或收起个人项目 Demo 快捷入口',
       resume: '简历',
       availability: '开放工作机会与项目交流',
       selectedCases: [
@@ -276,6 +278,8 @@ export const siteCopy = {
       selectedWork: 'Selected Work',
       experience: 'Experience',
       projects: 'Personal Projects',
+      demos: 'Interactive Demos',
+      demoShortcuts: 'Expand or collapse personal-project demo shortcuts',
       resume: 'Resume',
       availability: 'Open to opportunities and project conversations',
       selectedCases: [
