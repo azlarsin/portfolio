@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { articleUrl, formatDate, getPublicArticles, publishedAt } from '../../lib/content';
+
+const articles = await getPublicArticles();
+const articlesByYear = articles.reduce((years, article) => {
+  const year = publishedAt(article).slice(0, 4);
+  years.set(year, [...(years.get(year) ?? []), article]);
+  return years;
+}, new Map<string, typeof articles>());
+---
+
+<BaseLayout title="归档">
+  <section class="page page-narrow">
+    <p class="eyebrow">Archive</p>
+    <h1 class="page-title">按时间回看。</h1>
+    <p class="page-lead">这些文章以最初公开时间排序。更新日期会在正文页单独保留，不让补记的内容失去它原本的位置。</p>
+
+    <div style="margin-top: 56px;">
+      {[...articlesByYear.entries()].map(([year, yearArticles]) => (
+        <section class="archive-year" aria-labelledby={`year-${year}`}>
+          <h2 id={`year-${year}`}>{year}<span>{yearArticles.length} 篇</span></h2>
+          <ol class="archive-list">
+            {yearArticles.map((article) => (
+              <li>
+                <time datetime={publishedAt(article)}>{formatDate(publishedAt(article)).replace(/^\d{4}年/, '')}</time>
+                <div>
+                  <a href={articleUrl(article)}>{article.data.title}</a>
+                  {article.data.description && <p>{article.data.description}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+    </div>
+  </section>
+</BaseLayout>

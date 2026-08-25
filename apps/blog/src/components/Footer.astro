@@ -1,0 +1,15 @@
+---
+import { SITE } from '../data/site';
+---
+
+<footer class="site-footer" data-pagefind-ignore>
+  <div class="footer-inner">
+    <p>长期写作，也长期整理。</p>
+    <div class="footer-links">
+      <a href={SITE.links.portfolio}>Portfolio</a>
+      <a href={SITE.links.github}>GitHub</a>
+      <a href="/rss.xml">RSS</a>
+    </div>
+    <small>© {new Date().getFullYear()} {SITE.author}</small>
+  </div>
+</footer>

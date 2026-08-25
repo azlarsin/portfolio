@@ -1,0 +1,59 @@
+name: Publish Blog to GitHub Pages repository
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: blog-pages-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Blog source
+        uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.1.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify Blog build, routes, and Pagefind index
+        run: pnpm verify:blog
+
+      - name: Check out publishing repository
+        uses: actions/checkout@v6
+        with:
+          repository: azlarsin/azlarsin.github.io
+          ref: master
+          ssh-key: ${{ secrets.BLOG_PAGES_DEPLOY_KEY }}
+          ssh-strict: true
+          persist-credentials: true
+          path: blog-pages
+
+      - name: Replace the static publishing artifact
+        run: |
+          set -euo pipefail
+          test -d blog-pages/.git
+          rsync -a --delete --exclude='.git/' apps/blog/dist/ blog-pages/
+          test -d blog-pages/.git
+          git -C blog-pages config user.name 'github-actions[bot]'
+          git -C blog-pages config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C blog-pages add --all
+          if ! git -C blog-pages diff --cached --quiet; then
+            git -C blog-pages commit -m 'Deploy blog from ${{ github.sha }}'
+            git -C blog-pages push origin HEAD:master
+          fi

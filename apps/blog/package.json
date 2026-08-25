@@ -1,0 +1,26 @@
+{
+  "name": "@azlar/blog",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0 --port 4321",
+    "build": "astro build && pagefind --site dist --glob \"article/**/*.html\"",
+    "build:astro": "astro build",
+    "check": "NODE_OPTIONS=--max-old-space-size=6144 astro check",
+    "preview": "astro preview --host 0.0.0.0 --port 4321",
+    "content:migrate": "node scripts/migrate-legacy-content.mjs",
+    "test:contracts": "node --test tests/blog-contract.test.mjs",
+    "test": "pnpm build && pnpm test:contracts",
+    "verify": "pnpm check && pnpm test"
+  },
+  "dependencies": {
+    "@astrojs/rss": "4.0.19",
+    "astro": "7.2.4"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "pagefind": "1.5.2",
+    "typescript": "5.9.3"
+  }
+}

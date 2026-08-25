@@ -1,0 +1,55 @@
+---
+import EntryCard from '../components/EntryCard.astro';
+import Pagination from '../components/Pagination.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPublicArticles, getTagCounts, pageCount, pageItems, tagUrl } from '../lib/content';
+
+const articles = await getPublicArticles();
+const latestArticles = pageItems(articles, 1);
+const totalPages = pageCount(articles);
+const popularTags = getTagCounts(articles).slice(0, 8);
+---
+
+<BaseLayout title="写下仍在发生的事">
+  <section class="page">
+    <div class="home-hero">
+      <p class="eyebrow">Azlar Notes · since 2016</p>
+      <h1>长期写作，<br /><em>也长期整理。</em></h1>
+      <p>技术、生活、游戏与一些尚未归类的片段。这里保留完整的文章，也给持续发生的记录留出位置。</p>
+      <div class="hero-actions">
+        <a class="button-link" href="/archives/">浏览全部归档</a>
+        <a class="button-link button-link-subtle" href="/search/">搜索笔记</a>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <section aria-labelledby="latest-writing">
+        <div class="section-heading">
+          <h2 id="latest-writing">最近更新</h2>
+          <a href="/archives/">全部文章 →</a>
+        </div>
+        <div class="entry-list">
+          {latestArticles.map((article) => <EntryCard article={article} />)}
+        </div>
+        <Pagination currentPage={1} totalPages={totalPages} />
+      </section>
+
+      <aside class="home-aside">
+        <section class="aside-block">
+          <h2>此刻</h2>
+          <p>把分散的记录逐步收回这个长期可维护的个人档案。旧文保留原样，新内容慢慢连接起来。</p>
+        </section>
+        <section class="aside-block">
+          <h2>常见标签</h2>
+          <ul>
+            {popularTags.map(([tag, count]) => <li><a href={tagUrl(tag)}>{tag} <span aria-hidden="true">({count})</span></a></li>)}
+          </ul>
+        </section>
+        <section class="aside-block">
+          <h2>另一处</h2>
+          <p><a href="https://me.azlar.cc">查看 Portfolio 与工作经历 ↗</a></p>
+        </section>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

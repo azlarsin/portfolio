@@ -1,0 +1,26 @@
+---
+import type { Article } from '../lib/content';
+import { articleUrl, formatDate, publishedAt, tagUrl } from '../lib/content';
+
+interface Props {
+  article: Article;
+  compact?: boolean;
+}
+
+const { article, compact = false } = Astro.props;
+---
+
+<article class:list={['entry-card', { 'entry-card-compact': compact }]}>
+  <div class="entry-card-meta">
+    <time datetime={publishedAt(article)}>{formatDate(publishedAt(article))}</time>
+    <span aria-hidden="true">·</span>
+    <span>{article.data.type === 'log' ? '记录' : '文章'}</span>
+  </div>
+  <h2><a href={articleUrl(article)}>{article.data.title}</a></h2>
+  {article.data.description && <p>{article.data.description}</p>}
+  {article.data.tags.length > 0 && (
+    <ul class="tag-list" aria-label={`${article.data.title} 的标签`}>
+      {article.data.tags.slice(0, compact ? 2 : 4).map((tag) => <li><a href={tagUrl(tag)}>{tag}</a></li>)}
+    </ul>
+  )}
+</article>

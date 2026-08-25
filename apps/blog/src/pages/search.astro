@@ -1,0 +1,121 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="搜索" description="搜索 Azlar Notes 中公开发布的文章。" noindex>
+  <section class="page page-narrow">
+    <p class="eyebrow">Search</p>
+    <h1 class="page-title">找回一个线索。</h1>
+    <p class="page-lead">搜索索引只包含公开文章。未列出的历史直链、RSS 与 sitemap 都不会进入结果。</p>
+    <form class="search-form" role="search">
+      <label class="sr-only" for="search-input">搜索文章</label>
+      <input id="search-input" name="q" type="search" autocomplete="off" placeholder="标题、正文或标签" />
+      <button type="submit">搜索</button>
+    </form>
+    <p id="search-status" class="search-status" role="status">生产构建完成后，搜索索引会在这里载入。</p>
+    <div id="search-results" class="search-results" aria-live="polite"></div>
+  </section>
+</BaseLayout>
+
+<!--
+  This stays inline so Astro/Vite does not wrap Pagefind's static module import
+  in its build-time preload helper. Pagefind is created after Astro builds the
+  site, so the browser must load the generated module from the final site root.
+-->
+<script is:inline type="module">
+  const form = document.querySelector('.search-form');
+  const input = document.querySelector('#search-input');
+  const status = document.querySelector('#search-status');
+  const resultsContainer = document.querySelector('#search-results');
+
+  let pagefind;
+
+  function setStatus(message) {
+    if (status) status.textContent = message;
+  }
+
+  function renderExcerpt(container, excerpt) {
+    const markers = /<\/?mark>/gu;
+    let cursor = 0;
+    let highlighted;
+
+    for (const match of excerpt.matchAll(markers)) {
+      const index = match.index ?? 0;
+      (highlighted ?? container).append(document.createTextNode(excerpt.slice(cursor, index)));
+      if (match[0] === '<mark>' && !highlighted) {
+        highlighted = document.createElement('mark');
+        container.append(highlighted);
+      } else if (match[0] === '</mark>' && highlighted) {
+        highlighted = undefined;
+      } else {
+        (highlighted ?? container).append(document.createTextNode(match[0]));
+      }
+      cursor = index + match[0].length;
+    }
+    (highlighted ?? container).append(document.createTextNode(excerpt.slice(cursor)));
+  }
+
+  async function renderResults(results) {
+    if (!resultsContainer) return;
+    const entries = await Promise.all(results.map((result) => result.data()));
+    resultsContainer.replaceChildren();
+    for (const data of entries) {
+      const article = document.createElement('article');
+      article.className = 'search-result';
+      const title = document.createElement('h2');
+      const link = document.createElement('a');
+      link.href = data.url;
+      link.textContent = data.meta.title || data.url;
+      title.append(link);
+      article.append(title);
+      if (data.excerpt) {
+        const excerpt = document.createElement('p');
+        renderExcerpt(excerpt, data.excerpt);
+        article.append(excerpt);
+      }
+      resultsContainer.append(article);
+    }
+  }
+
+  async function loadPagefind() {
+    try {
+      pagefind = await import('/pagefind/pagefind.js');
+      await pagefind.init();
+      setStatus('输入关键词开始搜索。');
+      const query = new URLSearchParams(window.location.search).get('q');
+      if (query && input) {
+        input.value = query;
+        await runSearch(query);
+      }
+    } catch (error) {
+      console.error('Pagefind search initialization failed:', error);
+      setStatus('搜索索引只会在生产构建中生成；本地开发时此页面保持可用，但暂不提供结果。');
+    }
+  }
+
+  async function runSearch(query) {
+    if (!pagefind || !query.trim()) return;
+    setStatus('正在搜索…');
+    try {
+      const search = await pagefind.search(query);
+      await renderResults(search.results);
+      setStatus(search.results.length ? `找到 ${search.results.length} 条结果。` : '没有找到匹配的公开文章。');
+    } catch (error) {
+      console.error('Pagefind search failed:', error);
+      resultsContainer?.replaceChildren();
+      setStatus('搜索暂时不可用，请稍后重试。');
+    }
+  }
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const query = input?.value ?? '';
+    const url = new URL(window.location.href);
+    if (query.trim()) url.searchParams.set('q', query);
+    else url.searchParams.delete('q');
+    history.replaceState(null, '', url);
+    await runSearch(query);
+  });
+
+  void loadPagefind();
+</script>

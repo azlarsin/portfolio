@@ -1,0 +1,34 @@
+---
+import type { GetStaticPaths } from 'astro';
+import EntryCard from '../../components/EntryCard.astro';
+import Pagination from '../../components/Pagination.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublicArticles, pageCount, pageItems } from '../../lib/content';
+
+export const getStaticPaths = (async () => {
+  const articles = await getPublicArticles();
+  const totalPages = pageCount(articles);
+
+  return Array.from({ length: Math.max(0, totalPages - 1) }, (_, index) => {
+    const currentPage = index + 2;
+    return {
+      params: { page: String(currentPage) },
+      props: { articles: pageItems(articles, currentPage), currentPage, totalPages },
+    };
+  });
+}) satisfies GetStaticPaths;
+
+const { articles, currentPage, totalPages } = Astro.props;
+---
+
+<BaseLayout title={`第 ${currentPage} 页`} description={`Azlar Notes 的第 ${currentPage} 页文章列表。`}>
+  <section class="page page-narrow">
+    <p class="eyebrow">Writing</p>
+    <h1 class="page-title">继续往前翻。</h1>
+    <p class="page-lead">第 {currentPage} 页，共 {totalPages} 页。</p>
+    <div class="entry-list" style="margin-top: 48px;">
+      {articles.map((article) => <EntryCard article={article} />)}
+    </div>
+    <Pagination currentPage={currentPage} totalPages={totalPages} />
+  </section>
+</BaseLayout>

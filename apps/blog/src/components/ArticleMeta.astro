@@ -1,0 +1,20 @@
+---
+import type { Article } from '../lib/content';
+import { formatDate, publishedAt, tagUrl, updatedAt } from '../lib/content';
+
+const { article } = Astro.props as { article: Article };
+const publicationDate = publishedAt(article);
+const lastUpdatedDate = updatedAt(article);
+const wasUpdated = lastUpdatedDate !== publicationDate;
+---
+
+<div class="article-meta">
+  <span>写于 <time datetime={publicationDate}>{formatDate(publicationDate)}</time></span>
+  {wasUpdated && <span>更新于 <time datetime={lastUpdatedDate}>{formatDate(lastUpdatedDate)}</time></span>}
+  <span>作者 {article.data.author}</span>
+</div>
+{article.data.tags.length > 0 && (
+  <ul class="tag-list article-tags" aria-label="文章标签">
+    {article.data.tags.map((tag) => <li><a href={tagUrl(tag)}>{tag}</a></li>)}
+  </ul>
+)}

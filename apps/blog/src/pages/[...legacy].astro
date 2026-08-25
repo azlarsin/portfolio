@@ -1,0 +1,43 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import ArticleMeta from '../components/ArticleMeta.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getUnlistedArticles, isModernAbout } from '../lib/content';
+
+export const getStaticPaths = (async () => {
+  const articles = await getUnlistedArticles();
+  return articles
+    .filter((article) => !isModernAbout(article))
+    .map((article) => ({ params: { legacy: article.data.legacySlug }, props: { article } }));
+}) satisfies GetStaticPaths;
+
+const { article } = Astro.props;
+const { Content, headings } = await render(article);
+---
+
+<BaseLayout title={article.data.title} description={article.data.description} openGraphType="article" noindex>
+  <article class="article-page" aria-label="未列出的历史文章">
+    <div class="article-shell">
+      <div>
+        <header class="article-header">
+          <p class="article-kicker">未列出的历史文章</p>
+          <h1>{article.data.title}</h1>
+          {article.data.description && <p class="article-summary">{article.data.description}</p>}
+          <ArticleMeta article={article} />
+        </header>
+        {headings.length > 0 && (
+          <div class="mobile-toc-wrap">
+            <details>
+              <summary>文章目录</summary>
+              <TableOfContents headings={headings} mobile />
+            </details>
+          </div>
+        )}
+        <div class="article-content"><Content /></div>
+      </div>
+      <aside class="desktop-toc"><TableOfContents headings={headings} /></aside>
+    </div>
+  </article>
+</BaseLayout>
