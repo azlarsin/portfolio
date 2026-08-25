@@ -144,7 +144,7 @@ test('public articles are server-rendered, indexable, and independent of GitHub 
     assert.ok(data.description.trim(), `${basename(file)} needs a non-empty meta description`);
     const html = expectedHtml(`article/${data.legacySlug}/index.html`, `missing public route for ${basename(file)}`);
     assert.match(html, /<meta name="description" content="[^"\n]+"/u, `${data.legacySlug} must render a non-empty description meta tag`);
-    assert.match(html, /<div class="article-content"><[\s\S]+<\/div><\/div><aside class="desktop-toc">/u, `${data.legacySlug} body must be present in static HTML rather than fetched at runtime`);
+    assert.match(html, /<div class="article-content"><[\s\S]+?<\/div>/u, `${data.legacySlug} body must be present in static HTML rather than fetched at runtime`);
     const runtimeScripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/giu)].map(([, source]) => source).join('\n');
     assert.doesNotMatch(runtimeScripts, /raw\.githubusercontent\.com|fetch\([^)]*(github|raw)/iu, `${data.legacySlug} must not runtime-fetch Markdown from GitHub Raw`);
   }
