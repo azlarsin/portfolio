@@ -183,6 +183,28 @@ test('core generated pages preserve accessible viewport and static search/discov
   assert.ok(existsSync(join(publicDirectory, '.nojekyll')));
 });
 
+test('core Blog pages use the current concise labels', () => {
+  requireBuiltArtifact();
+  const labels = [
+    ['index.html', 'src/pages/index.astro', '文章与记录'],
+    ['archives/index.html', 'src/pages/archives/index.astro', '文章归档'],
+    ['tags/index.html', 'src/pages/tags/index.astro', '标签'],
+    ['search/index.html', 'src/pages/search.astro', '搜索'],
+  ];
+
+  for (const [route, sourcePath, label] of labels) {
+    const source = read(join(appDirectory, sourcePath));
+    const html = expectedHtml(route, `missing core page /${route}`);
+    assert.match(source, new RegExp(`<h1[^>]*>${label}</h1>`, 'u'), `${sourcePath} must use the current page label`);
+    assert.match(html, new RegExp(`<h1[^>]*>${label}</h1>`, 'u'), `${route} must render the current page label`);
+  }
+
+  const footerSource = read(join(appDirectory, 'src/components/Footer.astro'));
+  const homeHtml = expectedHtml('index.html', 'missing core page /index.html');
+  assert.match(footerSource, /<p>Azlar Notes<\/p>/u, 'the footer source must use the current signature');
+  assert.match(homeHtml, /<footer[^>]*>[\s\S]*<p>Azlar Notes<\/p>/u, 'the built footer must render the current signature');
+});
+
 test('search loads Pagefind as an unbundled static module and keeps excerpts safely text-rendered', () => {
   requireBuiltArtifact();
   const source = read(join(appDirectory, 'src/pages/search.astro'));

@@ -8,7 +8,7 @@ const tags = getTagCounts(await getPublicArticles());
 <BaseLayout title="标签">
   <section class="page page-narrow">
     <p class="eyebrow">Tags</p>
-    <h1 class="page-title">从一个线索继续。</h1>
+    <h1 class="page-title">标签</h1>
     <p class="page-lead">标签保留为旧文章的上下文，而不是唯一的导航方式。条目少的标签也值得被完整保留。</p>
     <nav class="tag-cloud" aria-label="文章标签">
       {tags.map(([tag, count]) => <a href={tagUrl(tag)}>{tag}<small>{count}</small></a>)}
