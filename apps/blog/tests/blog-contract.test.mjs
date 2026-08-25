@@ -205,6 +205,27 @@ test('core Blog pages use the current concise labels', () => {
   assert.match(homeHtml, /<footer[^>]*>[\s\S]*<p>Azlar Notes<\/p>/u, 'the built footer must render the current signature');
 });
 
+test('home and About copy stay direct, and article comments retain the legacy Disqus identity', () => {
+  requireBuiltArtifact();
+  const homeSource = read(join(appDirectory, 'src/pages/index.astro'));
+  const homeHtml = expectedHtml('index.html', 'home page must be generated');
+  const aboutSource = read(join(appDirectory, 'src/pages/about.astro'));
+  const aboutHtml = expectedHtml('about/index.html', 'About page must be generated');
+  const headerSource = read(join(appDirectory, 'src/components/Header.astro'));
+  const commentsSource = read(join(appDirectory, 'src/components/Comments.astro'));
+  const articleHtml = expectedHtml('article/blog/index.html', 'representative article must be generated');
+
+  for (const removed of ['技术、生活、游戏与一些尚未归类的片段', '此刻', '把分散的记录逐步收回', '一个仍在生长的个人档案']) {
+    assert.doesNotMatch(`${homeSource}\n${homeHtml}\n${aboutSource}\n${aboutHtml}`, new RegExp(removed, 'u'));
+  }
+  assert.match(aboutHtml, /为什么写这个 Blog/u);
+  assert.match(aboutHtml, /查看最新的 Portfolio/u);
+  assert.doesNotMatch(headerSource, /portfolio-link|>Portfolio ↗</u, 'primary navigation must not highlight Portfolio');
+  assert.match(commentsSource, /https:\/\/azlarsin\.disqus\.com\/embed\.js/u);
+  assert.match(commentsSource, /this\.page\.identifier = window\.location\.pathname/u);
+  assert.match(articleHtml, /id="disqus_thread"/u);
+});
+
 test('search loads Pagefind as an unbundled static module and keeps excerpts safely text-rendered', () => {
   requireBuiltArtifact();
   const source = read(join(appDirectory, 'src/pages/search.astro'));

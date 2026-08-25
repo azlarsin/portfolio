@@ -2,6 +2,7 @@
 import type { GetStaticPaths } from 'astro';
 import { render } from 'astro:content';
 import ArticleMeta from '../components/ArticleMeta.astro';
+import Comments from '../components/Comments.astro';
 import TableOfContents from '../components/TableOfContents.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getUnlistedArticles, isModernAbout } from '../lib/content';
@@ -36,6 +37,7 @@ const { Content, headings } = await render(article);
           </div>
         )}
         <div class="article-content"><Content /></div>
+        <Comments title={article.data.title} />
       </div>
       <aside class="desktop-toc"><TableOfContents headings={headings} /></aside>
     </div>

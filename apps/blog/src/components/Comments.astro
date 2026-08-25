@@ -1,0 +1,29 @@
+---
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<section class="comments-section" data-pagefind-ignore aria-labelledby="comments-title">
+  <h2 id="comments-title">评论</h2>
+  <div id="disqus_thread" data-article-title={title}></div>
+  <noscript>请启用 JavaScript 查看评论。</noscript>
+</section>
+
+<script is:inline>
+  const thread = document.querySelector('#disqus_thread');
+  if (thread) {
+    window.disqus_config = function () {
+      this.page.identifier = window.location.pathname;
+      this.page.url = window.location.origin + window.location.pathname;
+      this.page.title = thread.dataset.articleTitle || document.title;
+    };
+
+    const script = document.createElement('script');
+    script.src = 'https://azlarsin.disqus.com/embed.js';
+    script.setAttribute('data-timestamp', String(Date.now()));
+    (document.head || document.body).appendChild(script);
+  }
+</script>

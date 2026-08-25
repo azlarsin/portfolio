@@ -34,7 +34,6 @@ function active(href: string) {
         </svg>
         <span>搜索</span>
       </a>
-      <a class="portfolio-link" href={SITE.links.portfolio}>Portfolio <span aria-hidden="true">↗</span></a>
       <ThemeToggle />
     </nav>
 
@@ -47,7 +46,6 @@ function active(href: string) {
         <nav aria-label="移动端主导航">
           {navigation.map((item) => <a href={item.href} aria-current={active(item.href) ? 'page' : undefined}>{item.label}</a>)}
           <a href="/search/">搜索</a>
-          <a href={SITE.links.portfolio}>Portfolio ↗</a>
         </nav>
       </details>
     </div>

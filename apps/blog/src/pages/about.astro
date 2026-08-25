@@ -3,27 +3,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { SITE } from '../data/site';
 ---
 
-<BaseLayout title="关于" description="陈成的个人笔记、维护边界与通向 Portfolio 的入口。">
+<BaseLayout title="关于" description="为什么写这个 Blog，以及最新的 Portfolio。">
   <section class="page page-narrow">
-    <p class="eyebrow">About</p>
-    <h1 class="page-title">一个仍在生长的个人档案。</h1>
-    <p class="page-lead">这里不是简历的副本，而是把技术、生活、兴趣与当时的判断慢慢留下来的地方。</p>
+    <h1 class="page-title">为什么写这个 Blog</h1>
 
-    <div class="about-layout">
-      <div class="about-copy" data-pagefind-body>
-        <p>我是陈成，长期做前端与全栈开发，也一直保留写笔记的习惯。早期文章有很强的时间印记：旧技术、当时的困惑、未完成的项目与不加修饰的生活记录。我想把它们保留住，再让新的内容以更容易维护的方式接续下去。</p>
-        <h2>这里会继续收集什么</h2>
-        <p>技术实践、观影与游戏记录、真实发生的事件，以及来自我自己账号的公开内容。它们会先经过整理、关联与人工确认；不是每一条即时动态都需要被重新发布。</p>
-        <h2>和 Portfolio 的关系</h2>
-        <p>Blog 关注长期写作和个人时间线；Portfolio 聚焦职业经历、作品与公开项目。两边共享同一个人，但不应该长成同一种页面。</p>
-      </div>
-      <aside class="about-links">
-        <h2>继续了解</h2>
-        <p>职业经历与项目放在 Portfolio；这里保留更慢、更私人的写作脉络。</p>
-        <a href={SITE.links.portfolio}>Portfolio <span aria-hidden="true">↗</span></a>
-        <a href={SITE.links.experience}>工作经历 <span aria-hidden="true">↗</span></a>
-        <a href={SITE.links.github}>GitHub <span aria-hidden="true">↗</span></a>
-      </aside>
+    <div class="about-copy about-simple" data-pagefind-body>
+      <ul>
+        <li>工作以来，做了很多项目，也解决过许多问题，但仍然觉得自己没有明确的核心竞争力，希望通过这个项目持续提高自己。</li>
+        <li>我喜欢向身边的人分享收藏和经验，但一直没有系统整理。随着越来越多的链接失效，我决定建立这个 Blog，把这些内容长期保存下来。</li>
+        <li>这个 Blog 最初基于 React 编写，开发过程记录在<a href="/article/blog/">《开发日历》</a>中。</li>
+      </ul>
+
+      <h2>了解更多 / 工作相关</h2>
+      <p><a href={SITE.links.portfolio}>查看最新的 Portfolio <span aria-hidden="true">↗</span></a></p>
     </div>
   </section>
 </BaseLayout>
