@@ -9,7 +9,7 @@ legacySlug: "QNAP-折腾笔记"
 visibility: public
 publishedAt: "2023-02-12 19:46:19"
 updatedAt: "2025-02-09 03:29:29"
-description: "[TOC]"
+description: "记录 QNAP NAS 的 SSH 登录、RAID1 降级与 crontab 配置问题。"
 type: log
 ---
 [TOC]

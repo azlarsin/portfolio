@@ -32,7 +32,7 @@ const articleJsonLd = {
 ---
 
 <BaseLayout title={article.data.title} description={article.data.description} openGraphType="article" jsonLd={articleJsonLd}>
-  <article class="article-page" data-pagefind-body data-pagefind-meta={`title:${article.data.title}`}>
+  <article class:list={['article-page', { 'article-page-single': headings.length === 0 }]} data-pagefind-body data-pagefind-meta={`title:${article.data.title}`}>
     <div class="article-shell">
       <div>
         <header class="article-header">
@@ -52,7 +52,7 @@ const articleJsonLd = {
         <div class="article-content"><Content /></div>
         <Comments title={article.data.title} />
       </div>
-      <aside class="desktop-toc"><TableOfContents headings={headings} /></aside>
+      {headings.length > 0 && <aside class="desktop-toc"><TableOfContents headings={headings} /></aside>}
     </div>
   </article>
 </BaseLayout>

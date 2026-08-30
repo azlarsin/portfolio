@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { basename, dirname, extname, join, relative, resolve } from 'node:path';
+import { basename, dirname, extname, join, relative, resolve, sep } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
@@ -70,6 +70,33 @@ function requireBuiltArtifact() {
   assert.ok(existsSync(distDirectory), 'Build artifact is missing. Run `pnpm --filter @azlar/blog build` before `pnpm test:contracts`.');
 }
 
+function relativeLuminance(hex) {
+  const channels = [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255);
+  const [red, green, blue] = channels.map((channel) => (
+    channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  ));
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}
+
+function contrastRatio(left, right) {
+  const leftLuminance = relativeLuminance(left);
+  const rightLuminance = relativeLuminance(right);
+  return (Math.max(leftLuminance, rightLuminance) + 0.05) / (Math.min(leftLuminance, rightLuminance) + 0.05);
+}
+
+function outputForUrl(pathname) {
+  const decodedPath = decodeURIComponent(pathname);
+  if (decodedPath === '/') return output('index.html');
+  if (decodedPath.endsWith('/')) return output(join(decodedPath.slice(1), 'index.html'));
+  return output(decodedPath.slice(1));
+}
+
+function pageUrl(file) {
+  const path = relative(distDirectory, file).split('\\').join('/');
+  if (path === 'index.html') return new URL('https://blog.azlar.cc/');
+  return new URL(`https://blog.azlar.cc/${path.replace(/index\.html$/u, '')}`);
+}
+
 test('committed content preserves the self-contained legacy inventory and game body', () => {
   assert.equal(fixture.schemaVersion, 1, 'legacy fixture schema version must be supported');
   assert.equal(fixture.publicArticleRoutes.length, fixture.resources.publicArticles, 'fixture must list every public route');
@@ -91,7 +118,15 @@ test('committed content preserves the self-contained legacy inventory and game b
     for (const key of ['legacySlug', 'publishedAt', 'updatedAt', 'description', 'type']) {
       assert.ok(data[key], `${basename(file)} is missing migrated ${key}`);
     }
+    assert.notEqual(data.description.trim(), '[TOC]', `${basename(file)} needs a meaningful description rather than the legacy TOC marker`);
+    for (const key of ['date', 'publishedAt', 'updatedAt']) {
+      assert.match(data[key], /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/u, `${basename(file)} has an invalid ${key} format`);
+      assert.ok(Number.isFinite(new Date(`${data[key].replace(' ', 'T')}+08:00`).getTime()), `${basename(file)} has an invalid ${key} value`);
+    }
   }
+  assert.equal(new Set(entries.map(({ data }) => data.legacySlug)).size, entries.length, 'article legacy slugs must be unique');
+  assert.equal(new Set(fixture.tags.map(({ legacySlug }) => legacySlug)).size, fixture.tags.length, 'legacy tag slugs must be unique');
+  assert.ok(fixture.tags.every(({ legacySlug }) => legacySlug.length > 0), 'legacy tag slugs must not be empty');
   assert.deepEqual(sorted(publicEntries.map(({ data }) => data.legacySlug)), sorted(fixture.publicArticleRoutes), 'public entries must match the fixture');
   assert.deepEqual(
     sorted(unlistedEntries.filter(({ data }) => data.legacySlug !== 'about').map(({ data }) => data.legacySlug)),
@@ -101,6 +136,7 @@ test('committed content preserves the self-contained legacy inventory and game b
   assert.deepEqual(sorted(new Set(publicEntries.flatMap(({ data }) => data.tags))), sorted(fixture.tags.map(({ name }) => name)), 'public tags must match the fixture');
 
   const game = standardDocument(join(contentDirectory, fixture.gameBody.file));
+  assert.equal(game.data.updatedAt, '2025-12-27 00:00:00', 'the game log update metadata must include its latest dated entry');
   assert.equal(createHash('sha256').update(game.body).digest('hex'), fixture.gameBody.sha256, 'the migrated game body must match the committed legacy body hash');
 });
 
@@ -150,6 +186,83 @@ test('public articles are server-rendered, indexable, and independent of GitHub 
   }
 });
 
+test('visibility is authoritative and generated pages contain no broken internal links', () => {
+  requireBuiltArtifact();
+  const contentSource = read(join(appDirectory, 'src/lib/content.ts'));
+  assert.match(contentSource, /getPublicArticles\(\)[\s\S]*visibility === 'public'/u, 'public discovery must require explicit public visibility');
+  assert.match(contentSource, /getUnlistedArticles\(\)[\s\S]*visibility === 'unlisted'/u, 'unlisted routes must require explicit unlisted visibility');
+
+  const brokenLinks = [];
+  const htmlFiles = listFiles(distDirectory, (file) => extname(file) === '.html')
+    .filter((file) => !relative(distDirectory, file).startsWith(`demos${sep}`));
+  for (const file of htmlFiles) {
+    const html = read(file);
+    const sourceUrl = pageUrl(file);
+    for (const [, href] of html.matchAll(/<a\b[^>]*\shref="([^"]+)"/giu)) {
+      let target;
+      try {
+        target = new URL(href.replace(/&amp;/gu, '&'), sourceUrl);
+      } catch {
+        brokenLinks.push(`${relative(distDirectory, file)} -> invalid URL ${href}`);
+        continue;
+      }
+      if (target.hostname !== 'blog.azlar.cc') continue;
+      if (!existsSync(outputForUrl(target.pathname))) {
+        brokenLinks.push(`${relative(distDirectory, file)} -> ${target.pathname}`);
+      }
+    }
+  }
+  assert.deepEqual(brokenLinks, [], `generated pages contain broken internal links:\n${brokenLinks.join('\n')}`);
+});
+
+test('article media and interaction polish keep runtime work bounded', () => {
+  requireBuiltArtifact();
+  const css = read(join(appDirectory, 'src/styles/global.css'));
+  const commentsSource = read(join(appDirectory, 'src/components/Comments.astro'));
+  const packageJson = JSON.parse(read(join(appDirectory, 'package.json')));
+
+  assert.match(css, /--text-muted:\s*#66707c/u);
+  assert.ok(contrastRatio('#66707c', '#f6f7f9') >= 4.5, 'light-theme muted text must reach WCAG AA contrast');
+  assert.ok(contrastRatio('#ffffff', '#2457e6') >= 4.5, 'light-theme accent controls must reach WCAG AA contrast');
+  assert.ok(contrastRatio('#111318', '#8eaeff') >= 4.5, 'dark-theme accent controls must reach WCAG AA contrast');
+  assert.doesNotMatch(css, /backdrop-filter/iu, 'sticky navigation must not use a continuously repainted backdrop blur');
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\)/u);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)/u);
+  assert.doesNotMatch(css, /\.article-page\s*\{[^}]*animation/iu, 'long article bodies must not become animated compositing layers');
+  assert.match(commentsSource, /new IntersectionObserver/u, 'Disqus must wait until the comment area approaches the viewport');
+  assert.match(commentsSource, /rootMargin:\s*'600px 0px'/u);
+  assert.match(packageJson.scripts.build, /optimize-static-media\.mjs/u, 'media defaults must be applied before Pagefind indexing');
+
+  let imageCount = 0;
+  let iframeCount = 0;
+  const generatedArticles = documents()
+    .filter(({ data }) => data.visibility !== 'private' && data.legacySlug !== 'about')
+    .map(({ data }) => data.visibility === 'public'
+      ? expectedHtml(`article/${data.legacySlug}/index.html`, `missing public article ${data.legacySlug}`)
+      : expectedHtml(`${data.legacySlug}/index.html`, `missing unlisted article ${data.legacySlug}`));
+  for (const html of generatedArticles) {
+    for (const [tag] of html.matchAll(/<img\b[^>]*>/giu)) {
+      imageCount += 1;
+      assert.match(tag, /\sloading="lazy"/iu);
+      assert.match(tag, /\sdecoding="async"/iu);
+      if (/\ssrc="(?:https?:)?\/\/blog\.azlar\.cc\/images\//iu.test(tag)) {
+        assert.match(tag, /\swidth="\d+"/iu);
+        assert.match(tag, /\sheight="\d+"/iu);
+      }
+    }
+    for (const [tag] of html.matchAll(/<iframe\b[^>]*>/giu)) {
+      iframeCount += 1;
+      assert.match(tag, /\sloading="lazy"/iu);
+      assert.match(tag, /\stitle="[^"]+"/iu);
+    }
+    for (const [, datetime] of html.matchAll(/<time\b[^>]*\sdatetime="([^"]+)"/giu)) {
+      assert.match(datetime, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+08:00$/u);
+    }
+  }
+  assert.ok(imageCount > 0, 'representative generated articles must include optimized images');
+  assert.ok(iframeCount > 0, 'representative generated articles must include optimized iframes');
+});
+
 test('unlisted legacy routes are noindex and excluded from RSS, sitemap, and Pagefind', () => {
   requireBuiltArtifact();
   const packageJson = JSON.parse(read(join(appDirectory, 'package.json')));
@@ -174,6 +287,9 @@ test('core generated pages preserve accessible viewport and static search/discov
     assert.match(html, /<meta name="viewport" content="width=device-width, initial-scale=1"/u, `${route} must use a zoomable viewport`);
     assert.doesNotMatch(html, /user-scalable\s*=\s*no/iu, `${route} must not disable zoom`);
   }
+  const notFoundHtml = expectedHtml('404.html', '404 page must be generated');
+  assert.match(notFoundHtml, /<meta name="robots" content="noindex"/u, '404 page must not be indexed');
+  assert.match(notFoundHtml, /<link rel="canonical" href="https:\/\/blog\.azlar\.cc\/404\.html"/u, '404 canonical must point to the generated file');
   expectedHtml('rss.xml', 'RSS feed must be generated');
   expectedHtml('sitemap.xml', 'sitemap must be generated');
   expectedHtml('pagefind/pagefind-entry.json', 'Pagefind index must be generated');
@@ -223,6 +339,7 @@ test('home and About copy stay direct, and article comments retain the legacy Di
   assert.doesNotMatch(headerSource, /portfolio-link|>Portfolio ↗</u, 'primary navigation must not highlight Portfolio');
   assert.match(commentsSource, /https:\/\/azlarsin\.disqus\.com\/embed\.js/u);
   assert.match(commentsSource, /this\.page\.identifier = window\.location\.pathname/u);
+  assert.match(commentsSource, /IntersectionObserver/u, 'comments must not load on the initial article viewport');
   assert.match(articleHtml, /id="disqus_thread"/u);
 });
 
@@ -238,6 +355,8 @@ test('search loads Pagefind as an unbundled static module and keeps excerpts saf
   assert.match(source, /await import\('\/pagefind\/pagefind\.js'\)/u, 'search must load the Pagefind bundle from the static site root');
   assert.match(source, /await pagefind\.init\(\)/u, 'search must explicitly initialize Pagefind before accepting queries');
   assert.doesNotMatch(source, /@vite-ignore|pagefindPath|innerHTML/u, 'search must not reintroduce Vite preload wrapping or direct HTML injection');
+  assert.match(source, /if \(!query\.trim\(\)\)[\s\S]*resultsContainer\?\.replaceChildren\(\)/u, 'clearing the query must clear stale results');
+  assert.match(source, /const entries = await Promise\.all[\s\S]*request !== searchRequest[\s\S]*renderResults\(entries\)/u, 'only the latest async query may commit results');
   assert.match(html, /<script\s+type="module">[\s\S]*await import\('\/pagefind\/pagefind\.js'\)/u, 'built search page must retain the direct Pagefind static-module import');
   assert.doesNotMatch(html, /__VITE_PRELOAD__/u, 'built search page must not reference Vite\'s omitted preload helper');
 });

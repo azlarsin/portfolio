@@ -1,6 +1,6 @@
 ---
 import type { Article } from '../lib/content';
-import { articleUrl, formatDate, publishedAt, tagUrl } from '../lib/content';
+import { articleUrl, formatDate, htmlDateTime, publishedAt, tagUrl } from '../lib/content';
 
 interface Props {
   article: Article;
@@ -12,7 +12,7 @@ const { article, compact = false } = Astro.props;
 
 <article class:list={['entry-card', { 'entry-card-compact': compact }]}>
   <div class="entry-card-meta">
-    <time datetime={publishedAt(article)}>{formatDate(publishedAt(article))}</time>
+    <time datetime={htmlDateTime(publishedAt(article))}>{formatDate(publishedAt(article))}</time>
     <span aria-hidden="true">·</span>
     <span>{article.data.type === 'log' ? '记录' : '文章'}</span>
   </div>

@@ -103,7 +103,7 @@ console.log(findMedianSortedArrays([1, 10], [2, 3, 4, 5,6, 7, 8, 9]));
 ```
 
 ### else 
-还在 [这里](!http://blog.csdn.net/whucyl/article/details/23524045) 找到第三种解决方案：递归二分。还没测试，有点看不太懂。
+还在 [这里](http://blog.csdn.net/whucyl/article/details/23524045) 找到第三种解决方案：递归二分。还没测试，有点看不太懂。
 
 ## 5. Longest Palindromic Substring
 Given a string S, find the longest palindromic substring in S. You may assume that the maximum length of S is 1000, and there exists one unique longest palindromic substring.

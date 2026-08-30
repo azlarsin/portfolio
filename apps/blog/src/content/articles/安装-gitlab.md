@@ -78,7 +78,7 @@ $ echo "git ALL=(ALL)       NOPASSWD: ALL" >>/etc/sudoers
 此处直接参考 [官网](https://about.gitlab.com/downloads/#centos6)
 
 1. Install and configure the necessary dependencies
-	```SHELL
+	```shell
 	sudo yum install curl openssh-server openssh-clients postfix cronie
 	sudo service postfix start
 	sudo chkconfig postfix on
@@ -97,7 +97,7 @@ $ echo "git ALL=(ALL)       NOPASSWD: ALL" >>/etc/sudoers
 	```
 		
 ### 配置原有 nginx
-```conf
+```text
 # gitlab socket location
 upstream gitlab {
   # 7.x 
@@ -163,7 +163,7 @@ server {
 ```
 
 ### 配置 gitlab.rb
-```SHELL
+```shell
 $ vim /etc/gitlab/gitlab.rb
 
 ###### vim ######

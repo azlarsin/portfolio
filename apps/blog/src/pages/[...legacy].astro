@@ -19,14 +19,14 @@ const { Content, headings } = await render(article);
 ---
 
 <BaseLayout title={article.data.title} description={article.data.description} openGraphType="article" noindex>
-  <article class="article-page" aria-label="未列出的历史文章">
+  <article class:list={['article-page', { 'article-page-single': headings.length === 0 }]} aria-label="未列出的历史文章">
     <div class="article-shell">
       <div>
         <header class="article-header">
           <p class="article-kicker">未列出的历史文章</p>
           <h1>{article.data.title}</h1>
           {article.data.description && <p class="article-summary">{article.data.description}</p>}
-          <ArticleMeta article={article} />
+          <ArticleMeta article={article} linkTags={false} />
         </header>
         {headings.length > 0 && (
           <div class="mobile-toc-wrap">
@@ -39,7 +39,7 @@ const { Content, headings } = await render(article);
         <div class="article-content"><Content /></div>
         <Comments title={article.data.title} />
       </div>
-      <aside class="desktop-toc"><TableOfContents headings={headings} /></aside>
+      {headings.length > 0 && <aside class="desktop-toc"><TableOfContents headings={headings} /></aside>}
     </div>
   </article>
 </BaseLayout>

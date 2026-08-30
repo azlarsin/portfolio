@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { articleUrl, formatDate, getPublicArticles, publishedAt } from '../../lib/content';
+import { articleUrl, formatDate, getPublicArticles, htmlDateTime, publishedAt } from '../../lib/content';
 
 const articles = await getPublicArticles();
 const articlesByYear = articles.reduce((years, article) => {
@@ -23,7 +23,7 @@ const articlesByYear = articles.reduce((years, article) => {
           <ol class="archive-list">
             {yearArticles.map((article) => (
               <li>
-                <time datetime={publishedAt(article)}>{formatDate(publishedAt(article)).replace(/^\d{4}年/, '')}</time>
+                <time datetime={htmlDateTime(publishedAt(article))}>{formatDate(publishedAt(article)).replace(/^\d{4}年/, '')}</time>
                 <div>
                   <a href={articleUrl(article)}>{article.data.title}</a>
                   {article.data.description && <p>{article.data.description}</p>}

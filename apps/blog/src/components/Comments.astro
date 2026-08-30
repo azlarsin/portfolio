@@ -8,22 +8,47 @@ const { title } = Astro.props;
 
 <section class="comments-section" data-pagefind-ignore aria-labelledby="comments-title">
   <h2 id="comments-title">评论</h2>
+  <p class="comments-status" data-comments-status role="status">滚动到评论区时自动载入。</p>
   <div id="disqus_thread" data-article-title={title}></div>
   <noscript>请启用 JavaScript 查看评论。</noscript>
 </section>
 
 <script is:inline>
   const thread = document.querySelector('#disqus_thread');
+  const commentsStatus = document.querySelector('[data-comments-status]');
   if (thread) {
-    window.disqus_config = function () {
-      this.page.identifier = window.location.pathname;
-      this.page.url = window.location.origin + window.location.pathname;
-      this.page.title = thread.dataset.articleTitle || document.title;
-    };
+    let requested = false;
 
-    const script = document.createElement('script');
-    script.src = 'https://azlarsin.disqus.com/embed.js';
-    script.setAttribute('data-timestamp', String(Date.now()));
-    (document.head || document.body).appendChild(script);
+    function loadComments() {
+      if (requested) return;
+      requested = true;
+      if (commentsStatus) commentsStatus.textContent = '正在载入评论…';
+
+      window.disqus_config = function () {
+        this.page.identifier = window.location.pathname;
+        this.page.url = window.location.origin + window.location.pathname;
+        this.page.title = thread.dataset.articleTitle || document.title;
+      };
+
+      const script = document.createElement('script');
+      script.src = 'https://azlarsin.disqus.com/embed.js';
+      script.setAttribute('data-timestamp', String(Date.now()));
+      script.addEventListener('load', () => commentsStatus?.remove(), { once: true });
+      script.addEventListener('error', () => {
+        if (commentsStatus) commentsStatus.textContent = '评论载入失败，请刷新页面重试。';
+      }, { once: true });
+      (document.head || document.body).appendChild(script);
+    }
+
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+        loadComments();
+      }, { rootMargin: '600px 0px' });
+      observer.observe(thread);
+    } else {
+      loadComments();
+    }
   }
 </script>

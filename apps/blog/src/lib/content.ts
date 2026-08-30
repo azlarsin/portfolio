@@ -19,6 +19,10 @@ export function formatDate(value: string) {
   return dateFormatter.format(new Date(`${value.replace(' ', 'T')}+08:00`));
 }
 
+export function htmlDateTime(value: string) {
+  return `${value.replace(' ', 'T')}+08:00`;
+}
+
 export function publishedAt(article: Article) {
   return article.data.publishedAt ?? article.data.date;
 }
@@ -71,18 +75,18 @@ export async function getAllArticles() {
 }
 
 /**
- * The legacy `ignore` flag is the public indexing boundary. `visibility` still
- * records editorial intent, but never turns an ignored entry back into a list,
- * feed, sitemap, or search item. Private entries do not receive a static route.
+ * `visibility` is the publishing boundary. The legacy `ignore` flag remains in
+ * committed Markdown only for migration compatibility and must never turn an
+ * unlisted or private entry into a public route.
  */
 export async function getPublicArticles() {
   const articles = await getAllArticles();
-  return articles.filter((article) => !article.data.ignore && article.data.visibility !== 'private');
+  return articles.filter((article) => article.data.visibility === 'public');
 }
 
 export async function getUnlistedArticles() {
   const articles = await getAllArticles();
-  return articles.filter((article) => article.data.ignore && article.data.visibility !== 'private');
+  return articles.filter((article) => article.data.visibility === 'unlisted');
 }
 
 export function getTagCounts(articles: Article[]) {
