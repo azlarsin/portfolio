@@ -1048,6 +1048,10 @@ describe('portfolio acceptance contracts', () => {
     expect(turntable).toContain('const eased = progress*progress*(3-2*progress)')
     expect(turntable).toContain('const dt = Math.min(32, now-last) / 1000 * playbackRate')
     expect(turntable).toContain('animatePlaybackRate(slow ? SLOW_RATE : NORMAL_RATE)')
+    expect(turntable).toContain('color: colors[nextColorIndex++ % colors.length]')
+    expect(turntable).toContain('function removeSlice(index)')
+    expect(turntable).toContain('const midpoint = (removed.start+removed.end)/2')
+    expect(turntable).toContain('right.targetStart = removed.start')
     expect(poke).toContain('请在 PC 平台体验')
     expect(poke).toContain('class="mobile-pc-notice"')
 
