@@ -132,6 +132,7 @@
   </main>
   <script>
     const colors = ['#536dfe','#20c6b7','#f3b84b','#f06f78','#8968ed','#3f9ae8','#e16bb4','#8bbd55'];
+    const TAU = Math.PI * 2;
     const slicesRoot = document.querySelector('#slices');
     const toast = document.querySelector('#toast');
     const countNodes = [document.querySelector('#sliceCount'), document.querySelector('#centerCount')];
@@ -141,14 +142,13 @@
     const slowButtonLabel = document.querySelector('#slowButtonLabel');
     const slowButtonRate = document.querySelector('#slowButtonRate');
     let values = [10,20,30];
-    let current = [0,0,0];
-    let velocity = [0,0,0];
-    let pathNodes = [];
+    let slices = [];
+    let nextSliceId = 0;
+    let nextColorIndex = 0;
     let slow = false;
     let last = performance.now();
     let animationFrame = 0;
     let rateAnimationFrame = 0;
-    let settleTimer = 0;
     let playbackRate = 1;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const NORMAL_RATE = 1;
@@ -157,79 +157,149 @@
     const polar = (angle, radius=205) => ({ x: Math.cos(angle-Math.PI/2)*radius, y: Math.sin(angle-Math.PI/2)*radius });
     const arcPath = (start, end) => {
       const a = polar(start), b = polar(end), span = Math.max(0, end-start);
+      if (span >= TAU-.0001) {
+        const midpoint = polar(start+Math.PI);
+        return `M0 0 L${a.x.toFixed(2)} ${a.y.toFixed(2)} A205 205 0 1 1 ${midpoint.x.toFixed(2)} ${midpoint.y.toFixed(2)} A205 205 0 1 1 ${a.x.toFixed(2)} ${a.y.toFixed(2)} Z`;
+      }
       return `M0 0 L${a.x.toFixed(2)} ${a.y.toFixed(2)} A205 205 0 ${span > Math.PI ? 1 : 0} 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)} Z`;
     };
     function normalize(input) { const sum = input.reduce((a,b)=>a+b,0) || 1; return input.map(v => v/sum); }
+    function createSlice(value, origin=TAU) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const slice = {
+        id: nextSliceId++,
+        color: colors[nextColorIndex++ % colors.length],
+        value,
+        start: origin,
+        end: origin,
+        targetStart: origin,
+        targetEnd: origin,
+        startVelocity: 0,
+        endVelocity: 0,
+        path,
+      };
+      path.setAttribute('class','slice');
+      path.addEventListener('dblclick', () => {
+        const index = slices.indexOf(slice);
+        if (index !== -1) removeSlice(index);
+      });
+      path.addEventListener('mouseenter', () => {
+        const index = slices.indexOf(slice);
+        if (index === -1) return;
+        const fraction = Math.max(0,(slice.end-slice.start)/TAU);
+        flash(`SLICE ${String(index+1).padStart(2,'0')} · ${(fraction*100).toFixed(1)}%`);
+      });
+      slicesRoot.appendChild(path);
+      return slice;
+    }
+    function setDistributionTargets(input) {
+      const fractions = normalize(input);
+      let angle = 0;
+      slices.forEach((slice,index) => {
+        slice.value = input[index];
+        slice.targetStart = angle;
+        angle += fractions[index] * TAU;
+        slice.targetEnd = index === slices.length-1 ? TAU : angle;
+        slice.startVelocity = 0;
+        slice.endVelocity = 0;
+      });
+    }
     function setValues(next) {
-      const oldLength = current.length;
+      const oldLength = slices.length;
       values = next.length ? next : [1];
-      current = values.map((_,i) => current[i] ?? 0);
-      velocity = values.map((_,i) => velocity[i] ?? 0);
-      clearTimeout(settleTimer);
-      settleTimer = window.setTimeout(() => {
-        current = normalize(values);
-        velocity = values.map(() => 0);
-        render();
-      }, 1600);
+      while (slices.length > values.length) slices.pop().path.remove();
+      while (slices.length < values.length) slices.push(createSlice(values[slices.length]));
+      setDistributionTargets(values);
       if (values.length !== oldLength) flash('DATA CHANGED · SPRING RE-TARGETED');
       render();
       requestTick();
     }
-    function render() {
-      let angle = 0;
-      while (pathNodes.length < current.length) {
-        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-        path.setAttribute('class','slice');
-        path.addEventListener('dblclick', event => {
-          const index = Number(event.currentTarget.dataset.index);
-          if (values.length === 1) return flash('至少保留一个扇区');
-          const next = values.filter((_,i)=>i!==index);
-          current.splice(index,1); velocity.splice(index,1); setValues(next);
-        });
-        path.addEventListener('mouseenter', event => {
-          const index = Number(event.currentTarget.dataset.index);
-          flash(`SLICE ${String(index+1).padStart(2,'0')} · ${(current[index]*100).toFixed(1)}%`);
-        });
-        slicesRoot.appendChild(path);
-        pathNodes.push(path);
+    function removeSlice(index) {
+      if (slices.length === 1) return flash('至少保留一个扇区');
+      const removed = slices[index];
+      const left = index > 0 ? slices[index-1] : null;
+      const right = index < slices.length-1 ? slices[index+1] : null;
+
+      // Freeze every surviving slice at its visible geometry. Only the two
+      // exposed edges receive a new target, so no unrelated slice translates.
+      slices.forEach(slice => {
+        slice.targetStart = slice.start;
+        slice.targetEnd = slice.end;
+        slice.startVelocity = 0;
+        slice.endVelocity = 0;
+      });
+      if (left && right) {
+        const midpoint = (removed.start+removed.end)/2;
+        left.targetEnd = midpoint;
+        right.targetStart = midpoint;
+      } else if (right) {
+        right.targetStart = removed.start;
+      } else if (left) {
+        left.targetEnd = removed.end;
       }
-      while (pathNodes.length > current.length) pathNodes.pop().remove();
-      current.forEach((fraction, index) => {
-        const end = angle + fraction * Math.PI * 2;
-        const path = pathNodes[index];
-        path.setAttribute('d', arcPath(angle,end));
-        path.setAttribute('fill', colors[index % colors.length]);
+
+      removed.path.remove();
+      slices.splice(index,1);
+      values = slices.map(slice => Math.max(.0001,(slice.targetEnd-slice.targetStart)/TAU));
+      flash('SLICE REMOVED · NEIGHBORS EXPANDING');
+      render();
+      requestTick();
+    }
+    function render() {
+      slices.forEach((slice,index) => {
+        const fraction = Math.max(0,(slice.end-slice.start)/TAU);
+        const path = slice.path;
+        path.setAttribute('d', arcPath(slice.start,slice.end));
+        path.setAttribute('fill', slice.color);
+        path.setAttribute('data-id', slice.id);
         path.setAttribute('data-index', index);
         path.setAttribute('data-share', (fraction*100).toFixed(2));
         path.setAttribute('aria-label', `扇区 ${index+1}，占比 ${(fraction*100).toFixed(1)}%`);
         path.style.opacity = fraction < .0001 ? '0' : '1';
-        angle = end;
       });
-      countNodes[0].textContent = String(values.length).padStart(2,'0');
-      countNodes[1].textContent = values.length;
+      countNodes[0].textContent = String(slices.length).padStart(2,'0');
+      countNodes[1].textContent = slices.length;
+    }
+    function settleSlices() {
+      slices.forEach(slice => {
+        slice.start = slice.targetStart;
+        slice.end = slice.targetEnd;
+        slice.startVelocity = 0;
+        slice.endVelocity = 0;
+      });
     }
     function requestTick() {
       if (animationFrame || document.hidden) return;
       if (reducedMotion.matches) {
-        current = normalize(values);
-        velocity = values.map(() => 0);
+        settleSlices();
         render();
         return;
       }
       animationFrame = requestAnimationFrame(tick);
     }
+    function advanceEdge(position, velocity, target, dt) {
+      const distance = target-position;
+      if (Math.abs(distance) < .00005 && Math.abs(velocity) < .00005) return [target,0,false];
+      const omega = Math.sqrt(50);
+      const offset = position-target;
+      const decay = Math.exp(-omega*dt);
+      const change = (velocity+omega*offset)*dt;
+      const nextPosition = target+(offset+change)*decay;
+      const nextVelocity = (velocity-omega*change)*decay;
+      return [nextPosition,nextVelocity,true];
+    }
     function tick(now) {
       animationFrame = 0;
       const dt = Math.min(32, now-last) / 1000 * playbackRate;
       last = now;
-      const target = normalize(values);
       let moving = false;
-      for (let i=0;i<target.length;i++) {
-        const force = (target[i]-current[i]) * 50;
-        velocity[i] = (velocity[i] + force*dt) * Math.pow(.19,dt);
-        current[i] += velocity[i]*dt;
-        moving ||= Math.abs(target[i]-current[i]) > .00005 || Math.abs(velocity[i]) > .00005;
-      }
+      slices.forEach(slice => {
+        const startState = advanceEdge(slice.start,slice.startVelocity,slice.targetStart,dt);
+        const endState = advanceEdge(slice.end,slice.endVelocity,slice.targetEnd,dt);
+        [slice.start,slice.startVelocity] = startState;
+        [slice.end,slice.endVelocity] = endState;
+        moving ||= startState[2] || endState[2];
+      });
       render();
       if (moving) requestTick();
     }
@@ -286,7 +356,12 @@
     document.querySelector('#randomize').addEventListener('click', randomize);
     document.querySelector('#equalize').addEventListener('click', equalize);
     document.querySelector('#randomSpace').addEventListener('click', randomizeSpace);
-    document.querySelector('#reset').addEventListener('click', () => { current=[0,0,0]; velocity=[0,0,0]; setValues([10,20,30]); });
+    document.querySelector('#reset').addEventListener('click', () => {
+      slices.forEach(slice => slice.path.remove());
+      slices = [];
+      nextColorIndex = 0;
+      setValues([10,20,30]);
+    });
     slowButton.addEventListener('pointerdown', () => setSlow(true));
     window.addEventListener('pointerup', () => setSlow(false));
     window.addEventListener('pointercancel', () => setSlow(false));
@@ -322,7 +397,10 @@
       last = performance.now();
       requestTick();
     });
+    slices = values.map(value => createSlice(value,0));
+    setDistributionTargets(values);
     renderPlaybackRate();
+    render();
     requestTick();
   </script>
 </body>
