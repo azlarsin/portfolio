@@ -35,8 +35,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Test portfolio
+        run: pnpm --filter @portfolio/web test
+
       - name: Build portfolio and static Demo
         run: pnpm build:github-pages
+        env:
+          VITE_GA_MEASUREMENT_ID: G-HXZEF459C9
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

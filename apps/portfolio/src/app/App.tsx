@@ -27,6 +27,7 @@ import { useDocumentMeta } from './useDocumentMeta'
 import { useLanguage } from '../i18n/LanguageContext'
 import { getLocalizedRouteMeta } from '../i18n/routeMeta'
 import { getLocalizedProject } from '../data/localized'
+import { trackGoogleAnalyticsPageView } from './analytics'
 
 function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
   const { language } = useLanguage()
@@ -112,6 +113,15 @@ export function App() {
     window.history.scrollRestoration = 'manual'
     if (route.needsCanonicalReplace) replace(route.canonicalHref)
   }, [route.canonicalHref, route.needsCanonicalReplace])
+
+  useEffect(() => {
+    if (route.needsCanonicalReplace) return
+
+    trackGoogleAnalyticsPageView({
+      pageLocation: `${window.location.origin}${route.pathname}${route.search}`,
+      pageTitle: document.title,
+    })
+  }, [route.needsCanonicalReplace, route.pathname, route.search])
 
   useLayoutEffect(() => {
     let nestedFrame = 0
