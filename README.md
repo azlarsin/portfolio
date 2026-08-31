@@ -241,6 +241,12 @@ cp layered-route-lab/.env.production.example layered-route-lab/.env.production.l
 
 Layered Route Lab 自己使用 `NEXT_PUBLIC_SITE_URL` 生成公开 origin 和分享 metadata；它通常与 `VITE_LAYERED_ROUTE_LAB_URL` 指向同一 Demo 域名。
 
+## Google Analytics 4
+
+Portfolio 通过构建时变量 `VITE_GA_MEASUREMENT_ID` 加载 Google tag。即使变量存在，统计也只会在 production build 且页面域名为 `me.azlar.cc` 时启用，本地开发、预览地址和其他域名不会上报。
+
+GitHub Pages workflow 会注入现有 GA4 Web 数据流的 Measurement ID。Portfolio 在路由与页面 metadata 更新后手动发送一次 `page_view`，并忽略纯 hash 锚点变化与 canonical alias 的中间状态。该数据流已经关闭 Enhanced Measurement → Page views → Advanced settings 中的 **Page changes based on browser history events**，避免自研路由用于滚动位置的 `replaceState` 造成重复统计。
+
 ## 检查与本地生产验证
 
 提交或部署前的标准入口：

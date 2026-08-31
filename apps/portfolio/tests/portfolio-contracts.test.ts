@@ -12,6 +12,10 @@ import {
   routeDefinitions,
 } from '../src/app/router'
 import {
+  canInitializeGoogleAnalytics,
+  createGtag,
+} from '../src/app/analytics'
+import {
   archiveProjects,
   baijiahaoEditorProject,
   baiduMapWorkbenchProject,
@@ -43,6 +47,63 @@ function collectSourceFiles(directory: string): string[] {
 }
 
 describe('portfolio acceptance contracts', () => {
+  it('loads the GA4 stream only for the production portfolio domain', () => {
+    expect(
+      canInitializeGoogleAnalytics('G-HXZEF459C9', {
+        hostname: 'me.azlar.cc',
+        isProduction: true,
+      }),
+    ).toBe(true)
+    expect(
+      canInitializeGoogleAnalytics('UA-89586643-1', {
+        hostname: 'me.azlar.cc',
+        isProduction: true,
+      }),
+    ).toBe(false)
+    expect(
+      canInitializeGoogleAnalytics('G-HXZEF459C9', {
+        hostname: 'localhost',
+        isProduction: true,
+      }),
+    ).toBe(false)
+    expect(
+      canInitializeGoogleAnalytics('G-HXZEF459C9', {
+        hostname: 'me.azlar.cc',
+        isProduction: false,
+      }),
+    ).toBe(false)
+
+    const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
+    const analytics = readFileSync(`${sourceRoot}/app/analytics.ts`, 'utf8')
+    const app = readFileSync(`${sourceRoot}/app/App.tsx`, 'utf8')
+    const main = readFileSync(`${sourceRoot}/main.tsx`, 'utf8')
+
+    expect(main).toContain('initializeGoogleAnalytics()')
+    expect(analytics).toContain('VITE_GA_MEASUREMENT_ID')
+    expect(analytics).toContain('https://www.googletagmanager.com/gtag/js')
+    expect(analytics).toContain('{ send_page_view: false }')
+    expect(analytics).toContain("window.gtag('event', 'page_view'")
+    expect(app).toContain('if (route.needsCanonicalReplace) return')
+    expect(app).toContain('`${window.location.origin}${route.pathname}${route.search}`')
+    expect(app).toContain(
+      '[route.needsCanonicalReplace, route.pathname, route.search]',
+    )
+  })
+
+  it('queues GA4 commands in the arguments-object format expected by gtag.js', () => {
+    const dataLayer: unknown[] = []
+    const gtag = createGtag(dataLayer)
+
+    gtag('config', 'G-HXZEF459C9')
+
+    expect(dataLayer).toHaveLength(1)
+    expect(Array.isArray(dataLayer[0])).toBe(false)
+    expect(Array.from(dataLayer[0] as IArguments)).toEqual([
+      'config',
+      'G-HXZEF459C9',
+    ])
+  })
+
   it('1. exposes the complete canonical route set with stable SEO metadata', () => {
     const expectedTitles = new Map([
       ['/', '陈成｜前端技术负责人 · 全栈与复杂系统工程'],
