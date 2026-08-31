@@ -33,6 +33,8 @@ jobs:
 
       - name: Verify Blog build, routes, and Pagefind index
         run: pnpm verify:blog
+        env:
+          PUBLIC_GA_MEASUREMENT_ID: G-HXZEF459C9
 
       - name: Check out publishing repository
         uses: actions/checkout@v6

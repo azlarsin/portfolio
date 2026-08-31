@@ -13,6 +13,7 @@ const contentDirectory = join(appDirectory, 'src/content/articles');
 const publicDirectory = join(appDirectory, 'public');
 const distDirectory = join(appDirectory, 'dist');
 const fixture = JSON.parse(readFileSync(join(testDirectory, 'fixtures/legacy-contract.json'), 'utf8'));
+const gaMeasurementId = process.env.PUBLIC_GA_MEASUREMENT_ID;
 
 function listFiles(directory, predicate = () => true) {
   const files = [];
@@ -151,6 +152,25 @@ test('build output contains all public, unlisted, and shared legacy entry points
   for (const route of ['about/index.html', 'archives/index.html', 'tags/index.html', 'search/index.html', '404.html']) {
     expectedHtml(route, `missing shared legacy route /${route.replace(/index\.html$|\.html$/u, '')}/`);
   }
+});
+
+test('GA4 is optional locally and rendered once in the static layout when configured', () => {
+  requireBuiltArtifact();
+  const layout = read(join(appDirectory, 'src/layouts/BaseLayout.astro'));
+  const home = expectedHtml('index.html', 'missing blog homepage');
+
+  assert.match(layout, /PUBLIC_GA_MEASUREMENT_ID/u);
+  assert.match(layout, /https:\/\/www\.googletagmanager\.com\/gtag\/js/u);
+  assert.match(layout, /dataLayer\.push\(arguments\)/u);
+
+  if (!gaMeasurementId) {
+    assert.doesNotMatch(home, /googletagmanager\.com\/gtag\/js/u);
+    return;
+  }
+
+  const escapedId = gaMeasurementId.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+  assert.match(home, new RegExp(`googletagmanager\\.com/gtag/js\\?id=${escapedId}`, 'u'));
+  assert.match(home, /gtag\('config', gaMeasurementId\)/u);
 });
 
 test('all legacy tag paths use build.js-compatible slugs, including spaces', () => {
