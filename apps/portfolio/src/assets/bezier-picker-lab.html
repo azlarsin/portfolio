@@ -26,13 +26,13 @@
     .preset.active::before { border: 3px solid #356ae6; }
     .board-wrap { display: grid; place-items: center; padding: 32px; background-image: linear-gradient(rgba(94,105,124,.035) 1px, transparent 1px), linear-gradient(90deg,rgba(94,105,124,.035) 1px,transparent 1px); background-size: 24px 24px; }
     .board-card { width: min(430px, 100%); padding: 22px; border: 1px solid #d9dee7; border-radius: 14px; background: rgba(255,255,255,.94); box-shadow: 0 18px 48px rgba(33,42,58,.09); }
-    .board-card svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: none; }
+    .board-card svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
     .grid { stroke: #e7eaf0; stroke-width: 1; }
     .diagonal { stroke: #c8ced8; stroke-width: 1; stroke-dasharray: 4 5; }
     .curve { fill: none; stroke: #151b24; stroke-width: 3; stroke-linecap: round; }
     .handle-line.start { stroke: #ef656b; } .handle-line.end { stroke: #356ae6; }
     .handle-line { stroke-width: 1.5; stroke-dasharray: 4 4; }
-    .handle { cursor: grab; stroke-width: 3; fill: white; }
+    .handle { cursor: grab; stroke-width: 3; fill: white; touch-action: none; user-select: none; }
     .handle:active { cursor: grabbing; }
     .handle.start { stroke: #ef656b; } .handle.end { stroke: #356ae6; }
     .coords { display: flex; justify-content: space-between; margin-top: 14px; color: #748092; font: 10px ui-monospace, monospace; }

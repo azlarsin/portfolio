@@ -715,10 +715,10 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     role: 'Interaction design · SVG geometry · Motion implementation',
     status: 'Public interactive experiment',
     technologies: ['React', 'SVG', 'Spring Physics', 'Animation'],
-    impact: ['Converted weighted data into stable radial geometry.', 'Maintained continuous motion as sector order and size changed.', 'Added a slow-motion inspection mode for studying transitions.'],
-    scope: ['Weighted sector geometry', 'Stable item identity', 'Spring interpolation', 'Slow-motion inspection'],
+    impact: ['Converted weighted data into stable radial geometry.', 'Maintained continuous motion as sector order and size changed.', 'Added adjustable playback speed for studying transitions while using other controls.'],
+    scope: ['Weighted sector geometry', 'Stable item identity', 'Spring interpolation', 'Playback-speed inspection'],
     facts: [{ label: 'Type', value: 'Motion and geometry experiment' }, { label: 'Rendering', value: 'SVG' }, { label: 'Motion', value: 'Spring-based interpolation' }, { label: 'Input', value: 'Synthetic weighted data' }],
-    demo: { experienceId: 'turntable-motion-lab', source: '', title: 'Turntable Motion Lab', description: 'Change the source data to watch SVG sectors reorder and resize continuously. Hold S to inspect the transition in slow motion.', provenanceLabel: 'PUBLIC MOTION EXPERIMENT', statusLabel: 'SVG · SPRING · DATA-DRIVEN', toolbar: 'Turntable Motion Lab', height: 620, posterVariant: 'motion-lab', ctaLabel: 'Load motion lab', desktopPreferred: true },
+    demo: { experienceId: 'turntable-motion-lab', source: '', title: 'Turntable Motion Lab', description: 'Change the source data to watch SVG sectors reorder and resize continuously. Use the playback-speed slider to inspect transitions while operating the other controls.', provenanceLabel: 'PUBLIC MOTION EXPERIMENT', statusLabel: 'SVG · SPRING · DATA-DRIVEN', toolbar: 'Turntable Motion Lab', height: 620, posterVariant: 'motion-lab', ctaLabel: 'Load motion lab', desktopPreferred: true },
     chapters: [
       { id: 'geometry', title: 'Geometry calculation', paragraphs: ['Weights are normalized into angles, with gaps, labels, and hit regions derived from the same geometry.'], phase: 'SVG model' },
       { id: 'continuous-motion', title: 'Continuous motion', paragraphs: ['Stable item identity and spring interpolation prevent sectors from jumping when values or ordering change.'], phase: 'Motion system' },
