@@ -930,6 +930,8 @@ describe('portfolio acceptance contracts', () => {
       'Frontend architecture',
       'and full-stack delivery',
     ])
+    expect(siteCopy.zh.demo.player.startHere).toBe('建议体验时长')
+    expect(siteCopy.en.demo.player.startHere).toBe('Start here')
 
     const englishHomeMeta = getLocalizedRouteMeta(resolveRoute('/'), 'en')
     expect(englishHomeMeta.title).toBe(
@@ -1043,11 +1045,13 @@ describe('portfolio acceptance contracts', () => {
     expect(turntable).toContain('id="randomSpace"')
     expect(turntable).toContain('function equalize()')
     expect(turntable).toContain('function randomizeSpace()')
-    expect(turntable).toContain('id="slowButtonRate"')
-    expect(turntable).toContain('function animatePlaybackRate(target)')
-    expect(turntable).toContain('const eased = progress*progress*(3-2*progress)')
+    expect(turntable).toContain('id="speedRange"')
+    expect(turntable).toContain('id="speedRate"')
+    expect(turntable).toContain('function setPlaybackRate(value)')
+    expect(turntable).toContain("speedRange.addEventListener('input'")
     expect(turntable).toContain('const dt = Math.min(32, now-last) / 1000 * playbackRate')
-    expect(turntable).toContain('animatePlaybackRate(slow ? SLOW_RATE : NORMAL_RATE)')
+    expect(turntable).not.toContain('id="slowButton"')
+    expect(turntable).not.toContain('function setSlow(')
     expect(turntable).toContain('color: colors[nextColorIndex++ % colors.length]')
     expect(turntable).toContain('function removeSlice(index)')
     expect(turntable).toContain('const midpoint = (removed.start+removed.end)/2')
@@ -1061,5 +1065,7 @@ describe('portfolio acceptance contracts', () => {
     expect(bezier).toMatch(
       /@media \(max-width: 560px\)[\s\S]*?\.shell \{[^}]*overflow-x: hidden/,
     )
+    expect(bezier).toMatch(/\.board-card svg \{[^}]*touch-action: pan-y/)
+    expect(bezier).toMatch(/\.handle \{[^}]*touch-action: none/)
   })
 })

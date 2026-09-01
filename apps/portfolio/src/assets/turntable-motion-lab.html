@@ -16,7 +16,7 @@
         radial-gradient(circle at 80% 80%, rgba(22, 193, 178, .14), transparent 28%),
         #090c14;
     }
-    button { font: inherit; }
+    button, input { font: inherit; }
     .shell { display: grid; min-height: 100vh; grid-template-columns: minmax(0, 1fr) 290px; }
     .stage { position: relative; display: grid; min-height: 560px; place-items: center; overflow: hidden; padding: 44px; }
     .stage::before {
@@ -44,11 +44,16 @@
     }
     .controls button:hover { border-color: rgba(130,150,255,.48); background: rgba(91,109,255,.17); }
     .controls button.primary { color: white; background: #5468ff; border-color: #6678ff; }
-    .controls button.is-held { color: #07111e; background: #59ddc9; border-color: #59ddc9; }
-    #slowButton { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .slow-button-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .slow-button-rate { flex: 0 0 auto; padding-left: 9px; border-left: 1px solid currentcolor; color: #8fa1c8; font: 800 10px ui-monospace, SFMono-Regular, Menlo, monospace; opacity: .88; }
-    #slowButton.is-held .slow-button-rate { color: inherit; }
+    .speed-row { display: grid; grid-template-columns: minmax(0,1fr) 40px; gap: 9px; }
+    .speed-control {
+      display: grid; min-width: 0; min-height: 40px; grid-template-columns: auto minmax(0,1fr) 42px; align-items: center; gap: 9px;
+      padding: 0 11px; border: 1px solid rgba(139,157,199,.2); border-radius: 9px; color: #dce5ff;
+      background: rgba(91,109,255,.09); font-size: 10px; font-weight: 700; user-select: none;
+    }
+    .speed-control > span { white-space: nowrap; }
+    #speedRange { width: 100%; min-width: 0; height: 28px; margin: 0; accent-color: #59ddc9; cursor: ew-resize; touch-action: pan-y; }
+    .speed-rate { color: #8fa1c8; font: 800 10px ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
+    .controls .speed-reset { display: grid; min-width: 40px; padding: 0; place-items: center; font-size: 18px; text-align: center; }
     .hint { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(149,165,199,.12); color: #747f97; font-size: 10px; line-height: 1.75; }
     .hint kbd { display: inline-grid; min-width: 22px; height: 22px; place-items: center; margin-right: 5px; border: 1px solid #374158; border-radius: 5px; color: #aebbd8; background: #151b29; font: 10px ui-monospace, monospace; }
     .toast { position: absolute; bottom: 24px; left: 24px; padding: 9px 12px; border: 1px solid rgba(136,154,194,.18); border-radius: 999px; color: #9aa7c2; background: rgba(12,16,27,.78); font: 9px ui-monospace, monospace; opacity: 0; transform: translateY(8px); transition: .2s ease; }
@@ -82,8 +87,9 @@
       .stat strong { display: block; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
       .controls { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
       .controls button { min-height: 44px; padding: 0 7px; font-size: 10px; text-align: center; }
-      #slowButton { grid-column: span 2; gap: 5px; text-align: left; }
-      .slow-button-rate { padding-left: 5px; font-size: 9px; }
+      .speed-row { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) 44px; gap: 6px; }
+      .speed-control { min-height: 44px; grid-template-columns: auto minmax(0,1fr) 39px; gap: 6px; padding: 0 8px; }
+      .speed-rate { font-size: 9px; }
       .toast { right: 12px; bottom: 197px; left: 12px; text-align: center; }
     }
     @media (max-width: 760px) and (max-height: 560px) {
@@ -124,10 +130,12 @@
         <button class="primary" id="randomize">R · 重组数据</button>
         <button id="equalize">E · 所有扇区均分</button>
         <button id="randomSpace">A · 随机分配全空间</button>
-        <button id="slowButton" data-rate="1.00×"><span class="slow-button-label" id="slowButtonLabel">按住 S · 慢动作观察</span><output class="slow-button-rate" id="slowButtonRate" aria-live="polite">1.00×</output></button>
-        <button id="reset">恢复 10 / 20 / 30</button>
+        <div class="speed-row">
+          <label class="speed-control" for="speedRange"><span>动画速度</span><input id="speedRange" type="range" min="0.10" max="1.50" step="0.05" value="1.00" aria-label="动画播放速度" /><output class="speed-rate" id="speedRate" for="speedRange" aria-live="polite">1.00×</output></label>
+          <button class="speed-reset" id="reset" type="button" aria-label="重置数据与播放速度" title="重置数据与播放速度"><span aria-hidden="true">↺</span></button>
+        </div>
       </div>
-      <p class="hint"><kbd>R</kbd> 随机重组扇区<br /><kbd>E</kbd> 所有扇区均分空间 · <kbd>A</kbd> 随机分配全部空间<br /><kbd>S</kbd> 按住降低速度，松开立即恢复<br />双击任意扇区可移除；悬停可观察局部聚焦。</p>
+      <p class="hint"><kbd>R</kbd> 随机重组扇区<br /><kbd>E</kbd> 所有扇区均分空间 · <kbd>A</kbd> 随机分配全部空间<br />拖动速度滑杆后可继续操作其他按钮；双击任意扇区可移除。</p>
     </aside>
   </main>
   <script>
@@ -137,22 +145,16 @@
     const toast = document.querySelector('#toast');
     const countNodes = [document.querySelector('#sliceCount'), document.querySelector('#centerCount')];
     const speedLabel = document.querySelector('#speedLabel');
-    const stiffnessLabel = document.querySelector('#stiffnessLabel');
-    const slowButton = document.querySelector('#slowButton');
-    const slowButtonLabel = document.querySelector('#slowButtonLabel');
-    const slowButtonRate = document.querySelector('#slowButtonRate');
+    const speedRange = document.querySelector('#speedRange');
+    const speedRate = document.querySelector('#speedRate');
     let values = [10,20,30];
     let slices = [];
     let nextSliceId = 0;
     let nextColorIndex = 0;
-    let slow = false;
     let last = performance.now();
     let animationFrame = 0;
-    let rateAnimationFrame = 0;
     let playbackRate = 1;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const NORMAL_RATE = 1;
-    const SLOW_RATE = .12;
 
     const polar = (angle, radius=205) => ({ x: Math.cos(angle-Math.PI/2)*radius, y: Math.sin(angle-Math.PI/2)*radius });
     const arcPath = (start, end) => {
@@ -318,38 +320,14 @@
     function renderPlaybackRate() {
       const label = `${playbackRate.toFixed(2)}×`;
       speedLabel.textContent = label;
-      slowButton.dataset.rate = label;
-      slowButtonRate.value = label;
+      speedRange.value = playbackRate.toFixed(2);
+      speedRate.value = label;
     }
-    function animatePlaybackRate(target) {
-      if (rateAnimationFrame) cancelAnimationFrame(rateAnimationFrame);
-      rateAnimationFrame = 0;
-      const from = playbackRate;
-      if (reducedMotion.matches || Math.abs(from-target) < .001) {
-        playbackRate = target;
-        renderPlaybackRate();
-        return;
-      }
-      const startedAt = performance.now();
-      const duration = target < from ? 700 : 360;
-      const updateRate = now => {
-        const progress = Math.min(1, (now-startedAt)/duration);
-        const eased = progress*progress*(3-2*progress);
-        playbackRate = from+(target-from)*eased;
-        if (progress === 1) playbackRate = target;
-        renderPlaybackRate();
-        if (progress < 1) rateAnimationFrame = requestAnimationFrame(updateRate);
-        else rateAnimationFrame = 0;
-      };
-      rateAnimationFrame = requestAnimationFrame(updateRate);
-    }
-    function setSlow(next) {
-      if (slow === next) return;
-      slow = next;
-      stiffnessLabel.textContent = slow ? '01' : '50';
-      slowButton.classList.toggle('is-held', slow);
-      slowButtonLabel.textContent = slow ? '松开 · 恢复正常速度' : '按住 S · 慢动作观察';
-      animatePlaybackRate(slow ? SLOW_RATE : NORMAL_RATE);
+    function setPlaybackRate(value) {
+      const next = Number(value);
+      const fallback = Number.isFinite(next) ? next : 1;
+      playbackRate = Math.min(Number(speedRange.max),Math.max(Number(speedRange.min),fallback));
+      renderPlaybackRate();
     }
     let toastTimer;
     function flash(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),1300); }
@@ -361,27 +339,20 @@
       slices = [];
       nextColorIndex = 0;
       setValues([10,20,30]);
+      setPlaybackRate(1);
+      flash('RESET · DATA 10 / 20 / 30 · SPEED 1.00×');
     });
-    slowButton.addEventListener('pointerdown', () => setSlow(true));
-    window.addEventListener('pointerup', () => setSlow(false));
-    window.addEventListener('pointercancel', () => setSlow(false));
-    window.addEventListener('blur', () => setSlow(false));
+    speedRange.addEventListener('input', event => setPlaybackRate(event.currentTarget.value));
     window.addEventListener('keydown', e => {
       const key = e.key.toLowerCase();
-      if (key==='s') setSlow(true);
       if (!e.repeat && key==='r') randomize();
       if (!e.repeat && key==='e') equalize();
       if (!e.repeat && key==='a') randomizeSpace();
     });
-    window.addEventListener('keyup', e => { if (e.key.toLowerCase()==='s') setSlow(false); });
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         if (animationFrame) cancelAnimationFrame(animationFrame);
         animationFrame = 0;
-        if (rateAnimationFrame) cancelAnimationFrame(rateAnimationFrame);
-        rateAnimationFrame = 0;
-        playbackRate = slow ? SLOW_RATE : NORMAL_RATE;
-        renderPlaybackRate();
         return;
       }
       last = performance.now();
@@ -390,10 +361,6 @@
     reducedMotion.addEventListener('change', () => {
       if (animationFrame) cancelAnimationFrame(animationFrame);
       animationFrame = 0;
-      if (rateAnimationFrame) cancelAnimationFrame(rateAnimationFrame);
-      rateAnimationFrame = 0;
-      playbackRate = slow ? SLOW_RATE : NORMAL_RATE;
-      renderPlaybackRate();
       last = performance.now();
       requestTick();
     });
