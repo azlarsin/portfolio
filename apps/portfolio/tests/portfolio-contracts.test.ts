@@ -1062,6 +1062,8 @@ describe('portfolio acceptance contracts', () => {
     expect(dataview).toContain('const tourTimeline = [')
     expect(dataview).toContain('autoTourTimer = setTimeout(runTour,320)')
     expect(dataview).toContain("{view:'flow',label:'归档完成',flowStep:3}")
+    expect(dataview).toContain('class="mobile-pan-viewport"')
+    expect(dataview).toContain('touch-action: pan-x')
     expect(bezier).toMatch(
       /@media \(max-width: 560px\)[\s\S]*?\.shell \{[^}]*overflow-x: hidden/,
     )
