@@ -310,14 +310,26 @@
       .overview { grid-template-columns: minmax(0,1fr) 250px; }
       .map-view { grid-template-columns: minmax(0,1fr) 235px; }
     }
+    @media (max-width: 859px) {
+      html, body { width: 100%; min-width: 0; height: 100%; overflow: hidden; }
+      .mobile-pan-viewport {
+        width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden;
+        overscroll-behavior-x: contain; scrollbar-width: thin; touch-action: pan-x;
+        -webkit-overflow-scrolling: touch;
+      }
+      .mobile-pan-canvas { width: 860px; min-height: 100%; }
+      .archive-bar, .app { min-width: 860px; }
+    }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
     }
   </style>
 </head>
 <body>
-  <div class="archive-bar"><span>DATAVIEW · PURE FRONTEND ARCHIVE RECONSTRUCTION</span><b>SYNTHETIC DATA · 0 NETWORK REQUESTS</b></div>
-  <main class="app">
+  <div class="mobile-pan-viewport" aria-label="可横向滑动的超宽看板">
+    <div class="mobile-pan-canvas">
+      <div class="archive-bar"><span>DATAVIEW · PURE FRONTEND ARCHIVE RECONSTRUCTION</span><b>SYNTHETIC DATA · 0 NETWORK REQUESTS</b></div>
+      <main class="app">
     <header class="topbar">
       <div class="brand"><div class="brand-mark">DV</div><div><strong>Network Observatory</strong><span>32:9 SCENE SYSTEM</span></div></div>
       <nav class="nav" aria-label="演示场景">
@@ -444,7 +456,9 @@ networkRequests: 0</code></div>
     </section>
     <footer class="footer"><span><strong>OFFLINE DATASET</strong> · RESPONSIVE 32:9 SCENE · SVG + CSS</span><span class="tour-status" id="tourStatus">MANUAL MODE · TICK 01</span><span>NETWORK REQUESTS <strong id="networkRequests">0</strong></span></footer>
     <div class="toast" id="toast"></div>
-  </main>
+      </main>
+    </div>
+  </div>
   <script>
     (function () {
       'use strict';
