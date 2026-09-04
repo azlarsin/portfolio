@@ -16,6 +16,7 @@ import { HomePage } from '../pages/HomePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { ResumePage } from '../pages/ResumePage'
 import { DemoPlayerPage } from '../pages/DemoPlayerPage'
+import { PokeRenderPage } from '../pages/PokeRenderPage'
 import {
   getSavedScrollPosition,
   replace,
@@ -35,6 +36,8 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
     getLocalizedProject(project, language)
 
   switch (route.id) {
+    case ROUTES.POKE_RENDER.id:
+      return <PokeRenderPage route={route} />
     case ROUTES.DEMO.id:
       return <DemoPlayerPage route={route} />
     case ROUTES.HOME.id:
@@ -152,7 +155,7 @@ export function App() {
     }
   }, [route.href])
 
-  if (route.id === ROUTES.DEMO.id) {
+  if (route.id === ROUTES.DEMO.id || route.id === ROUTES.POKE_RENDER.id) {
     return <RoutePage route={route} />
   }
 

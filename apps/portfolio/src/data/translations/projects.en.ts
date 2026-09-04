@@ -664,7 +664,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         note: 'GitHub Release · Historical public version',
       },
     ],
-    demo: { experienceId: 'poke-prototype-editor', source: '', title: 'Poke Prototype Editor', description: 'An offline reconstruction of the editing workspace, layer model, and interaction settings. It uses synthetic content and does not connect to the original service.', provenanceLabel: 'OFFLINE RECONSTRUCTION · SYNTHETIC CONTENT', statusLabel: 'CANVAS · LAYERS · INTERACTIONS', toolbar: 'Poke Prototype Editor', height: 700, posterVariant: 'prototype-editor', ctaLabel: 'Load editor demo', desktopPreferred: true },
+    demo: { experienceId: 'poke-prototype-editor', source: '', title: 'Poke Prototype Editor', description: 'A source-driven reconstruction with editable layers, Status Bar and Tab Bar settings, interaction motion, and a URL-embedded QR preview for phones. It uses synthetic content and does not connect to the original service.', provenanceLabel: 'SOURCE-DRIVEN RECONSTRUCTION · SYNTHETIC CONTENT', statusLabel: 'QR PREVIEW · INTERACTIONS', toolbar: 'Poke Prototype Editor', height: 700, posterVariant: 'prototype-editor', ctaLabel: 'Load editor demo', desktopPreferred: true },
     visuals: [
       {
         id: 'poke-editor-architecture',

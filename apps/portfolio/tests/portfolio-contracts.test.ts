@@ -122,6 +122,7 @@ describe('portfolio acceptance contracts', () => {
       ['/archive/merchant-commerce', '移动电商独立全栈项目｜项目档案'],
       ['/archive/irregular-shape-layout', '不规则形状布局实验｜项目档案'],
       ['/demo', '交互体验播放器｜陈成作品集'],
+      ['/poke/render', 'Poke 手机预览'],
       ['/resume', '个人简历｜陈成'],
       ['/not-found', '页面未找到｜陈成作品集'],
     ])
@@ -153,6 +154,10 @@ describe('portfolio acceptance contracts', () => {
     const playerRoute = resolveRoute('/demo?experience=layered-route-agent')
     expect(playerRoute.route).toBe(ROUTES.DEMO)
     expect(playerRoute.search).toBe('?experience=layered-route-agent')
+
+    const pokeRenderRoute = resolveRoute('/poke/render?data=j.example')
+    expect(pokeRenderRoute.route).toBe(ROUTES.POKE_RENDER)
+    expect(pokeRenderRoute.search).toBe('?data=j.example')
   })
 
   it('1a. resolves player experiences through the finite trusted registry only', () => {
@@ -176,6 +181,9 @@ describe('portfolio acceptance contracts', () => {
     expect(getDemoExperience(null)).toBeNull()
     expect(demoPlayerPath('poke-prototype-editor')).toBe(
       '/demo?experience=poke-prototype-editor',
+    )
+    expect(demoExperiences['poke-prototype-editor'].sandbox).toBe(
+      'allow-scripts allow-same-origin',
     )
 
     const layeredSource = new URL(demoExperiences['layered-route-agent'].source)
@@ -977,6 +985,26 @@ describe('portfolio acceptance contracts', () => {
     expect(source).toContain("artboard.addEventListener('lostpointercapture'")
     expect(source).toContain('MIN_RESIZE_SIZE = 16')
     expect(source).not.toMatch(/\.selected::(?:before|after)/)
+  })
+
+  it('12a. serializes the edited Poke document into a QR preview with real runtime controls', () => {
+    const assetPath = fileURLToPath(
+      new URL('../src/assets/poke-editor-demo.html', import.meta.url),
+    )
+    const source = readFileSync(assetPath, 'utf8')
+
+    expect(source).toContain("new URL('/poke/render', 'https://me.azlar.cc')")
+    expect(source).toContain("new CompressionStream('gzip')")
+    expect(source).toContain('interactionEvents[targetId] = {')
+    expect(source).toContain('data-event-type="swipeLeft"')
+    expect(source).toContain('data-event-type="touch"')
+    expect(source).toContain("item.type === 'status-bar'")
+    expect(source).toContain("item.type === 'tab-bar'")
+    expect(source).toContain('data-tabbar-color="selectedColor"')
+    expect(source).toContain('data-tab-prop="pageId"')
+    expect(source).toContain('id="previewQrFrame"')
+    expect(source).toContain('id="previewLiveFrame"')
+    expect(source).not.toContain('id="previewCta"')
   })
 
   it('13. retains every source-backed legacy demo asset as non-empty HTML', () => {
