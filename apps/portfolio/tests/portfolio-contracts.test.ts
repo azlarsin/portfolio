@@ -1018,6 +1018,9 @@ describe('portfolio acceptance contracts', () => {
     expect(source).toContain('function selectInteractionDraftTarget(target)')
     expect(source).toContain('function commitElementInteractionDraft()')
     expect(source).toContain('classList.add(\'state-link-svg\')')
+    expect(source).not.toMatch(
+      /\.canvas-element\.interaction-candidate:hover\s*\{[^}]*z-index/,
+    )
     expect(source).toContain('id="undo"')
     expect(source).toContain('id="redo"')
     expect(source).toContain('function undoDocument()')
