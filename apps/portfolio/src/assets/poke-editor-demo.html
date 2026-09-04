@@ -78,6 +78,7 @@
     .artboard { position: relative; width: 280px; height: 522px; overflow: hidden; background: #f8f9fc; box-shadow: 0 0 0 1px #ccd1d8; touch-action: none; }
     .canvas-element { position: absolute; border: 1px solid transparent; cursor: move; user-select: none; }
     .canvas-element.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.75), 0 0 0 2px #2f79ed; }
+    .canvas-element.state-ghost { z-index: 0; border: 1px dashed #8ca9e2; filter: saturate(.5); opacity: .28 !important; pointer-events: none; }
     .canvas-element.text { display: flex; align-items: center; border-style: dashed; }
     .canvas-element.nav { display: flex; align-items: center; justify-content: space-around; }
     .canvas-element.status-bar { z-index: 24; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; cursor: default; font-size: 6px; font-weight: 700; }
@@ -108,6 +109,12 @@
     .full-field { display: grid; grid-template-columns: 40px minmax(0,1fr); align-items: center; gap: 6px; margin-top: 8px; color: #8e96a1; font-size: 8px; }
     .interaction-button { display: flex; width: 100%; min-height: 34px; align-items: center; justify-content: space-between; padding: 0 10px; border: 1px solid #d5dbe6; border-radius: 7px; color: #3f67bd; background: #f3f6fc; cursor: pointer; font-size: 9px; font-weight: 700; }
     .interaction-button.has-event::after { color: #27a978; content: '● 已配置'; font-size: 7px; }
+    .element-states { display: flex; flex-wrap: wrap; gap: 5px; }
+    .element-state { display: inline-flex; min-height: 27px; align-items: center; gap: 5px; padding: 0 8px; border: 1px solid #d4d9e1; border-radius: 6px; color: #7c8592; background: white; cursor: pointer; font-size: 7px; }
+    .element-state.active { border-color: #9eb5e9; color: #285fc5; background: #edf3ff; font-weight: 700; }
+    .element-state .delete-state { color: #ae727b; font-size: 9px; }
+    .element-state-add { width: 27px; padding: 0; justify-content: center; color: #3266c5; }
+    .state-compare-note { margin: 8px 0 0; color: #8c96a5; font-size: 7px; line-height: 1.5; }
     .system-style-options { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; }
     .system-style-choice { display: grid; min-height: 45px; place-items: center; gap: 4px; border: 1px solid #d5dae2; border-radius: 7px; color: #7b8491; background: white; cursor: pointer; font-size: 7px; }
     .system-style-choice.active { border-color: #91ace9; color: #2d61c8; background: #eef3ff; box-shadow: 0 0 0 1px rgba(46,103,221,.08); }
@@ -146,7 +153,7 @@
     .confirm-actions { display: flex; justify-content: flex-end; gap: 7px; }
     .confirm-actions button { height: 29px; padding: 0 12px; border: 1px solid #d2d7df; border-radius: 6px; color: #626b78; background: white; cursor: pointer; font-size: 8px; }
     .confirm-actions button.danger { border-color: #d3515a; color: white; background: #d95d65; }
-    .interaction-panel { position: absolute; z-index: 25; right: 226px; bottom: 0; left: 234px; display: grid; grid-template-columns: 160px 1fr; min-height: 196px; border-top: 1px solid #c7ccd3; background: rgba(250,251,252,.98); box-shadow: 0 -12px 34px rgba(38,45,57,.14); transform: translateY(105%); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
+    .interaction-panel { position: absolute; z-index: 25; right: 226px; bottom: 0; left: 234px; display: grid; grid-template-columns: 170px 1fr; min-height: 252px; border-top: 1px solid #c7ccd3; background: rgba(250,251,252,.98); box-shadow: 0 -12px 34px rgba(38,45,57,.14); transform: translateY(105%); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
     .interaction-panel.open { transform: none; }
     .interaction-side { padding: 14px; border-right: 1px solid #dce0e5; }
     .interaction-side .close { float: right; border: 0; color: #858d98; background: transparent; cursor: pointer; }
@@ -154,13 +161,19 @@
     .event-types { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
     .event-types button { height: 30px; border: 1px solid #d7dce4; border-radius: 6px; color: #7d8795; background: white; cursor: pointer; font-size: 7px; }
     .event-types button.active { border-color: #aebff0; color: #2b63d3; background: #edf2ff; }
-    .states { display: flex; gap: 5px; margin-top: 12px; }
-    .states span { padding: 5px 7px; border-radius: 5px; color: #68717f; background: #eceff3; font-size: 7px; }
-    .states span.active { color: white; background: #2e67dd; }
-    .interaction-form { display: grid; grid-template-columns: repeat(4,1fr) auto; align-content: start; gap: 9px; padding: 15px; }
+    .states { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+    .states button { min-height: 25px; padding: 0 7px; border: 0; border-radius: 5px; color: #68717f; background: #eceff3; cursor: pointer; font-size: 7px; }
+    .states button.active { color: white; background: #2e67dd; }
+    .interaction-form { display: grid; grid-template-columns: minmax(112px,1.25fr) repeat(5,minmax(70px,1fr)) auto; align-content: start; gap: 8px; padding: 13px 14px; }
     .interaction-form label { display: grid; grid-template-columns: 1fr; gap: 5px; }
     .interaction-form .save { align-self: end; height: 27px; padding: 0 12px; border: 0; border-radius: 6px; color: white; background: #2e67dd; cursor: pointer; font-size: 8px; font-weight: 700; }
-    .interaction-note { grid-column: 1 / -1; margin: 4px 0 0; color: #929aa5; font-size: 8px; line-height: 1.6; }
+    .interaction-field[hidden] { display: none; }
+    .interaction-actions { display: flex; min-height: 30px; grid-column: 1 / -1; flex-wrap: wrap; gap: 6px; padding-top: 3px; }
+    .interaction-action { display: inline-grid; min-height: 30px; grid-template-columns: auto auto; align-items: center; gap: 7px; padding: 5px 6px 5px 9px; border: 1px solid #d6dce6; border-radius: 7px; color: #536177; background: white; font-size: 7px; line-height: 1.35; }
+    .interaction-action b { color: #2d62c7; font-weight: 750; }
+    .interaction-action button { width: 19px; height: 19px; padding: 0; border: 0; border-radius: 5px; color: #a05f6b; background: #faedef; cursor: pointer; }
+    .interaction-empty { align-self: center; color: #9aa2af; font-size: 8px; }
+    .interaction-note { grid-column: 1 / -1; margin: 0; color: #929aa5; font-size: 7px; line-height: 1.5; }
     .preview-modal { position: absolute; z-index: 60; display: grid; place-items: center; inset: 0; padding: 28px; background: rgba(20,26,36,.64); opacity: 0; pointer-events: none; transition: opacity 220ms ease; }
     .preview-modal.open { opacity: 1; pointer-events: auto; }
     .preview-window { width: min(742px,calc(100vw - 70px)); overflow: hidden; border: 1px solid #bbc2cc; border-radius: 14px; background: #edf0f4; box-shadow: 0 30px 80px rgba(12,17,25,.4); transform: translateY(12px) scale(.97); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
@@ -174,7 +187,7 @@
     .preview-qr-shell { position: relative; display: grid; width: 230px; min-height: 282px; place-items: center; overflow: hidden; border: 1px solid #d3d9e2; border-radius: 12px; background: white; box-shadow: 0 10px 30px rgba(34,44,59,.1); }
     .preview-qr-shell iframe { width: 100%; height: 282px; border: 0; background: white; }
     .preview-loading { position: absolute; display: grid; place-items: center; color: #8490a2; background: white; font-size: 9px; inset: 0; }
-    .preview-url { display: block; min-height: 44px; padding: 8px; overflow: hidden; border: 1px solid #d1d7e0; border-radius: 7px; color: #5c6879; background: #f8fafc; font: 7px/1.45 ui-monospace,monospace; overflow-wrap: anywhere; }
+    .preview-loading[hidden], .preview-loading.is-done { display: none; }
     .preview-share-actions { display: flex; align-items: center; gap: 7px; }
     .preview-copy { height: 29px; padding: 0 11px; border: 0; border-radius: 6px; color: white; background: #2e67dd; cursor: pointer; font-size: 8px; font-weight: 700; }
     .preview-payload { color: #8c95a2; font: 7px ui-monospace,monospace; }
@@ -278,14 +291,14 @@
         </div>
       </div>
       <section class="interaction-panel" id="interactionPanel">
-        <div class="interaction-side"><button class="close" id="closeInteraction">×</button><strong id="interactionTitle">按钮 · 交互事件</strong><div class="event-types"><button class="active" data-event-type="click">点击</button><button data-event-type="doubleClick">双击</button><button data-event-type="touch">长按</button><button data-event-type="swipeLeft">← 滑</button><button data-event-type="swipeRight">→ 滑</button><button data-event-type="swipeUp">↑ 滑</button><button data-event-type="swipeDown">↓ 滑</button></div><div class="states"><span class="active">初始状态</span><span>状态 1</span><span>＋</span></div></div>
-        <div class="interaction-form"><label>目标<select id="eventTarget"><option value="details">Details 页面</option><option value="home">Launch 页面</option></select></label><label>转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>时长<input id="eventDuration" type="number" min="0.08" max="2.4" step="0.05" value="0.35" /></label><button class="save" id="saveInteraction">保存事件</button><p class="interaction-note">保留原项目的点击、双击、长按与四向滑动模型；扫码后的运行时会按这里的方向、时长和 easing 执行真实页面转场。</p></div>
+        <div class="interaction-side"><button class="close" id="closeInteraction">×</button><strong id="interactionTitle">按钮 · 交互事件</strong><div class="event-types"><button class="active" data-event-type="click">点击</button><button data-event-type="doubleClick">双击</button><button data-event-type="touch">长按</button><button data-event-type="swipeLeft">← 滑</button><button data-event-type="swipeRight">→ 滑</button><button data-event-type="swipeUp">↑ 滑</button><button data-event-type="swipeDown">↓ 滑</button></div><div class="states" id="interactionStates"></div></div>
+        <div class="interaction-form"><label>目标<select id="eventTarget"></select></label><label class="interaction-field" id="targetStateField">目标 State<select id="eventTargetState"></select></label><label class="interaction-field" id="effectField" hidden>页面转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>延迟<input id="eventDelay" type="number" min="0" max="5" step="0.05" value="0" /></label><label>时长<input id="eventDuration" type="number" min="0.05" max="3" step="0.05" value="0.3" /></label><button class="save" id="saveInteraction">添加动作</button><div class="interaction-actions" id="interactionActions"></div><p class="interaction-note">同一次触发可让多个本页元素切换到指定 State，并可同时执行一次页面跳转；每个动作独立保存延迟、时长和 easing。</p></div>
       </section>
       <div class="preview-modal" id="previewModal">
-        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">SCAN PREVIEW · URL-EMBEDDED PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在压缩项目并生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>用手机相机扫码，立即检查交互</strong><p>画布、页面事件、Status Bar 与 Tab Bar 配置都会写入链接；服务端不保存项目内容。</p><code class="preview-url" id="previewUrl">准备预览链接…</code><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">SERIALIZING</span></div></section><section class="preview-device-pane"><span>LIVE RUNTIME · SAME PAYLOAD</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
+        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">SCAN PREVIEW · URL-EMBEDDED PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>用手机相机扫码，立即检查交互</strong><p>当前画布、全部 State、元素事件与系统栏配置都会写入同一份预览数据。</p><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">SERIALIZING</span></div></section><section class="preview-device-pane"><span id="previewRuntimeLabel">LIVE RUNTIME · WAITING</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
       </div>
     </div>
-    <footer class="footer"><span><strong id="footerMode">SELECT</strong> · DOCUMENT / SYNTHETIC-MOBILE-PROTOTYPE</span><span id="footerState">6 ELEMENTS · 2 PAGES · 0 EVENTS</span></footer>
+    <footer class="footer"><span><strong id="footerMode">SELECT</strong> · DOCUMENT / SYNTHETIC-MOBILE-PROTOTYPE</span><span id="footerState">7 ELEMENTS · 2 PAGES · 0 EVENTS</span></footer>
   </main>
   <script>
     (function () {
@@ -336,7 +349,7 @@
       let expandedContainerId = null;
       let clipboard = null;
       let eventElementIds = new Set();
-      let interactionEvents = {};
+      let interactionEvents = [];
       let gesture = null;
       let replaying = false;
       let idSequence = 100;
@@ -362,6 +375,77 @@
         const id = typeof itemOrId === 'string' ? itemOrId : (itemOrId && itemOrId.id);
         return id === 'status-bar' || id === 'tab-bar';
       }
+
+      function elementStateSnapshot(item) {
+        const state = {
+          x:item.x,
+          y:item.y,
+          w:item.w,
+          h:item.h,
+          fill:item.fill,
+          radius:item.radius,
+          opacity:item.opacity
+        };
+        if (Object.prototype.hasOwnProperty.call(item, 'text')) state.text = item.text;
+        return state;
+      }
+
+      function ensureElementStates(item) {
+        if (!item || isSystemElement(item)) return item;
+        if (!item.states || typeof item.states !== 'object') {
+          item.states = {'0':elementStateSnapshot(item)};
+        }
+        if (!item.states['0']) item.states['0'] = elementStateSnapshot(item);
+        if (!item.nowState || !item.states[item.nowState]) item.nowState = '0';
+        return item;
+      }
+
+      function saveCurrentElementState(item) {
+        if (!ensureElementStates(item)) return;
+        item.states[item.nowState] = elementStateSnapshot(item);
+      }
+
+      function elementStateIds(item) {
+        ensureElementStates(item);
+        return Object.keys(item.states).sort((a, b) => Number(a)-Number(b));
+      }
+
+      function switchElementState(item, stateId) {
+        if (!ensureElementStates(item) || !item.states[stateId]) return false;
+        saveCurrentElementState(item);
+        item.nowState = stateId;
+        Object.assign(item, clone(item.states[stateId]));
+        if (item.containerId) syncContainer(getContainer(item.containerId));
+        return true;
+      }
+
+      function addElementState(item, selectState) {
+        if (!ensureElementStates(item)) return null;
+        const ids = elementStateIds(item);
+        if (ids.length >= 3) {
+          flash('每个元素最多包含初始状态和 2 个扩展 State');
+          return null;
+        }
+        saveCurrentElementState(item);
+        const stateId = String(Math.max.apply(null, ids.map(Number)) + 1);
+        item.states[stateId] = clone(item.states[item.nowState]);
+        if (selectState !== false) switchElementState(item, stateId);
+        return stateId;
+      }
+
+      function deleteElementState(item, stateId) {
+        if (!ensureElementStates(item) || stateId === '0' || !item.states[stateId]) return;
+        delete item.states[stateId];
+        interactionEvents = interactionEvents.flatMap(event => {
+          if (event.sourceId === item.id && event.sourceState === stateId) return [];
+          event.elementActions = event.elementActions.filter(action => !(action.targetId === item.id && action.targetState === stateId));
+          return event.elementActions.length || event.pageAction ? [event] : [];
+        });
+        switchElementState(item, '0');
+        syncEventElementIds();
+      }
+
+      elements.filter(item => !isSystemElement(item)).forEach(ensureElementStates);
 
       function getElement(id) {
         return elements.find(item => item.id === id) || null;
@@ -602,6 +686,21 @@
         artboard.appendChild(overlay);
       }
 
+      function renderStateGhost() {
+        if (currentPage !== 'home' || selectedIds.size !== 1) return;
+        const item = selected();
+        if (!item || getContainer(item.id) || isSystemElement(item)) return;
+        ensureElementStates(item);
+        if (item.nowState === '0' || !item.states['0']) return;
+        const ghostItem = clone(item);
+        Object.assign(ghostItem, clone(item.states['0']));
+        const ghost = createElementNode(ghostItem, 0, 0, item.id);
+        ghost.classList.remove('selected');
+        ghost.classList.add('state-ghost');
+        ghost.removeAttribute('data-select-id');
+        artboard.appendChild(ghost);
+      }
+
       function renderCanvas() {
         artboard.innerHTML = '';
         if (currentPage === 'details') {
@@ -610,6 +709,7 @@
           elements.filter(isSystemElement).forEach(item => artboard.appendChild(createElementNode(item, 0, 0, item.id)));
           return;
         }
+        renderStateGhost();
         const renderedContainers = new Set();
         elements.forEach(item => {
           if (item.containerId) {
@@ -761,6 +861,9 @@
         const completed = gesture;
         gesture = null;
         if (cancel) restoreGeometry(completed.snapshot);
+        if (!cancel && completed.changed) {
+          completed.snapshot.forEach(origin => saveCurrentElementState(getElement(origin.id)));
+        }
         if (artboard.hasPointerCapture(completed.pointerId)) artboard.releasePointerCapture(completed.pointerId);
         renderAll();
         if (!cancel && completed.changed) flash((completed.mode === 'resize' ? '已调整大小 ' : '已移动 ') + completed.label);
@@ -874,6 +977,50 @@
         return '<div class="inspector-head"><div class="inspector-icon">◇</div><div><strong>' + selectedIds.size + ' 个图层</strong><span>MULTI SELECTION</span></div></div><div class="inspector-section"><h3>BOUNDING BOX</h3><div class="fields"><label>X<input value="' + bounds.x + '" disabled></label><label>Y<input value="' + bounds.y + '" disabled></label><label>W<input value="' + bounds.w + '" disabled></label><label>H<input value="' + bounds.h + '" disabled></label></div></div><div class="inspector-section"><h3>STRUCTURE</h3><button class="interaction-button" data-inspector-command="group"><span>⌘ 组合选择</span></button><button class="interaction-button" data-inspector-command="mask" style="margin-top:7px"><span>◐ 创建 Mask</span></button><button class="interaction-button" data-inspector-command="component" style="margin-top:7px"><span>◇ 创建组件</span></button></div>';
       }
 
+      function elementStatesMarkup(item) {
+        ensureElementStates(item);
+        return '<div class="inspector-section"><h3>STATES · ' + elementStateIds(item).length + ' / 3</h3><div class="element-states">' + elementStateIds(item).map(stateId => '<button class="element-state ' + (item.nowState === stateId ? 'active' : '') + '" data-element-state="' + stateId + '"><span>' + (stateId === '0' ? '初始状态' : 'State ' + stateId) + '</span>' + (stateId === '0' ? '' : '<span class="delete-state" data-delete-element-state="' + stateId + '">×</span>') + '</button>').join('') + '<button class="element-state element-state-add" data-add-element-state ' + (elementStateIds(item).length >= 3 ? 'disabled' : '') + '>＋</button></div>' + (item.nowState === '0' ? '' : '<p class="state-compare-note">画布中的虚线半透明元素是初始状态；当前正在编辑 State ' + item.nowState + '。</p>') + '</div>';
+      }
+
+      function bindElementStateControls(item) {
+        inspector.querySelectorAll('[data-element-state]').forEach(button => button.addEventListener('click', event => {
+          const deleteControl = event.target.closest('[data-delete-element-state]');
+          if (deleteControl) {
+            event.stopPropagation();
+            deleteElementState(item, deleteControl.dataset.deleteElementState);
+            renderAll();
+            if (interactionPanel.classList.contains('open') && currentInteractionSource()) {
+              if (currentInteractionSource().id === item.id) interactionPanel.dataset.sourceState = item.nowState;
+              renderInteractionStates(currentInteractionSource());
+              refreshInteractionPanel();
+            }
+            flash('已删除 State');
+            return;
+          }
+          if (switchElementState(item, button.dataset.elementState)) {
+            renderAll();
+            if (interactionPanel.classList.contains('open') && currentInteractionSource() && currentInteractionSource().id === item.id) {
+              interactionPanel.dataset.sourceState = item.nowState;
+              renderInteractionStates(item);
+              refreshInteractionPanel();
+            }
+            flash('正在编辑 ' + (item.nowState === '0' ? '初始状态' : 'State ' + item.nowState));
+          }
+        }));
+        const addButton = inspector.querySelector('[data-add-element-state]');
+        if (addButton) addButton.addEventListener('click', () => {
+          const stateId = addElementState(item, true);
+          if (!stateId) return;
+          renderAll();
+          if (interactionPanel.classList.contains('open') && currentInteractionSource()) {
+            if (currentInteractionSource().id === item.id) interactionPanel.dataset.sourceState = item.nowState;
+            renderInteractionStates(currentInteractionSource());
+            refreshInteractionPanel();
+          }
+          flash('已创建 State ' + stateId + ' · 可直接修改属性');
+        });
+      }
+
       function renderSystemInspector(item) {
         if (!item || !isSystemElement(item)) return false;
 
@@ -963,11 +1110,13 @@
         }
 
         const hasText = Object.prototype.hasOwnProperty.call(item, 'text');
-        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div><div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.h + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div>' + elementStatesMarkup(item) + '<div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.h + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE · ' + (item.nowState === '0' ? '初始状态' : 'STATE ' + item.nowState) + '</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+        bindElementStateControls(item);
         inspector.querySelectorAll('[data-prop]').forEach(input => input.addEventListener('input', () => {
           const prop = input.dataset.prop;
           const value = ['x','y','w','h','radius','opacity'].includes(prop) ? Number(input.value) : input.value;
           item[prop] = (prop === 'w' || prop === 'h') && Number.isFinite(value) ? Math.max(MIN_RESIZE_SIZE, value) : value;
+          saveCurrentElementState(item);
           if (item.containerId) syncContainer(getContainer(item.containerId));
           renderCanvas();
           renderLayers();
@@ -988,6 +1137,7 @@
           const next = Object.assign({}, before, {[prop]:Math.max(MIN_RESIZE_SIZE, value)});
           applyBoundsToSnapshot(snapshot, before, next);
         }
+        members.forEach(saveCurrentElementState);
         syncContainer(container);
         renderAll();
       }
@@ -1014,6 +1164,9 @@
         if (selectedIds.size > 1) {
           selectionChip.hidden = false;
           selectionChip.textContent = selectedIds.size + ' LAYERS SELECTED · SHIFT CLICK TO ADJUST';
+        } else if (selected() && !getContainer(selected().id) && !isSystemElement(selected()) && selected().nowState !== '0') {
+          selectionChip.hidden = false;
+          selectionChip.textContent = 'EDITING STATE ' + selected().nowState + ' · INITIAL STATE SHOWN AS GHOST';
         } else if (expandedContainerId) {
           selectionChip.hidden = false;
           selectionChip.textContent = 'EDITING CONTAINER · ESC TO EXIT';
@@ -1084,6 +1237,7 @@
           y:type === 'nav' ? 466 : 330+(index%4)*18,
           w:template.w,h:template.h,fill:template.fill,radius:template.radius,opacity:100,text:template.text || ''
         };
+        ensureElementStates(item);
         elements.push(item);
         selectedIds = new Set([id]);
         lastHomeSelection = new Set(selectedIds);
@@ -1293,8 +1447,12 @@
             }
           }
         });
-        eventElementIds = new Set(Array.from(eventElementIds).filter(id => !elementIds.has(id)));
-        elementIds.forEach(id => delete interactionEvents[id]);
+        interactionEvents = interactionEvents.flatMap(event => {
+          if (elementIds.has(event.sourceId)) return [];
+          event.elementActions = event.elementActions.filter(action => !elementIds.has(action.targetId));
+          return event.elementActions.length || event.pageAction ? [event] : [];
+        });
+        syncEventElementIds();
         elements = elements.filter(item => !elementIds.has(item.id));
         containers = containers.filter(container => !containerIds.has(container.id));
         containers.forEach(syncContainer);
@@ -1332,25 +1490,168 @@
         flash('已创建 ' + component.name + ' 实例');
       }
 
+      function activeInteractionTrigger() {
+        const active = document.querySelector('.event-types button.active');
+        return active ? active.dataset.eventType : 'click';
+      }
+
+      function currentInteractionSource() {
+        return getElement(interactionPanel.dataset.sourceId);
+      }
+
+      function findInteraction(sourceId, sourceState, trigger, create) {
+        let interaction = interactionEvents.find(event => event.sourceId === sourceId && event.sourceState === sourceState && event.trigger === trigger) || null;
+        if (!interaction && create) {
+          interaction = {sourceId:sourceId,sourceState:sourceState,trigger:trigger,elementActions:[],pageAction:null};
+          interactionEvents.push(interaction);
+        }
+        return interaction;
+      }
+
+      function syncEventElementIds() {
+        eventElementIds = new Set(interactionEvents.map(event => event.sourceId));
+      }
+
+      function dropEmptyInteractions() {
+        interactionEvents = interactionEvents.filter(event => event.elementActions.length || event.pageAction);
+        syncEventElementIds();
+      }
+
+      function renderInteractionStates(source) {
+        ensureElementStates(source);
+        const host = document.querySelector('#interactionStates');
+        host.innerHTML = elementStateIds(source).map(stateId => '<button data-source-state="' + stateId + '" class="' + (source.nowState === stateId ? 'active' : '') + '">' + (stateId === '0' ? '初始状态' : 'State ' + stateId) + '</button>').join('') + '<button data-add-source-state ' + (elementStateIds(source).length >= 3 ? 'disabled' : '') + '>＋</button>';
+        host.querySelectorAll('[data-source-state]').forEach(button => button.addEventListener('click', () => {
+          if (!switchElementState(source, button.dataset.sourceState)) return;
+          selectedIds = new Set([source.id]);
+          lastHomeSelection = new Set(selectedIds);
+          interactionPanel.dataset.sourceState = source.nowState;
+          renderAll();
+          renderInteractionStates(source);
+          refreshInteractionPanel();
+        }));
+        const add = host.querySelector('[data-add-source-state]');
+        if (add) add.addEventListener('click', () => {
+          const stateId = addElementState(source, true);
+          if (!stateId) return;
+          selectedIds = new Set([source.id]);
+          lastHomeSelection = new Set(selectedIds);
+          interactionPanel.dataset.sourceState = stateId;
+          renderAll();
+          renderInteractionStates(source);
+          refreshInteractionPanel();
+          flash('已创建并进入 State ' + stateId);
+        });
+      }
+
+      function interactionTargetOptions() {
+        const source = currentInteractionSource();
+        const elementOptions = elements.filter(item => !isSystemElement(item)).map(item => {
+          ensureElementStates(item);
+          return '<option value="element:' + esc(item.id) + '">' + esc(item.name) + (source && item.id === source.id ? '（自身）' : '') + ' · ' + elementStateIds(item).length + ' states</option>';
+        }).join('');
+        const pageOptions = pages.map(page => '<option value="page:' + esc(page.id) + '">' + esc(page.name) + ' 页面</option>').join('');
+        return '<optgroup label="本页面元素">' + elementOptions + '</optgroup><optgroup label="页面跳转">' + pageOptions + '</optgroup>';
+      }
+
+      function selectedInteractionTarget() {
+        const value = document.querySelector('#eventTarget').value || '';
+        const separator = value.indexOf(':');
+        return {kind:value.slice(0, separator),id:value.slice(separator+1)};
+      }
+
+      function syncInteractionTargetFields(preferredState) {
+        const target = selectedInteractionTarget();
+        const stateField = document.querySelector('#targetStateField');
+        const effectField = document.querySelector('#effectField');
+        stateField.hidden = target.kind !== 'element';
+        effectField.hidden = target.kind !== 'page';
+        if (target.kind !== 'element') return;
+        const element = getElement(target.id);
+        if (!element) return;
+        ensureElementStates(element);
+        const stateSelect = document.querySelector('#eventTargetState');
+        stateSelect.innerHTML = elementStateIds(element).map(stateId => '<option value="' + stateId + '">' + (stateId === '0' ? '初始状态' : 'State ' + stateId) + '</option>').join('') + (elementStateIds(element).length < 3 ? '<option value="__new__">＋ 新建 State</option>' : '');
+        const fallbackState = elementStateIds(element).find(stateId => stateId !== '0') || '0';
+        stateSelect.value = preferredState && element.states[preferredState] ? preferredState : fallbackState;
+      }
+
+      function renderInteractionActions() {
+        const source = currentInteractionSource();
+        const sourceState = interactionPanel.dataset.sourceState || '0';
+        const interaction = source ? findInteraction(source.id, sourceState, activeInteractionTrigger(), false) : null;
+        const host = document.querySelector('#interactionActions');
+        if (!interaction || (!interaction.elementActions.length && !interaction.pageAction)) {
+          host.innerHTML = '<span class="interaction-empty">这个触发条件还没有动作。可依次添加多个元素 State 与一个页面跳转。</span>';
+          return;
+        }
+        const elementActions = interaction.elementActions.map(action => {
+          const target = getElement(action.targetId);
+          return '<span class="interaction-action"><span><b>' + esc(target ? target.name : action.targetId) + '</b> → ' + (action.targetState === '0' ? '初始状态' : 'State ' + action.targetState) + ' · ' + action.startTime + 's / ' + action.duration + 's</span><button data-remove-element-action="' + esc(action.targetId) + '" aria-label="删除元素动作">×</button></span>';
+        }).join('');
+        const pageAction = interaction.pageAction ? (() => {
+          const page = pages.find(item => item.id === interaction.pageAction.targetPageId);
+          return '<span class="interaction-action"><span><b>页面</b> → ' + esc(page ? page.name : interaction.pageAction.targetPageId) + ' · ' + esc(interaction.pageAction.effect) + '</span><button data-remove-page-action aria-label="删除页面动作">×</button></span>';
+        })() : '';
+        host.innerHTML = elementActions + pageAction;
+        host.querySelectorAll('[data-remove-element-action]').forEach(button => button.addEventListener('click', () => {
+          interaction.elementActions = interaction.elementActions.filter(action => action.targetId !== button.dataset.removeElementAction);
+          dropEmptyInteractions();
+          renderInteractionActions();
+          renderInspector();
+          updateChrome();
+        }));
+        const removePage = host.querySelector('[data-remove-page-action]');
+        if (removePage) removePage.addEventListener('click', () => {
+          interaction.pageAction = null;
+          dropEmptyInteractions();
+          renderInteractionActions();
+          renderInspector();
+          updateChrome();
+        });
+      }
+
+      function refreshInteractionPanel() {
+        const source = currentInteractionSource();
+        if (!source) return;
+        const sourceState = interactionPanel.dataset.sourceState || source.nowState || '0';
+        const interaction = findInteraction(source.id, sourceState, activeInteractionTrigger(), false);
+        const targetSelect = document.querySelector('#eventTarget');
+        const previousTarget = targetSelect.value;
+        targetSelect.innerHTML = interactionTargetOptions();
+        const preferredTarget = interaction && interaction.elementActions.length ? 'element:' + interaction.elementActions[0].targetId : (interaction && interaction.pageAction ? 'page:' + interaction.pageAction.targetPageId : previousTarget);
+        const hasPreferred = Array.from(targetSelect.options).some(option => option.value === preferredTarget);
+        targetSelect.value = hasPreferred ? preferredTarget : 'element:' + source.id;
+        const selected = selectedInteractionTarget();
+        const existingElementAction = interaction && selected.kind === 'element' ? interaction.elementActions.find(action => action.targetId === selected.id) : null;
+        const existingPageAction = interaction && selected.kind === 'page' ? interaction.pageAction : null;
+        syncInteractionTargetFields(existingElementAction ? existingElementAction.targetState : null);
+        document.querySelector('#eventEffect').value = existingPageAction ? existingPageAction.effect : 'push-left';
+        document.querySelector('#eventEasing').value = existingElementAction ? existingElementAction.easing : (existingPageAction ? existingPageAction.easing : 'ease-out');
+        document.querySelector('#eventDelay').value = existingElementAction ? existingElementAction.startTime : (existingPageAction ? existingPageAction.startTime : 0);
+        document.querySelector('#eventDuration').value = existingElementAction ? existingElementAction.duration : (existingPageAction ? existingPageAction.duration : .3);
+        renderInteractionActions();
+      }
+
       function openInteraction() {
         closeContextMenu();
-        const target = selectedVisualItems()[0];
-        if (!target || isSystemElement(target)) {
+        const source = selectedVisualItems()[0];
+        if (!source || isSystemElement(source)) {
           flash('请先选择一个图层');
           return;
         }
-        const existing = interactionEvents[target.id] || null;
-        const fallbackTarget = (pages.find(page => page.id !== currentPage) || pages[0] || {}).id || '';
-        interactionPanel.dataset.targetId = target.id;
-        document.querySelector('#interactionTitle').textContent = target.name + ' · 交互事件';
-        document.querySelector('#eventTarget').innerHTML = pages.map(page => '<option value="' + esc(page.id) + '">' + esc(page.name) + ' 页面</option>').join('');
-        document.querySelector('#eventTarget').value = existing && pages.some(page => page.id === existing.targetPageId) ? existing.targetPageId : fallbackTarget;
-        document.querySelector('#eventEffect').value = existing ? existing.effect : 'push-left';
-        document.querySelector('#eventEasing').value = existing ? existing.easing : 'ease-out';
-        document.querySelector('#eventDuration').value = existing ? existing.duration : 0.35;
-        document.querySelectorAll('.event-types button').forEach(button => button.classList.toggle('active', button.dataset.eventType === (existing ? existing.trigger : 'click')));
+        ensureElementStates(source);
+        saveCurrentElementState(source);
+        interactionPanel.dataset.sourceId = source.id;
+        interactionPanel.dataset.sourceState = source.nowState;
+        document.querySelector('#interactionTitle').textContent = source.name + ' · 交互事件';
+        const firstEvent = interactionEvents.find(event => event.sourceId === source.id && event.sourceState === source.nowState);
+        const trigger = firstEvent ? firstEvent.trigger : 'click';
+        document.querySelectorAll('.event-types button').forEach(button => button.classList.toggle('active', button.dataset.eventType === trigger));
+        renderInteractionStates(source);
+        refreshInteractionPanel();
         interactionPanel.classList.add('open');
-        flash('进入交互编排');
+        flash('正在编排 ' + source.name + ' · ' + (source.nowState === '0' ? '初始状态' : 'State ' + source.nowState));
       }
 
       function showMenuAt(x, y, title, items, context) {
@@ -1471,10 +1772,11 @@
         }
         openConfirm('确认删除页面？', '“' + page.name + '” 删除后无法恢复；关联到该页面的演示事件也会被清理。', () => {
           pages = pages.filter(item => item.id !== pageId);
-          Object.keys(interactionEvents).forEach(sourceId => {
-            if (interactionEvents[sourceId].targetPageId === pageId) delete interactionEvents[sourceId];
+          interactionEvents.forEach(event => {
+            if (event.pageAction && event.pageAction.targetPageId === pageId) event.pageAction = null;
           });
-          eventElementIds = new Set(Object.keys(interactionEvents));
+          if (pageId === 'home') interactionEvents = [];
+          dropEmptyInteractions();
           const tabBar = getElement('tab-bar');
           if (tabBar) tabBar.tabs.forEach(tab => { if (tab.pageId === pageId) tab.pageId = null; });
           if (currentPage === pageId) switchPage(pages[0].id);
@@ -1593,29 +1895,76 @@
       document.querySelector('#closeInteraction').addEventListener('click', () => interactionPanel.classList.remove('open'));
       document.querySelectorAll('.event-types button').forEach(button => button.addEventListener('click', () => {
         document.querySelectorAll('.event-types button').forEach(item => item.classList.toggle('active', item === button));
+        refreshInteractionPanel();
         flash('已选择' + button.textContent + '事件');
       }));
+      document.querySelector('#eventTarget').addEventListener('change', () => {
+        const source = currentInteractionSource();
+        const interaction = source ? findInteraction(source.id, interactionPanel.dataset.sourceState || '0', activeInteractionTrigger(), false) : null;
+        const target = selectedInteractionTarget();
+        const elementAction = interaction && target.kind === 'element' ? interaction.elementActions.find(action => action.targetId === target.id) : null;
+        const pageAction = interaction && target.kind === 'page' && interaction.pageAction && interaction.pageAction.targetPageId === target.id ? interaction.pageAction : null;
+        syncInteractionTargetFields(elementAction ? elementAction.targetState : null);
+        document.querySelector('#eventEffect').value = pageAction ? pageAction.effect : 'push-left';
+        document.querySelector('#eventEasing').value = elementAction ? elementAction.easing : (pageAction ? pageAction.easing : 'ease-out');
+        document.querySelector('#eventDelay').value = elementAction ? elementAction.startTime : (pageAction ? pageAction.startTime : 0);
+        document.querySelector('#eventDuration').value = elementAction ? elementAction.duration : (pageAction ? pageAction.duration : .3);
+      });
+      document.querySelector('#eventTargetState').addEventListener('change', event => {
+        const target = selectedInteractionTarget();
+        const element = target.kind === 'element' ? getElement(target.id) : null;
+        if (!element) return;
+        let stateId = event.target.value;
+        if (stateId === '__new__') stateId = addElementState(element, true);
+        if (!stateId || !switchElementState(element, stateId)) return;
+        selectedIds = new Set([element.id]);
+        lastHomeSelection = new Set(selectedIds);
+        renderAll();
+        syncInteractionTargetFields(stateId);
+        flash('画布正在显示 ' + element.name + ' · ' + (stateId === '0' ? '初始状态' : 'State ' + stateId));
+      });
       document.querySelector('#saveInteraction').addEventListener('click', () => {
-        const targetId = interactionPanel.dataset.targetId;
-        const triggerButton = document.querySelector('.event-types button.active');
-        const targetPageId = document.querySelector('#eventTarget').value;
+        const source = currentInteractionSource();
+        if (!source) return;
+        const sourceState = interactionPanel.dataset.sourceState || '0';
+        const trigger = activeInteractionTrigger();
+        const target = selectedInteractionTarget();
+        const interaction = findInteraction(source.id, sourceState, trigger, true);
+        const delayInput = Number(document.querySelector('#eventDelay').value);
         const durationInput = Number(document.querySelector('#eventDuration').value);
-        if (targetId && getElement(targetId) && pages.some(page => page.id === targetPageId)) {
-          interactionEvents[targetId] = {
-            sourceId:targetId,
-            trigger:triggerButton ? triggerButton.dataset.eventType : 'click',
-            targetPageId:targetPageId,
+        const startTime = Math.min(5, Math.max(0, Number.isFinite(delayInput) ? delayInput : 0));
+        const duration = Math.min(3, Math.max(.05, Number.isFinite(durationInput) ? durationInput : .3));
+        const easing = document.querySelector('#eventEasing').value;
+        if (target.kind === 'element') {
+          const targetElement = getElement(target.id);
+          if (!targetElement) return;
+          let targetState = document.querySelector('#eventTargetState').value;
+          if (targetState === '__new__') targetState = addElementState(targetElement, true);
+          if (!targetState) return;
+          interaction.elementActions = interaction.elementActions.filter(action => action.targetId !== target.id);
+          interaction.elementActions.push({
+            targetId:target.id,
+            targetState:targetState,
+            startTime:startTime,
+            duration:duration,
+            easing:easing
+          });
+          flash(activeInteractionTrigger() + ' · ' + targetElement.name + ' → ' + (targetState === '0' ? '初始状态' : 'State ' + targetState));
+        } else if (target.kind === 'page' && pages.some(page => page.id === target.id)) {
+          interaction.pageAction = {
+            targetPageId:target.id,
             effect:document.querySelector('#eventEffect').value,
-            easing:document.querySelector('#eventEasing').value,
-            duration:Math.min(2.4, Math.max(.08, Number.isFinite(durationInput) ? durationInput : .35))
+            startTime:startTime,
+            duration:duration,
+            easing:easing
           };
-          eventElementIds.add(targetId);
+          const targetPage = pages.find(page => page.id === target.id);
+          flash(activeInteractionTrigger() + ' · 页面 → ' + (targetPage ? targetPage.name : target.id));
         }
-        interactionPanel.classList.remove('open');
+        dropEmptyInteractions();
+        renderInteractionActions();
         renderInspector();
         updateChrome();
-        const targetPage = pages.find(page => page.id === targetPageId);
-        flash((triggerButton ? triggerButton.textContent.trim() : '点击') + '事件已保存 · ' + (getElement(targetId) ? getElement(targetId).name : '图层') + ' → ' + (targetPage ? targetPage.name : targetPageId));
       });
 
       document.querySelector('#preview').addEventListener('click', openPreview);
@@ -1624,18 +1973,23 @@
 
       function toPreviewElement(item) {
         if (!item || !['rect','circle','text','image','input','nav'].includes(item.type)) return null;
+        if (item.states) saveCurrentElementState(item);
+        const rawStates = item.states ? elementStateIds(item).map(stateId => Object.assign({stateId:stateId}, item.states[stateId])) : [Object.assign({stateId:'0'}, item)];
         return {
           id:item.id,
           name:item.name,
           type:item.type,
-          x:Number(item.x) || 0,
-          y:Number(item.y) || 0,
-          width:Math.max(1, Number(item.w == null ? item.width : item.w) || 1),
-          height:Math.max(1, Number(item.h == null ? item.height : item.h) || 1),
-          fill:item.fill || (item.type === 'text' ? '#202735' : '#dfe6f2'),
-          radius:Number(item.radius) || 0,
-          opacity:item.opacity == null ? 100 : Number(item.opacity),
-          text:item.text || ''
+          states:rawStates.map(state => ({
+            stateId:state.stateId,
+            x:Number(state.x) || 0,
+            y:Number(state.y) || 0,
+            width:Math.max(1, Number(state.w == null ? state.width : state.w) || 1),
+            height:Math.max(1, Number(state.h == null ? state.height : state.h) || 1),
+            fill:state.fill || (item.type === 'text' ? '#202735' : '#dfe6f2'),
+            radius:Number(state.radius) || 0,
+            opacity:state.opacity == null ? 100 : Number(state.opacity),
+            text:state.text || ''
+          }))
         };
       }
 
@@ -1649,12 +2003,17 @@
           elements:(page.id === 'home' ? elements.filter(item => !isSystemElement(item)) : detailsElements).map(toPreviewElement).filter(Boolean)
         }));
         const sourceIds = new Set(projectPages.flatMap(page => page.elements.map(item => item.id)));
-        const previewInteractions = Object.keys(interactionEvents).map(id => interactionEvents[id]).filter(event => sourceIds.has(event.sourceId) && pages.some(page => page.id === event.targetPageId));
+        const previewInteractions = clone(interactionEvents).flatMap(event => {
+          if (!sourceIds.has(event.sourceId)) return [];
+          event.elementActions = event.elementActions.filter(action => sourceIds.has(action.targetId));
+          if (event.pageAction && !pages.some(page => page.id === event.pageAction.targetPageId)) event.pageAction = null;
+          return event.elementActions.length || event.pageAction ? [event] : [];
+        });
         if (sourceIds.has('details-back') && pages.some(page => page.id === 'home')) {
-          previewInteractions.push({sourceId:'details-back',trigger:'click',targetPageId:'home',effect:'push-right',easing:'ease-out',duration:.3});
+          previewInteractions.push({sourceId:'details-back',sourceState:'0',trigger:'click',elementActions:[],pageAction:{targetPageId:'home',effect:'push-right',startTime:0,easing:'ease-out',duration:.3}});
         }
         return {
-          version:1,
+          version:2,
           title:'Poke · Synthetic Mobile Prototype',
           stage:{width:280,height:522},
           statusBar:{color:statusBar ? statusBar.color : '#111827',background:statusBar ? statusBar.fill : '#ffffff'},
@@ -1695,6 +2054,15 @@
         return {data:'j.' + bytesToBase64Url(raw),bytes:raw.length,rawBytes:raw.length};
       }
 
+      function previewPayloadId(data) {
+        let hash = 2166136261;
+        for (let index = 0; index < data.length; index += 1) {
+          hash ^= data.charCodeAt(index);
+          hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(16).padStart(8, '0').toUpperCase();
+      }
+
       let previewRequest = 0;
       async function openPreview() {
         closeContextMenu();
@@ -1703,11 +2071,10 @@
         const qrFrame = document.querySelector('#previewQrFrame');
         const liveFrame = document.querySelector('#previewLiveFrame');
         loading.hidden = false;
-        loading.textContent = '正在压缩项目并生成二维码…';
-        document.querySelector('#previewUrl').textContent = '准备预览链接…';
+        loading.classList.remove('is-done');
+        loading.textContent = '正在生成二维码…';
         document.querySelector('#previewPayload').textContent = 'SERIALIZING';
-        qrFrame.src = 'about:blank';
-        liveFrame.src = 'about:blank';
+        document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · WAITING';
         previewModal.classList.add('open');
         try {
           const encoded = await encodePreviewProject(buildPreviewProject());
@@ -1716,14 +2083,29 @@
           canonicalUrl.searchParams.set('data', encoded.data);
           const localUrl = new URL('/poke/render', window.location.href);
           localUrl.searchParams.set('data', encoded.data);
+          localUrl.searchParams.set('preview', String(requestId));
           const qrUrl = new URL(localUrl.toString());
           qrUrl.searchParams.set('qr', '1');
           const canonicalText = canonicalUrl.toString();
-          document.querySelector('#previewUrl').textContent = canonicalText;
-          document.querySelector('#previewUrl').title = canonicalText;
+          const payloadId = previewPayloadId(encoded.data);
           document.querySelector('#copyPreviewUrl').dataset.url = canonicalText;
-          document.querySelector('#previewPayload').textContent = encoded.bytes + ' B · ' + Math.round((1 - encoded.bytes / encoded.rawBytes) * 100) + '% SMALLER';
-          qrFrame.onload = () => { if (requestId === previewRequest) loading.hidden = true; };
+          qrFrame.dataset.payloadId = payloadId;
+          liveFrame.dataset.payloadId = payloadId;
+          document.querySelector('#previewPayload').textContent = 'PAYLOAD ' + payloadId + ' · ' + encoded.bytes + ' B';
+          document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · PAYLOAD ' + payloadId;
+          qrFrame.onload = () => {
+            setTimeout(() => {
+              if (requestId !== previewRequest || qrFrame.dataset.payloadId !== payloadId) return;
+              loading.hidden = true;
+              loading.classList.add('is-done');
+            }, 180);
+          };
+          liveFrame.onload = () => {
+            setTimeout(() => {
+              if (requestId !== previewRequest || liveFrame.dataset.payloadId !== payloadId) return;
+              document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · PAYLOAD ' + payloadId + ' · READY';
+            }, 180);
+          };
           qrFrame.onerror = () => { loading.textContent = '二维码生成失败，请复制链接预览'; };
           qrFrame.src = qrUrl.toString();
           liveFrame.src = localUrl.toString();
@@ -1740,6 +2122,23 @@
         document.querySelector('#previewQrFrame').src = 'about:blank';
         document.querySelector('#previewLiveFrame').src = 'about:blank';
       }
+
+      window.addEventListener('message', event => {
+        const qrFrame = document.querySelector('#previewQrFrame');
+        const liveFrame = document.querySelector('#previewLiveFrame');
+        const message = event.data || {};
+        if (event.source === qrFrame.contentWindow && message.payloadId === qrFrame.dataset.payloadId) {
+          if (message.type === 'poke:qr-ready') {
+            const loading = document.querySelector('#previewLoading');
+            loading.hidden = true;
+            loading.classList.add('is-done');
+          }
+          if (message.type === 'poke:qr-error') document.querySelector('#previewLoading').textContent = '二维码生成失败，请使用复制链接';
+        }
+        if (event.source === liveFrame.contentWindow && message.type === 'poke:runtime-ready' && message.payloadId === liveFrame.dataset.payloadId) {
+          document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · PAYLOAD ' + message.payloadId + ' · READY';
+        }
+      });
 
       document.querySelector('#copyPreviewUrl').addEventListener('click', async () => {
         const button = document.querySelector('#copyPreviewUrl');
@@ -1839,7 +2238,8 @@
         components = [];
         pages = [{id:'home',name:'Launch'},{id:'details',name:'Details'}];
         eventElementIds = new Set();
-        interactionEvents = {};
+        interactionEvents = [];
+        elements.filter(item => !isSystemElement(item)).forEach(ensureElementStates);
         selectedIds = new Set(['cta']);
         lastHomeSelection = new Set(selectedIds);
         expandedContainerId = null;
@@ -1855,21 +2255,33 @@
           action();
           await delay(720);
         };
-        await step('01 / 05 · 选择按钮图层', () => selectElement('cta'));
-        await step('02 / 05 · 调整填充颜色', () => {
+        await step('01 / 06 · 选择按钮图层', () => selectElement('cta'));
+        await step('02 / 06 · 调整按钮样式', () => {
           getElement('cta').fill = '#2e67dd';
+          saveCurrentElementState(getElement('cta'));
           renderAll();
           const fill = inspector.querySelector('[data-prop="fill"]');
           if (fill) fill.classList.add('pulse');
         });
-        await step('03 / 05 · 设置圆角 16', () => {
+        await step('03 / 06 · 设置圆角 16', () => {
           getElement('cta').radius = 16;
+          saveCurrentElementState(getElement('cta'));
           renderAll();
         });
-        await step('04 / 05 · 编排页面跳转', openInteraction);
-        await step('05 / 05 · 保存并实时预览', () => {
-          eventElementIds.add('cta');
-          interactionEvents.cta = {sourceId:'cta',trigger:'click',targetPageId:'details',effect:'push-left',easing:'ease-out',duration:.35};
+        await step('04 / 06 · 创建标题 State 1', () => {
+          const title = getElement('title');
+          addElementState(title, true);
+          title.x = 38;
+          title.opacity = 45;
+          title.fill = '#6d5bd0';
+          saveCurrentElementState(title);
+          switchElementState(title, '0');
+          selectElement('cta');
+        });
+        await step('05 / 06 · 编排元素与页面动作', openInteraction);
+        await step('06 / 06 · 保存并扫码预览', () => {
+          interactionEvents = [{sourceId:'cta',sourceState:'0',trigger:'click',elementActions:[{targetId:'title',targetState:'1',startTime:0,duration:.35,easing:'ease-out'}],pageAction:{targetPageId:'details',effect:'push-left',startTime:.55,duration:.35,easing:'ease-out'}}];
+          syncEventElementIds();
           interactionPanel.classList.remove('open');
           renderInspector();
           updateChrome();

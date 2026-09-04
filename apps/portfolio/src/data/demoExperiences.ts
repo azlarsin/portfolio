@@ -129,15 +129,15 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 3,
-        summary: '原型编辑工作台重建，包含画布、图层、系统栏、交互设置与手机扫码预览。',
+        summary: '原型编辑工作台重建，包含元素多态、跨元素事件、页面转场、系统栏与手机扫码预览。',
         boundary: '使用虚构项目，不连接历史 Poke 服务或用户内容。',
-        steps: ['在画布中选择元素。', '通过右侧面板调整图层、Status Bar 或 Tab Bar。', '配置 interaction 后点击“扫码预览”，在二维码或实时运行时中检查动效。'],
+        steps: ['选择元素，在右侧创建 State 并修改该状态的属性。', '为 source 的某个 State 配置触发，让本页一个或多个 target 切换 State，并可追加页面跳转。', '点击“扫码预览”，确认二维码和 Live Runtime 的 payload 编号一致后检查动效。'],
       },
       en: {
         duration: 3,
-        summary: 'A reconstructed prototyping workspace with canvas, layers, system bars, interactions, and QR mobile preview.',
+        summary: 'A reconstructed prototyping workspace with element states, cross-element actions, page transitions, system bars, and QR mobile preview.',
         boundary: 'It uses a fictitious project and never connects to historical Poke services or user content.',
-        steps: ['Select an element on the canvas.', 'Adjust a layer, Status Bar, or Tab Bar in the inspector.', 'Configure an interaction, then open QR Preview to test its motion in the live runtime.'],
+        steps: ['Select an element, create a State in the inspector, and change that state’s properties.', 'Configure a source State and trigger to switch one or more target elements, optionally followed by a page transition.', 'Open QR Preview, match the payload IDs, and test the motion in Live Runtime.'],
       },
     },
   },

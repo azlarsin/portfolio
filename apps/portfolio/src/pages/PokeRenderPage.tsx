@@ -12,53 +12,67 @@ import {
 import QRCode from 'qrcode'
 import type { ResolvedRoute } from '../app/router'
 import {
+  createPokePayloadId,
   createPokeRenderUrl,
   decodePokePrototype,
+  type PokeEasing,
   type PokeElement,
+  type PokeElementState,
   type PokeInteraction,
   type PokePage,
+  type PokePageAction,
   type PokePrototype,
-  type PokeTransitionEffect,
+  type PokeTrigger,
 } from '../features/poke/protocol'
 
-interface TransitionState extends PokeInteraction {
+interface TransitionState extends PokePageAction {
   fromPageId: string
   phase: 'ready' | 'running'
 }
 
-function transitionStyle(interaction: PokeInteraction): CSSProperties {
+interface ElementMotion {
+  duration: number
+  easing: PokeEasing
+}
+
+function transitionStyle(action: PokePageAction): CSSProperties {
   return {
-    transitionDuration: `${interaction.duration}s`,
-    transitionTimingFunction: interaction.easing,
+    transitionDuration: `${action.duration}s`,
+    transitionTimingFunction: action.easing,
   }
 }
 
-function elementStyle(item: PokeElement): CSSProperties {
+function elementStyle(
+  item: PokeElement,
+  state: PokeElementState,
+  motion?: ElementMotion,
+): CSSProperties {
   const isText = item.type === 'text'
-  const isButton = item.type === 'rect' && Boolean(item.text)
+  const isButton = item.type === 'rect' && Boolean(state.text)
   const isHeadline = /headline|title/i.test(`${item.id} ${item.name}`)
   const isBodyCopy = /description|copy/i.test(`${item.id} ${item.name}`)
   return {
-    left: item.x,
-    top: item.y,
-    width: item.width,
-    height: item.height,
-    borderRadius: item.type === 'circle' ? '50%' : item.radius,
-    background: isText ? 'transparent' : item.fill,
-    color: isText ? item.fill : isButton ? '#fff' : '#556170',
-    opacity: item.opacity / 100,
+    left: state.x,
+    top: state.y,
+    width: state.width,
+    height: state.height,
+    borderRadius: item.type === 'circle' ? '50%' : state.radius,
+    background: isText ? 'transparent' : state.fill,
+    color: isText ? state.fill : isButton ? '#fff' : '#556170',
+    opacity: state.opacity / 100,
     fontFamily: isHeadline ? 'Georgia, Times New Roman, serif' : 'inherit',
     fontSize: isHeadline ? 29 : isBodyCopy ? 10 : 10,
     fontWeight: isButton ? 700 : isHeadline ? 500 : 500,
     lineHeight: isHeadline ? 1.03 : isBodyCopy ? 1.55 : 1.2,
     padding: isText ? 2 : isButton || item.type === 'input' ? '0 15px' : 0,
     justifyContent: isButton ? 'center' : 'flex-start',
-    touchAction: 'manipulation',
+    transitionDuration: motion ? `${motion.duration}s` : undefined,
+    transitionTimingFunction: motion?.easing,
   }
 }
 
-function navContent(item: PokeElement) {
-  const names = (item.text || 'Home\nExplore\nProfile').split('\n').slice(0, 5)
+function navContent(state: PokeElementState) {
+  const names = (state.text || 'Home\nExplore\nProfile').split('\n').slice(0, 5)
   const icons = ['⌂', '◇', '○', '★', '＋']
   return names.map((name, index) => (
     <span key={`${name}-${index}`}>
@@ -70,50 +84,59 @@ function navContent(item: PokeElement) {
 
 function PrototypeElement({
   item,
-  interaction,
+  state,
+  interactions,
+  motion,
   onInteraction,
 }: {
   item: PokeElement
-  interaction?: PokeInteraction
+  state: PokeElementState
+  interactions: PokeInteraction[]
+  motion?: ElementMotion
   onInteraction: (interaction: PokeInteraction) => void
 }) {
   const pointerStart = useRef<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<number | null>(null)
-  const longPressFired = useRef(false)
+  const clickTimer = useRef<number | null>(null)
+  const suppressClick = useRef(false)
 
-  const clearLongPress = () => {
-    if (longPressTimer.current !== null) {
-      window.clearTimeout(longPressTimer.current)
-      longPressTimer.current = null
-    }
+  const clearTimers = () => {
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
+    if (clickTimer.current !== null) window.clearTimeout(clickTimer.current)
+    longPressTimer.current = null
+    clickTimer.current = null
   }
 
-  useEffect(() => clearLongPress, [])
+  useEffect(() => clearTimers, [])
 
-  const fire = () => {
+  const eventFor = (trigger: PokeTrigger) =>
+    interactions.find((interaction) => interaction.trigger === trigger)
+  const fire = (trigger: PokeTrigger) => {
+    const interaction = eventFor(trigger)
     if (interaction) onInteraction(interaction)
   }
 
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
-    if (!interaction) return
+    if (!interactions.length) return
     pointerStart.current = { x: event.clientX, y: event.clientY }
-    longPressFired.current = false
-    if (interaction.trigger === 'touch') {
+    suppressClick.current = false
+    if (eventFor('touch')) {
       longPressTimer.current = window.setTimeout(() => {
-        longPressFired.current = true
-        fire()
+        suppressClick.current = true
+        fire('touch')
       }, 520)
     }
   }
 
   const onPointerUp = (event: ReactPointerEvent<HTMLElement>) => {
-    clearLongPress()
-    if (!interaction || !pointerStart.current) return
+    if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
+    longPressTimer.current = null
+    if (!pointerStart.current) return
     const deltaX = event.clientX - pointerStart.current.x
     const deltaY = event.clientY - pointerStart.current.y
     pointerStart.current = null
     if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 30) return
-    const direction =
+    const direction: PokeTrigger =
       Math.abs(deltaX) > Math.abs(deltaY)
         ? deltaX < 0
           ? 'swipeLeft'
@@ -121,41 +144,61 @@ function PrototypeElement({
         : deltaY < 0
           ? 'swipeUp'
           : 'swipeDown'
-    if (interaction.trigger === direction) fire()
+    if (eventFor(direction)) {
+      suppressClick.current = true
+      fire(direction)
+      window.setTimeout(() => {
+        suppressClick.current = false
+      }, 0)
+    }
   }
 
+  const interactive = interactions.length > 0
+  const hasSwipe = interactions.some((interaction) => interaction.trigger.startsWith('swipe'))
   const commonProps = {
-    className: `poke-prototype-element is-${item.type}${interaction ? ' is-interactive' : ''}`,
+    className: `poke-prototype-element is-${item.type}${interactive ? ' is-interactive' : ''}`,
     style: {
-      ...elementStyle(item),
-      touchAction: interaction?.trigger.startsWith('swipe') ? 'none' : 'manipulation',
+      ...elementStyle(item, state, motion),
+      touchAction: hasSwipe ? 'none' : 'manipulation',
     },
     'data-element-id': item.id,
+    'data-state-id': state.stateId,
     onPointerDown,
     onPointerUp,
     onPointerCancel: () => {
       pointerStart.current = null
-      clearLongPress()
+      clearTimers()
     },
-    onPointerLeave: clearLongPress,
+    onPointerLeave: () => {
+      if (longPressTimer.current !== null) window.clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    },
     onContextMenu: (event: ReactMouseEvent<HTMLElement>) => {
-      if (interaction?.trigger === 'touch') event.preventDefault()
+      if (eventFor('touch')) event.preventDefault()
     },
   }
 
-  const content = item.type === 'nav' ? navContent(item) : item.text || null
-  if (!interaction) return <div {...commonProps}>{content}</div>
+  const content = item.type === 'nav' ? navContent(state) : state.text || null
+  if (!interactive) return <div {...commonProps}>{content}</div>
 
   return (
     <button
       type="button"
       {...commonProps}
-      aria-label={`${item.name} · ${interaction.trigger}`}
+      aria-label={`${item.name} · interaction target`}
       onClick={() => {
-        if (interaction.trigger === 'click' && !longPressFired.current) fire()
+        if (suppressClick.current || !eventFor('click')) return
+        if (eventFor('doubleClick')) {
+          clickTimer.current = window.setTimeout(() => fire('click'), 240)
+        } else {
+          fire('click')
+        }
       }}
       onDoubleClick={() => {
-        if (interaction.trigger === 'doubleClick') fire()
+        if (!eventFor('doubleClick')) return
+        if (clickTimer.current !== null) window.clearTimeout(clickTimer.current)
+        clickTimer.current = null
+        fire('doubleClick')
       }}
     >
       {content}
@@ -167,13 +210,17 @@ function PrototypePage({
   page,
   role,
   transition,
-  interactions,
+  stateIds,
+  motions,
+  interactionMap,
   onInteraction,
 }: {
   page: PokePage
   role: 'current' | 'from' | 'to'
   transition: TransitionState | null
-  interactions: Map<string, PokeInteraction>
+  stateIds: Record<string, string>
+  motions: Record<string, ElementMotion>
+  interactionMap: Map<string, PokeInteraction[]>
   onInteraction: (interaction: PokeInteraction) => void
 }) {
   const effect = transition?.effect || 'fade'
@@ -188,14 +235,21 @@ function PrototypePage({
       }}
       aria-hidden={role === 'from' ? true : undefined}
     >
-      {page.elements.map((item) => (
-        <PrototypeElement
-          key={item.id}
-          item={item}
-          interaction={interactions.get(item.id)}
-          onInteraction={onInteraction}
-        />
-      ))}
+      {page.elements.map((item) => {
+        const stateId = stateIds[item.id] || '0'
+        const state =
+          item.states.find((candidate) => candidate.stateId === stateId) || item.states[0]
+        return (
+          <PrototypeElement
+            key={item.id}
+            item={item}
+            state={state}
+            interactions={interactionMap.get(`${item.id}:${state.stateId}`) || []}
+            motion={motions[item.id]}
+            onInteraction={onInteraction}
+          />
+        )
+      })}
     </section>
   )
 }
@@ -220,49 +274,83 @@ function useStageScale(width: number, height: number) {
   return { hostRef, scale }
 }
 
-function PokePrototypePlayer({ project }: { project: PokePrototype }) {
+function initialElementStates(project: PokePrototype) {
+  return Object.fromEntries(
+    project.pages.flatMap((page) => page.elements.map((element) => [element.id, '0'])),
+  )
+}
+
+function PokePrototypePlayer({
+  project,
+  payloadId,
+}: {
+  project: PokePrototype
+  payloadId: string
+}) {
   const pageMap = useMemo(
     () => new Map(project.pages.map((page) => [page.id, page])),
     [project.pages],
   )
-  const interactions = useMemo(
-    () => new Map(project.interactions.map((event) => [event.sourceId, event])),
-    [project.interactions],
-  )
+  const interactionMap = useMemo(() => {
+    const result = new Map<string, PokeInteraction[]>()
+    project.interactions.forEach((interaction) => {
+      const key = `${interaction.sourceId}:${interaction.sourceState}`
+      result.set(key, [...(result.get(key) || []), interaction])
+    })
+    return result
+  }, [project.interactions])
   const [currentPageId, setCurrentPageId] = useState(project.pages[0].id)
+  const [stateIds, setStateIds] = useState<Record<string, string>>(() =>
+    initialElementStates(project),
+  )
+  const [motions, setMotions] = useState<Record<string, ElementMotion>>({})
   const [transition, setTransition] = useState<TransitionState | null>(null)
   const busyRef = useRef(false)
   const animationFrame = useRef<number | null>(null)
   const transitionTimer = useRef<number | null>(null)
+  const actionTimers = useRef(new Set<number>())
   const { hostRef, scale } = useStageScale(project.stage.width, project.stage.height)
 
-  const clearTransitionHandles = useCallback(() => {
+  const clearTimers = useCallback(() => {
     if (animationFrame.current !== null) window.cancelAnimationFrame(animationFrame.current)
     if (transitionTimer.current !== null) window.clearTimeout(transitionTimer.current)
+    actionTimers.current.forEach((timer) => window.clearTimeout(timer))
+    actionTimers.current.clear()
     animationFrame.current = null
     transitionTimer.current = null
   }, [])
 
-  useEffect(() => clearTransitionHandles, [clearTransitionHandles])
+  useEffect(() => clearTimers, [clearTimers])
+  useEffect(() => {
+    window.parent.postMessage({ type: 'poke:runtime-ready', payloadId }, '*')
+  }, [payloadId])
+
+  const schedule = useCallback((action: () => void, delay: number) => {
+    const timer = window.setTimeout(() => {
+      actionTimers.current.delete(timer)
+      action()
+    }, Math.max(0, delay) * 1000)
+    actionTimers.current.add(timer)
+  }, [])
 
   const navigate = useCallback(
-    (interaction: PokeInteraction) => {
+    (action: PokePageAction) => {
       if (
         busyRef.current ||
-        interaction.targetPageId === currentPageId ||
-        !pageMap.has(interaction.targetPageId)
+        action.targetPageId === currentPageId ||
+        !pageMap.has(action.targetPageId)
       ) {
         return
       }
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
       if (reducedMotion) {
-        setCurrentPageId(interaction.targetPageId)
+        setCurrentPageId(action.targetPageId)
         return
       }
 
       busyRef.current = true
       const next: TransitionState = {
-        ...interaction,
+        ...action,
         fromPageId: currentPageId,
         phase: 'ready',
       }
@@ -274,25 +362,43 @@ function PokePrototypePlayer({ project }: { project: PokePrototype }) {
       })
       transitionTimer.current = window.setTimeout(
         () => {
-          setCurrentPageId(interaction.targetPageId)
+          setCurrentPageId(action.targetPageId)
           setTransition(null)
           busyRef.current = false
         },
-        interaction.duration * 1000 + 60,
+        action.duration * 1000 + 60,
       )
     },
     [currentPageId, pageMap],
+  )
+
+  const runInteraction = useCallback(
+    (interaction: PokeInteraction) => {
+      interaction.elementActions.forEach((action) => {
+        schedule(() => {
+          setMotions((current) => ({
+            ...current,
+            [action.targetId]: { duration: action.duration, easing: action.easing },
+          }))
+          setStateIds((current) => ({ ...current, [action.targetId]: action.targetState }))
+        }, action.startTime)
+      })
+      if (interaction.pageAction) {
+        const pageAction = interaction.pageAction
+        schedule(() => navigate(pageAction), pageAction.startTime)
+      }
+    },
+    [navigate, schedule],
   )
 
   const navigateFromTab = (targetPageId: string) => {
     const fromIndex = project.pages.findIndex((page) => page.id === currentPageId)
     const toIndex = project.pages.findIndex((page) => page.id === targetPageId)
     navigate({
-      sourceId: 'tab-bar',
-      trigger: 'click',
       targetPageId,
       effect: toIndex < fromIndex ? 'push-right' : 'push-left',
       easing: 'ease-out',
+      startTime: 0,
       duration: 0.28,
     })
   }
@@ -301,6 +407,7 @@ function PokePrototypePlayer({ project }: { project: PokePrototype }) {
   const fromPage = transition ? pageMap.get(transition.fromPageId) : null
   const toPage = transition ? pageMap.get(transition.targetPageId) : null
   const selectedPageId = transition?.targetPageId || currentPageId
+  const pageProps = { stateIds, motions, interactionMap, onInteraction: runInteraction }
 
   return (
     <main className="poke-render-shell" aria-label={project.title}>
@@ -314,6 +421,7 @@ function PokePrototypePlayer({ project }: { project: PokePrototype }) {
         >
           <div
             className={`poke-prototype-stage${transition?.phase === 'running' ? ' is-running' : ''}`}
+            data-payload-id={payloadId}
             style={{
               width: project.stage.width,
               height: project.stage.height,
@@ -322,29 +430,11 @@ function PokePrototypePlayer({ project }: { project: PokePrototype }) {
           >
             {transition && fromPage && toPage ? (
               <>
-                <PrototypePage
-                  page={fromPage}
-                  role="from"
-                  transition={transition}
-                  interactions={interactions}
-                  onInteraction={navigate}
-                />
-                <PrototypePage
-                  page={toPage}
-                  role="to"
-                  transition={transition}
-                  interactions={interactions}
-                  onInteraction={navigate}
-                />
+                <PrototypePage page={fromPage} role="from" transition={transition} {...pageProps} />
+                <PrototypePage page={toPage} role="to" transition={transition} {...pageProps} />
               </>
             ) : (
-              <PrototypePage
-                page={currentPage}
-                role="current"
-                transition={null}
-                interactions={interactions}
-                onInteraction={navigate}
-              />
+              <PrototypePage page={currentPage} role="current" transition={null} {...pageProps} />
             )}
 
             <div
@@ -391,11 +481,13 @@ function PokePrototypePlayer({ project }: { project: PokePrototype }) {
       <button
         type="button"
         className="poke-render-restart"
-        aria-label="返回原型首页"
+        aria-label="返回原型首页并重置元素状态"
         onClick={() => {
-          clearTransitionHandles()
+          clearTimers()
           busyRef.current = false
           setTransition(null)
+          setMotions({})
+          setStateIds(initialElementStates(project))
           setCurrentPageId(project.pages[0].id)
         }}
       >
@@ -405,7 +497,7 @@ function PokePrototypePlayer({ project }: { project: PokePrototype }) {
   )
 }
 
-function PokeQrPreview({ encoded }: { encoded: string }) {
+function PokeQrPreview({ encoded, payloadId }: { encoded: string; payloadId: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [error, setError] = useState(false)
   const target = useMemo(() => createPokeRenderUrl(encoded), [encoded])
@@ -419,11 +511,24 @@ function PokeQrPreview({ encoded }: { encoded: string }) {
       margin: 2,
       errorCorrectionLevel: 'L',
       color: { dark: '#172035', light: '#ffffff' },
-    }).catch(() => setError(true))
-  }, [encoded, target])
+    })
+      .then(() => {
+        window.parent.postMessage(
+          { type: 'poke:qr-ready', payloadId },
+          '*',
+        )
+      })
+      .catch(() => {
+        setError(true)
+        window.parent.postMessage(
+          { type: 'poke:qr-error', payloadId },
+          '*',
+        )
+      })
+  }, [encoded, payloadId, target])
 
   return (
-    <main className="poke-qr-page">
+    <main className="poke-qr-page" data-payload-id={payloadId}>
       {error || !encoded ? (
         <div className="poke-qr-error">预览数据过长，请减少画布元素后重试。</div>
       ) : (
@@ -440,6 +545,7 @@ function PokeQrPreview({ encoded }: { encoded: string }) {
 export function PokeRenderPage({ route }: { route: ResolvedRoute }) {
   const query = useMemo(() => new URLSearchParams(route.search), [route.search])
   const encoded = query.get('data') || ''
+  const payloadId = useMemo(() => createPokePayloadId(encoded), [encoded])
   const qrOnly = query.get('qr') === '1'
   const [state, setState] = useState<
     | { status: 'loading' }
@@ -467,8 +573,10 @@ export function PokeRenderPage({ route }: { route: ResolvedRoute }) {
     }
   }, [encoded, qrOnly])
 
-  if (qrOnly) return <PokeQrPreview encoded={encoded} />
-  if (state.status === 'ready') return <PokePrototypePlayer project={state.project} />
+  if (qrOnly) return <PokeQrPreview encoded={encoded} payloadId={payloadId} />
+  if (state.status === 'ready') {
+    return <PokePrototypePlayer project={state.project} payloadId={payloadId} />
+  }
 
   return (
     <main className="poke-render-state" aria-live="polite">
