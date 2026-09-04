@@ -141,6 +141,14 @@ export const ROUTES = {
       description: '在受限的全窗口播放器中体验经过登记的公开交互案例。',
     },
   },
+  POKE_RENDER: {
+    id: 'poke-render',
+    path: '/poke/render',
+    meta: {
+      title: 'Poke 手机预览',
+      description: '通过二维码打开 Poke 原型，并在手机端运行页面跳转与交互动效。',
+    },
+  },
   RESUME: {
     id: 'resume',
     path: '/resume',

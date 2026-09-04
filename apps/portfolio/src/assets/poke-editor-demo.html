@@ -76,11 +76,16 @@
     .phone-shell::before { position: absolute; top: 7px; left: 50%; width: 43px; height: 4px; border-radius: 99px; background: #ced3d9; content: ''; transform: translateX(-50%); }
     .phone-shell::after { position: absolute; bottom: 6px; left: 50%; width: 27px; height: 4px; border-radius: 99px; background: #d3d7dc; content: ''; transform: translateX(-50%); }
     .artboard { position: relative; width: 280px; height: 522px; overflow: hidden; background: #f8f9fc; box-shadow: 0 0 0 1px #ccd1d8; touch-action: none; }
-    .statusbar { position: absolute; z-index: 20; top: 0; right: 0; left: 0; display: flex; height: 17px; align-items: center; justify-content: space-between; padding: 0 8px; color: #667080; font-size: 6px; pointer-events: none; }
     .canvas-element { position: absolute; border: 1px solid transparent; cursor: move; user-select: none; }
     .canvas-element.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.75), 0 0 0 2px #2f79ed; }
     .canvas-element.text { display: flex; align-items: center; border-style: dashed; }
     .canvas-element.nav { display: flex; align-items: center; justify-content: space-around; }
+    .canvas-element.status-bar { z-index: 24; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; cursor: default; font-size: 6px; font-weight: 700; }
+    .canvas-element.status-bar span:last-child { font-size: 5px; letter-spacing: 1px; }
+    .canvas-element.tab-bar { z-index: 23; display: flex; align-items: stretch; justify-content: stretch; border-top-color: rgba(55,66,84,.1); cursor: default; box-shadow: 0 -5px 16px rgba(35,44,59,.04); }
+    .tab-preview-item { display: grid; min-width: 0; flex: 1; place-content: center; gap: 3px; text-align: center; }
+    .tab-preview-item b { font-size: 13px; font-weight: 500; line-height: 1; }
+    .tab-preview-item small { overflow: hidden; font-size: 6px; font-weight: 650; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
     .canvas-container { position: absolute; overflow: visible; }
     .canvas-container.mask { overflow: hidden; border-radius: 9px; }
     .container-hit { position: absolute; z-index: 30; border: 1px solid transparent; cursor: move; inset: 0; }
@@ -103,6 +108,19 @@
     .full-field { display: grid; grid-template-columns: 40px minmax(0,1fr); align-items: center; gap: 6px; margin-top: 8px; color: #8e96a1; font-size: 8px; }
     .interaction-button { display: flex; width: 100%; min-height: 34px; align-items: center; justify-content: space-between; padding: 0 10px; border: 1px solid #d5dbe6; border-radius: 7px; color: #3f67bd; background: #f3f6fc; cursor: pointer; font-size: 9px; font-weight: 700; }
     .interaction-button.has-event::after { color: #27a978; content: '● 已配置'; font-size: 7px; }
+    .system-style-options { display: grid; grid-template-columns: repeat(2,1fr); gap: 7px; }
+    .system-style-choice { display: grid; min-height: 45px; place-items: center; gap: 4px; border: 1px solid #d5dae2; border-radius: 7px; color: #7b8491; background: white; cursor: pointer; font-size: 7px; }
+    .system-style-choice.active { border-color: #91ace9; color: #2d61c8; background: #eef3ff; box-shadow: 0 0 0 1px rgba(46,103,221,.08); }
+    .system-style-choice i { display: block; width: 29px; height: 10px; border: 1px solid #d4d9df; border-radius: 4px; background: var(--choice-color); }
+    .tab-config-list { display: grid; gap: 7px; }
+    .tab-config-row { display: grid; grid-template-columns: 34px minmax(0,1fr) 22px; gap: 5px; padding: 7px; border: 1px solid #dce0e6; border-radius: 7px; background: white; }
+    .tab-config-row select, .tab-config-row input { width: 100%; height: 25px; padding: 0 5px; font-size: 7px; }
+    .tab-config-row select:first-child { padding: 0 2px; text-align: center; }
+    .tab-config-main { display: grid; gap: 5px; }
+    .tab-config-remove { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 5px; color: #a16b73; background: #f8edef; cursor: pointer; font-size: 10px; }
+    .tab-config-remove:disabled { cursor: not-allowed; opacity: .35; }
+    .tab-config-add { width: 100%; height: 29px; margin-top: 8px; border: 1px dashed #bcc8dc; border-radius: 7px; color: #3564bb; background: #f5f8ff; cursor: pointer; font-size: 8px; font-weight: 700; }
+    .tab-config-add:disabled { color: #9ba4b2; cursor: not-allowed; opacity: .6; }
     .footer { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-top: 1px solid #cfd3d8; color: #9299a2; background: #f1f3f5; font: 7px ui-monospace, monospace; }
     .footer strong { color: #647084; font-weight: 600; }
     .toast { position: absolute; z-index: 40; right: 240px; bottom: 38px; padding: 9px 12px; border-radius: 8px; color: white; background: rgba(27,34,46,.9); box-shadow: 0 8px 24px rgba(24,29,39,.22); font-size: 9px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s ease; }
@@ -145,21 +163,25 @@
     .interaction-note { grid-column: 1 / -1; margin: 4px 0 0; color: #929aa5; font-size: 8px; line-height: 1.6; }
     .preview-modal { position: absolute; z-index: 60; display: grid; place-items: center; inset: 0; padding: 28px; background: rgba(20,26,36,.64); opacity: 0; pointer-events: none; transition: opacity 220ms ease; }
     .preview-modal.open { opacity: 1; pointer-events: auto; }
-    .preview-window { width: 352px; overflow: hidden; border: 1px solid #bbc2cc; border-radius: 14px; background: #edf0f4; box-shadow: 0 30px 80px rgba(12,17,25,.4); transform: translateY(12px) scale(.97); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
+    .preview-window { width: min(742px,calc(100vw - 70px)); overflow: hidden; border: 1px solid #bbc2cc; border-radius: 14px; background: #edf0f4; box-shadow: 0 30px 80px rgba(12,17,25,.4); transform: translateY(12px) scale(.97); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
     .preview-modal.open .preview-window { transform: none; }
     .preview-titlebar { display: flex; height: 34px; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid #d2d7de; color: #76808e; background: #f8f9fa; font-size: 8px; }
     .preview-titlebar button { border: 0; color: #66717f; background: transparent; cursor: pointer; }
-    .preview-body { display: grid; min-height: 560px; place-items: center; padding: 18px; background: #e2e5e9; }
-    .preview-phone { position: relative; width: 260px; height: 500px; overflow: hidden; border: 8px solid white; border-radius: 27px; background: #f8f9fc; box-shadow: 0 14px 32px rgba(35,43,55,.17); }
-    .preview-page { position: absolute; display: flex; flex-direction: column; inset: 0; padding: 62px 24px 30px; transition: transform 360ms cubic-bezier(.2,.8,.2,1), opacity 300ms ease; }
-    .preview-page.details { transform: translateX(105%); opacity: 0; }
-    .preview-phone.show-details .preview-page.home { transform: translateX(-105%); opacity: 0; }
-    .preview-phone.show-details .preview-page.details { transform: none; opacity: 1; }
-    .preview-page h2 { margin: 0 0 10px; font: 500 28px/1.05 Georgia,serif; }
-    .preview-page p { margin: 0; color: #8290a5; font-size: 10px; line-height: 1.6; }
-    .preview-cta { margin-top: 26px; height: 42px; border: 0; border-radius: 13px; color: white; background: #2e67dd; cursor: pointer; font-size: 10px; font-weight: 700; }
-    .preview-card { height: 120px; margin-top: 24px; border-radius: 18px; background: linear-gradient(135deg,#2f69de,#7a63e7); }
-    .preview-back { width: max-content; margin-bottom: 34px; border: 0; color: #2e67dd; background: transparent; cursor: pointer; font-size: 9px; }
+    .preview-body { display: grid; min-height: 558px; grid-template-columns: 230px 280px; place-content: center; align-items: center; gap: 34px; padding: 24px 28px; background: #e2e5e9; }
+    .preview-share { display: grid; align-content: center; gap: 10px; }
+    .preview-share > strong { color: #303a4b; font-size: 13px; line-height: 1.35; }
+    .preview-share > p { margin: 0; color: #7a8595; font-size: 9px; line-height: 1.6; }
+    .preview-qr-shell { position: relative; display: grid; width: 230px; min-height: 282px; place-items: center; overflow: hidden; border: 1px solid #d3d9e2; border-radius: 12px; background: white; box-shadow: 0 10px 30px rgba(34,44,59,.1); }
+    .preview-qr-shell iframe { width: 100%; height: 282px; border: 0; background: white; }
+    .preview-loading { position: absolute; display: grid; place-items: center; color: #8490a2; background: white; font-size: 9px; inset: 0; }
+    .preview-url { display: block; min-height: 44px; padding: 8px; overflow: hidden; border: 1px solid #d1d7e0; border-radius: 7px; color: #5c6879; background: #f8fafc; font: 7px/1.45 ui-monospace,monospace; overflow-wrap: anywhere; }
+    .preview-share-actions { display: flex; align-items: center; gap: 7px; }
+    .preview-copy { height: 29px; padding: 0 11px; border: 0; border-radius: 6px; color: white; background: #2e67dd; cursor: pointer; font-size: 8px; font-weight: 700; }
+    .preview-payload { color: #8c95a2; font: 7px ui-monospace,monospace; }
+    .preview-device-pane { display: grid; justify-items: center; gap: 9px; }
+    .preview-device-pane > span { color: #697586; font: 7px ui-monospace,monospace; letter-spacing: .08em; }
+    .preview-phone { position: relative; width: 280px; height: 522px; overflow: hidden; border: 8px solid white; border-radius: 28px; background: #f8f9fc; box-shadow: 0 14px 32px rgba(35,43,55,.17); }
+    .preview-phone iframe { width: 100%; height: 100%; border: 0; background: #f8f9fc; }
     .pulse { animation: pulse 650ms ease; }
     @keyframes pulse { 50% { box-shadow: 0 0 0 8px rgba(47,121,237,.18); } }
     .mobile-pc-notice { display: none; }
@@ -206,12 +228,12 @@
     <h1>请在 PC 平台体验</h1>
     <p>该演示保留了多面板编辑器、画布拖拽与右键菜单，需要桌面级指针和更宽视口才能完整操作。</p>
   </section>
-  <div class="archive-bar"><span>POKE 0.9 · SOURCE-DRIVEN ARCHIVE RECONSTRUCTION</span><span>SYNTHETIC PROJECT · LOCAL ONLY · NO NETWORK</span></div>
+  <div class="archive-bar"><span>POKE 0.9 · SOURCE-DRIVEN ARCHIVE RECONSTRUCTION</span><span>SYNTHETIC PROJECT · URL-EMBEDDED DATA · NO STORAGE</span></div>
   <main class="app">
     <header class="topbar">
       <div class="top-group">
         <button class="top-action" id="backToProjects"><b>‹</b>项目</button>
-        <button class="top-action" id="preview"><b>◉</b>APP 预览</button>
+        <button class="top-action" id="preview"><b>▦</b>扫码预览</button>
         <button class="top-action" data-command="save"><b>⇧</b>保存</button>
       </div>
       <div class="top-center">
@@ -234,7 +256,7 @@
         <button class="tool" data-tool="text" title="文字">Aa<small>T</small></button>
         <button class="tool" data-tool="image" title="图片">▧<small>M</small></button>
         <button class="tool" data-tool="input" title="输入框">▤<small>P</small></button>
-        <button class="tool" data-tool="nav" title="导航栏">⌂</button>
+        <button class="tool" data-tool="nav" title="Tab Bar">⌂</button>
         <button class="tool spacer" id="toggleLayers" title="图层">▱</button>
       </nav>
       <aside class="left-panel">
@@ -256,11 +278,11 @@
         </div>
       </div>
       <section class="interaction-panel" id="interactionPanel">
-        <div class="interaction-side"><button class="close" id="closeInteraction">×</button><strong id="interactionTitle">按钮 · 交互事件</strong><div class="event-types"><button class="active">点击</button><button>双击</button><button>长按</button><button>滑动</button></div><div class="states"><span class="active">初始状态</span><span>状态 1</span><span>＋</span></div></div>
-        <div class="interaction-form"><label>目标<select id="eventTarget"><option value="details">Details 页面</option><option value="home">Launch 页面</option></select></label><label>转场<select id="eventEffect"><option>Push Left</option><option>Fade</option><option>Modal</option></select></label><label>缓动<select id="eventEasing"><option>Ease Out</option><option>Ease Both</option><option>Linear</option></select></label><label>时长<input id="eventDuration" value="0.35 s" /></label><button class="save" id="saveInteraction">保存事件</button><p class="interaction-note">原项目支持点击、双击、长按与四向滑动；事件既能改变元素状态，也能跳转页面，并携带开始时间、结束时间与 cubic-bezier 参数。</p></div>
+        <div class="interaction-side"><button class="close" id="closeInteraction">×</button><strong id="interactionTitle">按钮 · 交互事件</strong><div class="event-types"><button class="active" data-event-type="click">点击</button><button data-event-type="doubleClick">双击</button><button data-event-type="touch">长按</button><button data-event-type="swipeLeft">← 滑</button><button data-event-type="swipeRight">→ 滑</button><button data-event-type="swipeUp">↑ 滑</button><button data-event-type="swipeDown">↓ 滑</button></div><div class="states"><span class="active">初始状态</span><span>状态 1</span><span>＋</span></div></div>
+        <div class="interaction-form"><label>目标<select id="eventTarget"><option value="details">Details 页面</option><option value="home">Launch 页面</option></select></label><label>转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>时长<input id="eventDuration" type="number" min="0.08" max="2.4" step="0.05" value="0.35" /></label><button class="save" id="saveInteraction">保存事件</button><p class="interaction-note">保留原项目的点击、双击、长按与四向滑动模型；扫码后的运行时会按这里的方向、时长和 easing 执行真实页面转场。</p></div>
       </section>
       <div class="preview-modal" id="previewModal">
-        <div class="preview-window"><div class="preview-titlebar"><span>LIVE PREVIEW · SYNTHETIC PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><div class="preview-phone" id="previewPhone"><div class="preview-page home"><h2>Make ideas tangible.</h2><p>Build a small interaction, inspect every state, then test it as a real flow.</p><div class="preview-card"></div><button class="preview-cta" id="previewCta">Open prototype →</button></div><div class="preview-page details"><button class="preview-back" id="previewBack">← Back</button><h2>Interaction linked.</h2><p>The button navigated to another page with the transition configured in the editor.</p><div class="preview-card" style="background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div></div></div></div>
+        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">SCAN PREVIEW · URL-EMBEDDED PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在压缩项目并生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>用手机相机扫码，立即检查交互</strong><p>画布、页面事件、Status Bar 与 Tab Bar 配置都会写入链接；服务端不保存项目内容。</p><code class="preview-url" id="previewUrl">准备预览链接…</code><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">SERIALIZING</span></div></section><section class="preview-device-pane"><span>LIVE RUNTIME · SAME PAYLOAD</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
       </div>
     </div>
     <footer class="footer"><span><strong id="footerMode">SELECT</strong> · DOCUMENT / SYNTHETIC-MOBILE-PROTOTYPE</span><span id="footerState">6 ELEMENTS · 2 PAGES · 0 EVENTS</span></footer>
@@ -270,12 +292,20 @@
       'use strict';
 
       const originalElements = [
+        {id:'status-bar',name:'Status Bar',type:'status-bar',x:0,y:0,w:280,h:17,fill:'#ffffff',radius:0,opacity:100,color:'#111827'},
         {id:'hero',name:'Hero Gradient',type:'rect',x:0,y:0,w:280,h:230,fill:'#e9efff',radius:0,opacity:100},
         {id:'mark',name:'Product Mark',type:'circle',x:24,y:42,w:34,h:34,fill:'#2e67dd',radius:50,opacity:100},
         {id:'title',name:'Headline',type:'text',x:24,y:92,w:225,h:64,fill:'#222a36',radius:0,opacity:100,text:'Make ideas tangible.'},
         {id:'copy',name:'Description',type:'text',x:24,y:160,w:222,h:42,fill:'#718096',radius:0,opacity:100,text:'Design states, connect events, preview the flow.'},
         {id:'cta',name:'Primary Button',type:'rect',x:24,y:252,w:232,h:48,fill:'#464d5c',radius:8,opacity:100,text:'Open prototype →'},
-        {id:'nav',name:'Bottom Navigation',type:'nav',x:0,y:466,w:280,h:56,fill:'#ffffff',radius:0,opacity:100,text:'Home\nExplore\nProfile'}
+        {id:'tab-bar',name:'Tab Bar',type:'tab-bar',x:0,y:466,w:280,h:56,fill:'#ffffff',radius:0,opacity:100,normalColor:'#8b95a5',selectedColor:'#2e67dd',tabs:[{id:'tab-home',icon:'⌂',text:'Home',pageId:'home'},{id:'tab-details',icon:'◇',text:'Details',pageId:'details'},{id:'tab-profile',icon:'○',text:'Profile',pageId:null}]}
+      ];
+
+      const detailsElements = [
+        {id:'details-back',name:'Back Action',type:'text',x:24,y:50,width:92,height:24,fill:'#2e67dd',radius:0,opacity:100,text:'← Back'},
+        {id:'details-title',name:'Details Headline',type:'text',x:24,y:126,width:232,height:70,fill:'#222a36',radius:0,opacity:100,text:'Interaction\nlinked.'},
+        {id:'details-copy',name:'Details Copy',type:'text',x:24,y:212,width:230,height:42,fill:'#8290a5',radius:0,opacity:100,text:'The configured interaction brought you here.'},
+        {id:'details-card',name:'Gradient Card',type:'rect',x:24,y:276,width:232,height:142,fill:'#20bcae',radius:22,opacity:100,text:''}
       ];
 
       const clone = value => JSON.parse(JSON.stringify(value));
@@ -306,6 +336,7 @@
       let expandedContainerId = null;
       let clipboard = null;
       let eventElementIds = new Set();
+      let interactionEvents = {};
       let gesture = null;
       let replaying = false;
       let idSequence = 100;
@@ -324,7 +355,12 @@
       }
 
       function elementLabel(item) {
-        return {rect:'▰',circle:'●',text:'Aa',image:'▧',input:'⌨',nav:'⌂',group:'⌘',mask:'◐',component:'◇'}[item.type] || '◇';
+        return {rect:'▰',circle:'●',text:'Aa',image:'▧',input:'⌨',nav:'⌂','status-bar':'◫','tab-bar':'⌂',group:'⌘',mask:'◐',component:'◇'}[item.type] || '◇';
+      }
+
+      function isSystemElement(itemOrId) {
+        const id = typeof itemOrId === 'string' ? itemOrId : (itemOrId && itemOrId.id);
+        return id === 'status-bar' || id === 'tab-bar';
       }
 
       function getElement(id) {
@@ -437,12 +473,13 @@
       function selectionRules() {
         const ids = Array.from(selectedIds);
         const entities = ids.map(getEntity).filter(Boolean);
-        const rootElementsOnly = entities.length === ids.length && entities.every(item => !getContainer(item.id) && !item.containerId);
+        const hasSystemElement = entities.some(isSystemElement);
+        const rootElementsOnly = entities.length === ids.length && entities.every(item => !getContainer(item.id) && !item.containerId && !isSystemElement(item));
         const onlyContainer = ids.length === 1 ? getContainer(ids[0]) : null;
         return {
           count: ids.length,
-          canCopy: ids.length > 0,
-          canDelete: ids.length > 0,
+          canCopy: ids.length > 0 && !hasSystemElement,
+          canDelete: ids.length > 0 && !hasSystemElement,
           canGroup: ids.length >= 2 && rootElementsOnly,
           canUngroup: Boolean(onlyContainer && onlyContainer.type === 'group'),
           canMask: ids.length >= 2 && rootElementsOnly,
@@ -472,7 +509,7 @@
           background:item.type === 'text' ? 'transparent' : item.fill,
           borderRadius:item.radius + (item.type === 'circle' ? '%' : 'px'),
           opacity:item.opacity/100,
-          color:item.type === 'text' ? item.fill : (item.id === 'cta' ? 'white' : '#556170'),
+          color:item.type === 'text' ? item.fill : (item.id === 'cta' ? 'white' : (item.color || '#556170')),
           fontSize:item.id === 'title' ? '29px' : (item.id === 'copy' ? '10px' : '10px'),
           fontFamily:item.id === 'title' ? 'Georgia,serif' : 'inherit',
           fontWeight:item.id === 'cta' ? '700' : '500',
@@ -481,12 +518,27 @@
           justifyContent:item.id === 'cta' ? 'center' : 'space-around',
           alignItems:'center'
         });
-        if (item.type === 'nav') {
+        if (item.type === 'status-bar') {
+          node.innerHTML = '<span>9:41</span><span>▮▮▮ ◒ ▰</span>';
+        } else if (item.type === 'tab-bar') {
+          const tabs = item.tabs || [];
+          node.innerHTML = tabs.map(tab => {
+            const active = tab.pageId === currentPage;
+            const color = active ? item.selectedColor : item.normalColor;
+            return '<span class="tab-preview-item" style="color:' + esc(color) + '"><b>' + esc(tab.icon || '○') + '</b><small>' + esc(tab.text || '') + '</small></span>';
+          }).join('');
+        } else if (item.type === 'nav') {
           node.innerHTML = '<span>⌂<br><small>Home</small></span><span>◇<br><small>Explore</small></span><span>○<br><small>Profile</small></span>';
         } else {
           node.textContent = item.text || '';
         }
-        node.addEventListener('pointerdown', startDrag);
+        node.addEventListener('pointerdown', isSystemElement(item) ? event => {
+          event.preventDefault();
+          event.stopPropagation();
+          closeContextMenu();
+          selectedIds = new Set([item.id]);
+          renderAll();
+        } : startDrag);
         node.addEventListener('contextmenu', event => openElementContext(event, selectId));
         return node;
       }
@@ -528,7 +580,7 @@
       function renderResizeOverlay() {
         if (currentPage !== 'home' || selectedIds.size !== 1) return;
         const entity = selected();
-        if (!entity) return;
+        if (!entity || isSystemElement(entity)) return;
         if (getContainer(entity.id)) syncContainer(entity);
         const overlay = document.createElement('div');
         overlay.className = 'resize-overlay';
@@ -551,10 +603,11 @@
       }
 
       function renderCanvas() {
-        artboard.innerHTML = '<div class="statusbar"><span>9:41</span><span>◉ ◌ 100%</span></div>';
+        artboard.innerHTML = '';
         if (currentPage === 'details') {
-          artboard.innerHTML += '<div class="details-canvas" style="position:absolute;inset:0;padding:62px 24px;background:#f8f9fc"><button id="canvasBack" style="border:0;background:transparent;color:#2e67dd;font-size:9px;padding:0">← Back</button><h2 style="margin:54px 0 12px;font:500 31px/1.03 Georgia,serif">Interaction<br>linked.</h2><p style="margin:0;color:#8290a5;font-size:10px;line-height:1.7">This page is the target of the CTA event.</p><div style="height:170px;margin-top:28px;border-radius:24px;background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div>';
+          artboard.innerHTML = '<div class="details-canvas" style="position:absolute;inset:0;padding:50px 24px 76px;background:#f8f9fc"><button id="canvasBack" style="border:0;background:transparent;color:#2e67dd;font-size:9px;padding:0">← Back</button><h2 style="margin:52px 0 12px;font:500 31px/1.03 Georgia,serif">Interaction<br>linked.</h2><p style="margin:0;color:#8290a5;font-size:10px;line-height:1.7">The configured interaction brought you here.</p><div style="height:142px;margin-top:22px;border-radius:22px;background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div>';
           artboard.querySelector('#canvasBack').addEventListener('click', () => switchPage('home'));
+          elements.filter(isSystemElement).forEach(item => artboard.appendChild(createElementNode(item, 0, 0, item.id)));
           return;
         }
         const renderedContainers = new Set();
@@ -752,7 +805,14 @@
         }
 
         if (currentPage === 'details') {
-          leftContent.innerHTML = '<div class="section-label"><span>Details · 图层</span><b>＋</b></div><div class="layer-list"><button class="layer-row"><span class="layer-icon">Aa</span><span>Details Headline</span><em>⌁</em></button><button class="layer-row"><span class="layer-icon">▰</span><span>Gradient Card</span><em>⌁</em></button><button class="layer-row"><span class="layer-icon">←</span><span>Back Action</span><em>⌁</em></button></div>';
+          const systemRows = elements.filter(isSystemElement).slice().reverse().map(item => renderLayerRow(item, false)).join('');
+          leftContent.innerHTML = '<div class="section-label"><span>Details · 图层</span><b>＋</b></div><div class="layer-list">' + systemRows + '<button class="layer-row"><span class="layer-icon">Aa</span><span class="layer-name">Details Headline</span><em>⌁</em></button><button class="layer-row"><span class="layer-icon">▰</span><span class="layer-name">Gradient Card</span><em>⌁</em></button><button class="layer-row"><span class="layer-icon">←</span><span class="layer-name">Back Action</span><em>⌁</em></button></div>';
+          leftContent.querySelectorAll('[data-layer]').forEach(button => {
+            button.addEventListener('click', () => {
+              selectedIds = new Set([button.dataset.layer]);
+              renderAll();
+            });
+          });
           return;
         }
 
@@ -814,7 +874,62 @@
         return '<div class="inspector-head"><div class="inspector-icon">◇</div><div><strong>' + selectedIds.size + ' 个图层</strong><span>MULTI SELECTION</span></div></div><div class="inspector-section"><h3>BOUNDING BOX</h3><div class="fields"><label>X<input value="' + bounds.x + '" disabled></label><label>Y<input value="' + bounds.y + '" disabled></label><label>W<input value="' + bounds.w + '" disabled></label><label>H<input value="' + bounds.h + '" disabled></label></div></div><div class="inspector-section"><h3>STRUCTURE</h3><button class="interaction-button" data-inspector-command="group"><span>⌘ 组合选择</span></button><button class="interaction-button" data-inspector-command="mask" style="margin-top:7px"><span>◐ 创建 Mask</span></button><button class="interaction-button" data-inspector-command="component" style="margin-top:7px"><span>◇ 创建组件</span></button></div>';
       }
 
+      function renderSystemInspector(item) {
+        if (!item || !isSystemElement(item)) return false;
+
+        if (item.type === 'status-bar') {
+          const choices = [{value:'#111827',label:'黑色'},{value:'#ffffff',label:'白色'}];
+          inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">◫</div><div><strong>Status Bar</strong><span>UNIQUE ELEMENT · ALL PAGES</span></div></div><div class="inspector-section"><h3>样式</h3><div class="system-style-options">' + choices.map(choice => '<button class="system-style-choice ' + (item.color.toLowerCase() === choice.value ? 'active' : '') + '" data-status-color="' + choice.value + '" style="--choice-color:' + choice.value + '"><i></i><span>' + choice.label + '</span></button>').join('') + '</div><div class="full-field"><span>背景</span><input id="statusBackground" type="color" value="' + esc(item.fill) + '"></div></div><div class="inspector-section"><h3>行为</h3><p style="margin:0;color:#8b94a0;font-size:8px;line-height:1.65">Status Bar 是跨页面唯一元素。样式修改会同步进入扫码预览中的所有页面。</p></div>';
+          inspector.querySelectorAll('[data-status-color]').forEach(button => button.addEventListener('click', () => {
+            item.color = button.dataset.statusColor;
+            renderAll();
+            flash('Status Bar 已切换为' + button.textContent.trim());
+          }));
+          inspector.querySelector('#statusBackground').addEventListener('input', event => {
+            item.fill = event.target.value;
+            renderCanvas();
+          });
+          return true;
+        }
+
+        const pageOptions = '<option value="">未关联</option>' + pages.map(page => '<option value="' + esc(page.id) + '">' + esc(page.name) + ' 页面</option>').join('');
+        const iconOptions = ['⌂','◇','○','★','＋','☰'].map(icon => '<option value="' + esc(icon) + '">' + esc(icon) + '</option>').join('');
+        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">⌂</div><div><strong>Tab Bar</strong><span>UNIQUE ELEMENT · ALL PAGES</span></div></div><div class="inspector-section"><h3>颜色</h3><div class="fields"><label>常<input data-tabbar-color="normalColor" type="color" value="' + esc(item.normalColor) + '"></label><label>选<input data-tabbar-color="selectedColor" type="color" value="' + esc(item.selectedColor) + '"></label></div><div class="full-field"><span>背景</span><input data-tabbar-color="fill" type="color" value="' + esc(item.fill) + '"></div></div><div class="inspector-section"><h3>页面选项 · ' + item.tabs.length + ' / 5</h3><div class="tab-config-list">' + item.tabs.map(tab => '<div class="tab-config-row" data-tab-row="' + esc(tab.id) + '"><select data-tab-prop="icon" aria-label="Tab 图标">' + iconOptions + '</select><div class="tab-config-main"><input data-tab-prop="text" value="' + esc(tab.text) + '" aria-label="Tab 名称"><select data-tab-prop="pageId" aria-label="关联页面">' + pageOptions + '</select></div><button class="tab-config-remove" data-delete-tab="' + esc(tab.id) + '" aria-label="删除 Tab" ' + (item.tabs.length <= 1 ? 'disabled' : '') + '>×</button></div>').join('') + '</div><button class="tab-config-add" id="addTab" ' + (item.tabs.length >= 5 ? 'disabled' : '') + '>＋ 添加 Tab</button></div>';
+        inspector.querySelectorAll('[data-tabbar-color]').forEach(input => input.addEventListener('input', () => {
+          item[input.dataset.tabbarColor] = input.value;
+          renderCanvas();
+        }));
+        inspector.querySelectorAll('[data-tab-row]').forEach(row => {
+          const tab = item.tabs.find(candidate => candidate.id === row.dataset.tabRow);
+          if (!tab) return;
+          const icon = row.querySelector('[data-tab-prop="icon"]');
+          const name = row.querySelector('[data-tab-prop="text"]');
+          const page = row.querySelector('[data-tab-prop="pageId"]');
+          icon.value = tab.icon;
+          page.value = tab.pageId || '';
+          icon.addEventListener('change', () => { tab.icon = icon.value; renderCanvas(); });
+          name.addEventListener('input', () => { tab.text = name.value.slice(0, 24); renderCanvas(); });
+          page.addEventListener('change', () => { tab.pageId = page.value || null; renderCanvas(); });
+        });
+        inspector.querySelectorAll('[data-delete-tab]').forEach(button => button.addEventListener('click', () => {
+          if (item.tabs.length <= 1) return;
+          item.tabs = item.tabs.filter(tab => tab.id !== button.dataset.deleteTab);
+          renderAll();
+          flash('已删除 Tab');
+        }));
+        inspector.querySelector('#addTab').addEventListener('click', () => {
+          if (item.tabs.length >= 5) return;
+          item.tabs.push({id:uid('tab'),icon:'○',text:'New Tab',pageId:null});
+          renderAll();
+          flash('已添加 Tab · 最多 5 个');
+        });
+        return true;
+      }
+
       function renderInspector() {
+        const item = selected();
+        if (renderSystemInspector(item)) return;
+
         if (currentPage === 'details') {
           inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">▤</div><div><strong>Details 页面</strong><span>PAGE ATTRIBUTES</span></div></div><div class="inspector-section"><h3>页面</h3><div class="full-field"><span>大小</span><input value="375 × 667" disabled></div><div class="full-field"><span>背景</span><input type="color" value="#f8f9fc"></div></div>';
           return;
@@ -826,7 +941,6 @@
           return;
         }
 
-        const item = selected();
         if (!item) {
           inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">↖</div><div><strong>未选择图层</strong><span>CANVAS SELECTION</span></div></div><div class="component-empty">单击元素进行选择；按住 Shift 可多选。<br><br>在画布或图层上单击右键，打开 Poke Context Menu。</div>';
           return;
@@ -942,6 +1056,13 @@
       }
 
       function createElement(type) {
+        if (type === 'nav') {
+          selectedIds = new Set(['tab-bar']);
+          if (currentPage === 'home') lastHomeSelection = new Set(selectedIds);
+          renderAll();
+          flash('已选择 Tab Bar · 在右侧编辑页面选项');
+          return;
+        }
         if (!pages.some(page => page.id === 'home')) {
           flash('Launch 页面已删除，无法创建图层');
           return;
@@ -952,8 +1073,7 @@
           circle:{name:'Circle',w:72,h:72,fill:'#ef8b7e',radius:50},
           text:{name:'Text',w:150,h:34,fill:'#354052',radius:0,text:'New text layer'},
           image:{name:'Image Placeholder',w:130,h:92,fill:'#d9dee7',radius:10,text:'IMAGE'},
-          input:{name:'Input Field',w:190,h:38,fill:'#ffffff',radius:8,text:'Input value'},
-          nav:{name:'Navigation',w:280,h:56,fill:'#ffffff',radius:0,text:'Home\nExplore\nProfile'}
+          input:{name:'Input Field',w:190,h:38,fill:'#ffffff',radius:8,text:'Input value'}
         };
         const template = templates[type];
         const index = elements.length;
@@ -978,7 +1098,7 @@
         const ids = Array.from(selectedIds);
         return ids.length >= minimum && ids.every(id => {
           const item = getElement(id);
-          return item && !item.containerId;
+          return item && !item.containerId && !isSystemElement(item);
         });
       }
 
@@ -1082,7 +1202,7 @@
             container.childIds.forEach(childId => visited.add(childId));
           } else {
             const item = getElement(id);
-            if (item && !visited.has(item.id)) {
+            if (item && !isSystemElement(item) && !visited.has(item.id)) {
               const copy = clone(item);
               delete copy.containerId;
               records.push({kind:'element',item:copy});
@@ -1093,7 +1213,10 @@
       }
 
       function copySelection() {
-        if (!selectedIds.size) return;
+        if (!selectionRules().canCopy) {
+          if (selectedIds.size) flash('系统栏会跨页面同步，不能复制');
+          return;
+        }
         clipboard = serializeSelection();
         flash('已复制 ' + selectedIds.size + ' 个选择');
         updateChrome();
@@ -1146,6 +1269,10 @@
 
       function deleteSelection() {
         if (!selectedIds.size) return;
+        if (!selectionRules().canDelete) {
+          flash('Status Bar 与 Tab Bar 是项目唯一元素，不能删除');
+          return;
+        }
         cancelActiveGesture();
         const elementIds = new Set();
         const containerIds = new Set();
@@ -1167,6 +1294,7 @@
           }
         });
         eventElementIds = new Set(Array.from(eventElementIds).filter(id => !elementIds.has(id)));
+        elementIds.forEach(id => delete interactionEvents[id]);
         elements = elements.filter(item => !elementIds.has(item.id));
         containers = containers.filter(container => !containerIds.has(container.id));
         containers.forEach(syncContainer);
@@ -1207,12 +1335,20 @@
       function openInteraction() {
         closeContextMenu();
         const target = selectedVisualItems()[0];
-        if (!target) {
+        if (!target || isSystemElement(target)) {
           flash('请先选择一个图层');
           return;
         }
+        const existing = interactionEvents[target.id] || null;
+        const fallbackTarget = (pages.find(page => page.id !== currentPage) || pages[0] || {}).id || '';
         interactionPanel.dataset.targetId = target.id;
         document.querySelector('#interactionTitle').textContent = target.name + ' · 交互事件';
+        document.querySelector('#eventTarget').innerHTML = pages.map(page => '<option value="' + esc(page.id) + '">' + esc(page.name) + ' 页面</option>').join('');
+        document.querySelector('#eventTarget').value = existing && pages.some(page => page.id === existing.targetPageId) ? existing.targetPageId : fallbackTarget;
+        document.querySelector('#eventEffect').value = existing ? existing.effect : 'push-left';
+        document.querySelector('#eventEasing').value = existing ? existing.easing : 'ease-out';
+        document.querySelector('#eventDuration').value = existing ? existing.duration : 0.35;
+        document.querySelectorAll('.event-types button').forEach(button => button.classList.toggle('active', button.dataset.eventType === (existing ? existing.trigger : 'click')));
         interactionPanel.classList.add('open');
         flash('进入交互编排');
       }
@@ -1335,7 +1471,12 @@
         }
         openConfirm('确认删除页面？', '“' + page.name + '” 删除后无法恢复；关联到该页面的演示事件也会被清理。', () => {
           pages = pages.filter(item => item.id !== pageId);
-          if (pageId === 'details') eventElementIds = new Set();
+          Object.keys(interactionEvents).forEach(sourceId => {
+            if (interactionEvents[sourceId].targetPageId === pageId) delete interactionEvents[sourceId];
+          });
+          eventElementIds = new Set(Object.keys(interactionEvents));
+          const tabBar = getElement('tab-bar');
+          if (tabBar) tabBar.tabs.forEach(tab => { if (tab.pageId === pageId) tab.pageId = null; });
           if (currentPage === pageId) switchPage(pages[0].id);
           else renderAll();
           flash('已删除 ' + page.name + ' 页面');
@@ -1359,14 +1500,14 @@
 
       function selectAll() {
         if (currentPage !== 'home') return;
-        selectedIds = new Set(getTopEntityIds());
+        selectedIds = new Set(getTopEntityIds().filter(id => !isSystemElement(id)));
         lastHomeSelection = new Set(selectedIds);
         renderAll();
         flash('已选择全部根级图层');
       }
 
       function nudgeSelection(dx, dy) {
-        const items = selectedVisualItems();
+        const items = selectedVisualItems().filter(item => !isSystemElement(item));
         if (!items.length) return;
         items.forEach(item => {
           item.x += dx;
@@ -1456,39 +1597,170 @@
       }));
       document.querySelector('#saveInteraction').addEventListener('click', () => {
         const targetId = interactionPanel.dataset.targetId;
-        if (targetId && getElement(targetId)) eventElementIds.add(targetId);
+        const triggerButton = document.querySelector('.event-types button.active');
+        const targetPageId = document.querySelector('#eventTarget').value;
+        const durationInput = Number(document.querySelector('#eventDuration').value);
+        if (targetId && getElement(targetId) && pages.some(page => page.id === targetPageId)) {
+          interactionEvents[targetId] = {
+            sourceId:targetId,
+            trigger:triggerButton ? triggerButton.dataset.eventType : 'click',
+            targetPageId:targetPageId,
+            effect:document.querySelector('#eventEffect').value,
+            easing:document.querySelector('#eventEasing').value,
+            duration:Math.min(2.4, Math.max(.08, Number.isFinite(durationInput) ? durationInput : .35))
+          };
+          eventElementIds.add(targetId);
+        }
         interactionPanel.classList.remove('open');
         renderInspector();
         updateChrome();
-        flash('点击事件已保存 · ' + (getElement(targetId) ? getElement(targetId).name : '图层') + ' → Details');
+        const targetPage = pages.find(page => page.id === targetPageId);
+        flash((triggerButton ? triggerButton.textContent.trim() : '点击') + '事件已保存 · ' + (getElement(targetId) ? getElement(targetId).name : '图层') + ' → ' + (targetPage ? targetPage.name : targetPageId));
       });
 
       document.querySelector('#preview').addEventListener('click', openPreview);
       document.querySelector('#closePreview').addEventListener('click', closePreview);
-      document.querySelector('#previewCta').addEventListener('click', () => {
-        if (!eventElementIds.has('cta')) {
-          flash('尚未为 CTA 配置页面跳转');
-          return;
-        }
-        if (!pages.some(page => page.id === 'details')) {
-          flash('目标 Details 页面已不存在');
-          return;
-        }
-        document.querySelector('#previewPhone').classList.add('show-details');
-        flash('事件执行 · Push Left → Details');
-      });
-      document.querySelector('#previewBack').addEventListener('click', () => document.querySelector('#previewPhone').classList.remove('show-details'));
       previewModal.addEventListener('click', event => { if (event.target === previewModal) closePreview(); });
 
-      function openPreview() {
+      function toPreviewElement(item) {
+        if (!item || !['rect','circle','text','image','input','nav'].includes(item.type)) return null;
+        return {
+          id:item.id,
+          name:item.name,
+          type:item.type,
+          x:Number(item.x) || 0,
+          y:Number(item.y) || 0,
+          width:Math.max(1, Number(item.w == null ? item.width : item.w) || 1),
+          height:Math.max(1, Number(item.h == null ? item.height : item.h) || 1),
+          fill:item.fill || (item.type === 'text' ? '#202735' : '#dfe6f2'),
+          radius:Number(item.radius) || 0,
+          opacity:item.opacity == null ? 100 : Number(item.opacity),
+          text:item.text || ''
+        };
+      }
+
+      function buildPreviewProject() {
+        const statusBar = getElement('status-bar');
+        const tabBar = getElement('tab-bar');
+        const projectPages = pages.map(page => ({
+          id:page.id,
+          name:page.name,
+          background:'#f8f9fc',
+          elements:(page.id === 'home' ? elements.filter(item => !isSystemElement(item)) : detailsElements).map(toPreviewElement).filter(Boolean)
+        }));
+        const sourceIds = new Set(projectPages.flatMap(page => page.elements.map(item => item.id)));
+        const previewInteractions = Object.keys(interactionEvents).map(id => interactionEvents[id]).filter(event => sourceIds.has(event.sourceId) && pages.some(page => page.id === event.targetPageId));
+        if (sourceIds.has('details-back') && pages.some(page => page.id === 'home')) {
+          previewInteractions.push({sourceId:'details-back',trigger:'click',targetPageId:'home',effect:'push-right',easing:'ease-out',duration:.3});
+        }
+        return {
+          version:1,
+          title:'Poke · Synthetic Mobile Prototype',
+          stage:{width:280,height:522},
+          statusBar:{color:statusBar ? statusBar.color : '#111827',background:statusBar ? statusBar.fill : '#ffffff'},
+          tabBar:{
+            background:tabBar ? tabBar.fill : '#ffffff',
+            normalColor:tabBar ? tabBar.normalColor : '#8b95a5',
+            selectedColor:tabBar ? tabBar.selectedColor : '#2e67dd',
+            tabs:tabBar ? clone(tabBar.tabs) : []
+          },
+          pages:projectPages,
+          interactions:previewInteractions
+        };
+      }
+
+      function bytesToBase64Url(bytes) {
+        let binary = '';
+        for (let offset = 0; offset < bytes.length; offset += 32768) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + 32768));
+        }
+        return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'');
+      }
+
+      async function transformPreviewBytes(bytes, stream) {
+        const transformed = new Blob([bytes]).stream().pipeThrough(stream);
+        return new Uint8Array(await new Response(transformed).arrayBuffer());
+      }
+
+      async function encodePreviewProject(project) {
+        const raw = new TextEncoder().encode(JSON.stringify(project));
+        if (typeof CompressionStream !== 'undefined') {
+          try {
+            const compressed = await transformPreviewBytes(raw, new CompressionStream('gzip'));
+            if (compressed.length < raw.length) return {data:'g.' + bytesToBase64Url(compressed),bytes:compressed.length,rawBytes:raw.length};
+          } catch (error) {
+            console.warn('Poke preview compression unavailable', error);
+          }
+        }
+        return {data:'j.' + bytesToBase64Url(raw),bytes:raw.length,rawBytes:raw.length};
+      }
+
+      let previewRequest = 0;
+      async function openPreview() {
         closeContextMenu();
-        document.querySelector('#previewPhone').classList.remove('show-details');
+        const requestId = ++previewRequest;
+        const loading = document.querySelector('#previewLoading');
+        const qrFrame = document.querySelector('#previewQrFrame');
+        const liveFrame = document.querySelector('#previewLiveFrame');
+        loading.hidden = false;
+        loading.textContent = '正在压缩项目并生成二维码…';
+        document.querySelector('#previewUrl').textContent = '准备预览链接…';
+        document.querySelector('#previewPayload').textContent = 'SERIALIZING';
+        qrFrame.src = 'about:blank';
+        liveFrame.src = 'about:blank';
         previewModal.classList.add('open');
+        try {
+          const encoded = await encodePreviewProject(buildPreviewProject());
+          if (requestId !== previewRequest) return;
+          const canonicalUrl = new URL('/poke/render', 'https://me.azlar.cc');
+          canonicalUrl.searchParams.set('data', encoded.data);
+          const localUrl = new URL('/poke/render', window.location.href);
+          localUrl.searchParams.set('data', encoded.data);
+          const qrUrl = new URL(localUrl.toString());
+          qrUrl.searchParams.set('qr', '1');
+          const canonicalText = canonicalUrl.toString();
+          document.querySelector('#previewUrl').textContent = canonicalText;
+          document.querySelector('#previewUrl').title = canonicalText;
+          document.querySelector('#copyPreviewUrl').dataset.url = canonicalText;
+          document.querySelector('#previewPayload').textContent = encoded.bytes + ' B · ' + Math.round((1 - encoded.bytes / encoded.rawBytes) * 100) + '% SMALLER';
+          qrFrame.onload = () => { if (requestId === previewRequest) loading.hidden = true; };
+          qrFrame.onerror = () => { loading.textContent = '二维码生成失败，请复制链接预览'; };
+          qrFrame.src = qrUrl.toString();
+          liveFrame.src = localUrl.toString();
+        } catch (error) {
+          console.error(error);
+          loading.textContent = '预览生成失败，请稍后重试';
+          document.querySelector('#previewPayload').textContent = 'ENCODE ERROR';
+        }
       }
 
       function closePreview() {
+        previewRequest += 1;
         previewModal.classList.remove('open');
+        document.querySelector('#previewQrFrame').src = 'about:blank';
+        document.querySelector('#previewLiveFrame').src = 'about:blank';
       }
+
+      document.querySelector('#copyPreviewUrl').addEventListener('click', async () => {
+        const button = document.querySelector('#copyPreviewUrl');
+        const url = button.dataset.url;
+        if (!url) return;
+        try {
+          await navigator.clipboard.writeText(url);
+        } catch (error) {
+          const input = document.createElement('textarea');
+          input.value = url;
+          input.style.position = 'fixed';
+          input.style.opacity = '0';
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+        }
+        flash('预览链接已复制');
+        button.textContent = '已复制 ✓';
+        setTimeout(() => { button.textContent = '复制链接'; }, 1200);
+      });
 
       document.querySelector('#confirmCancel').addEventListener('click', closeConfirm);
       document.querySelector('#confirmOk').addEventListener('click', () => {
@@ -1567,6 +1839,7 @@
         components = [];
         pages = [{id:'home',name:'Launch'},{id:'details',name:'Details'}];
         eventElementIds = new Set();
+        interactionEvents = {};
         selectedIds = new Set(['cta']);
         lastHomeSelection = new Set(selectedIds);
         expandedContainerId = null;
@@ -1596,6 +1869,7 @@
         await step('04 / 05 · 编排页面跳转', openInteraction);
         await step('05 / 05 · 保存并实时预览', () => {
           eventElementIds.add('cta');
+          interactionEvents.cta = {sourceId:'cta',trigger:'click',targetPageId:'details',effect:'push-left',easing:'ease-out',duration:.35};
           interactionPanel.classList.remove('open');
           renderInspector();
           updateChrome();

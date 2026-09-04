@@ -48,9 +48,9 @@ const pokeProject = {
     source: demoExperiences['poke-prototype-editor'].source,
     title: 'Poke Studio · Archive Reconstruction',
     description:
-      '基于原始源码和实际运行结果重建。可创建图层、调整属性、配置页面跳转并进入预览；演示使用虚构项目，不连接旧服务。',
+      '基于原始源码和实际运行结果重建。可创建图层、编辑 Status Bar / Tab Bar、配置页面跳转，并把当前项目压进二维码链接，在手机端运行真实交互动效；演示使用虚构项目，不连接旧服务。',
     provenanceLabel: 'SOURCE-DRIVEN INTERACTIVE RECONSTRUCTION',
-    statusLabel: 'LOCAL',
+    statusLabel: 'QR PREVIEW',
     toolbar: 'Poke Studio · Synthetic Mobile Prototype',
     badge: 'WEB · DESKTOP · PROTOTYPE',
     height: 760,

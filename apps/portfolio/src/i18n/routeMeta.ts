@@ -81,6 +81,11 @@ const englishRouteMeta: Record<RouteId, RouteMeta> = {
     title: 'Interactive Experience Player | Chen Cheng Portfolio',
     description: 'A full-window player for registered public interactive experiences.',
   },
+  'poke-render': {
+    title: 'Poke Mobile Preview',
+    description:
+      'Open a Poke prototype from a QR code and run its page transitions and interactions on a phone.',
+  },
   resume: {
     title: 'Résumé | Chen Cheng',
     description:

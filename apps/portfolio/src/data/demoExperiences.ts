@@ -43,6 +43,7 @@ const layeredRouteAgentSource = createLayeredRouteLabUrl(layeredRouteLabUrl, '/p
 })
 
 const localSandbox = 'allow-scripts'
+const pokePreviewSandbox = 'allow-scripts allow-same-origin'
 const routeLabSandbox =
   'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox'
 const standardAllow = 'clipboard-write; fullscreen'
@@ -119,24 +120,24 @@ export const demoExperiences = {
       en: 'Poke Prototype Editor',
     },
     source: pokeEditorDemo,
-    sandbox: localSandbox,
+    sandbox: pokePreviewSandbox,
     allow: standardAllow,
     casePath: '/archive/poke-prototype-editor',
     provenance: 'personal-product',
-    status: 'OFFLINE RECONSTRUCTION · SYNTHETIC CONTENT',
+    status: 'QR PREVIEW · URL-EMBEDDED SYNTHETIC DATA',
     posterVariant: 'prototype-editor',
     guide: {
       zh: {
         duration: 3,
-        summary: '离线重建的原型编辑工作台，包含画布、图层、属性和交互设置。',
+        summary: '原型编辑工作台重建，包含画布、图层、系统栏、交互设置与手机扫码预览。',
         boundary: '使用虚构项目，不连接历史 Poke 服务或用户内容。',
-        steps: ['在画布中选择元素。', '通过图层和属性面板调整内容。', '配置交互后进入预览检查结果。'],
+        steps: ['在画布中选择元素。', '通过右侧面板调整图层、Status Bar 或 Tab Bar。', '配置 interaction 后点击“扫码预览”，在二维码或实时运行时中检查动效。'],
       },
       en: {
         duration: 3,
-        summary: 'An offline reconstruction of a prototyping workspace with canvas, layers, properties, and interactions.',
+        summary: 'A reconstructed prototyping workspace with canvas, layers, system bars, interactions, and QR mobile preview.',
         boundary: 'It uses a fictitious project and never connects to historical Poke services or user content.',
-        steps: ['Select an element on the canvas.', 'Adjust content through the layers and properties panels.', 'Configure an interaction, then enter preview to check it.'],
+        steps: ['Select an element on the canvas.', 'Adjust a layer, Status Bar, or Tab Bar in the inspector.', 'Configure an interaction, then open QR Preview to test its motion in the live runtime.'],
       },
     },
   },

@@ -1,0 +1,400 @@
+.poke-render-shell,
+.poke-render-state,
+.poke-qr-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  color: #1f2938;
+  background: #111725;
+}
+
+.poke-render-shell {
+  position: fixed;
+  display: grid;
+  overflow: hidden;
+  place-items: center;
+  inset: 0;
+  overscroll-behavior: none;
+}
+
+.poke-render-viewport {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  inset: 0;
+}
+
+.poke-render-scaled-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: min(6vw, 28px);
+  background: #f8f9fc;
+  box-shadow: 0 34px 90px rgb(0 0 0 / 44%);
+}
+
+.poke-prototype-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  transform-origin: top left;
+  background: #f8f9fc;
+  isolation: isolate;
+}
+
+.poke-prototype-page {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  transition-property: transform, opacity, filter, border-radius;
+  will-change: transform, opacity;
+  inset: 0;
+}
+
+.poke-prototype-page.is-to[data-effect='push-left'] {
+  transform: translate3d(100%, 0, 0);
+}
+
+.poke-prototype-page.is-to[data-effect='push-right'] {
+  transform: translate3d(-100%, 0, 0);
+}
+
+.poke-prototype-page.is-to[data-effect='push-up'] {
+  transform: translate3d(0, 100%, 0);
+}
+
+.poke-prototype-page.is-to[data-effect='push-down'] {
+  transform: translate3d(0, -100%, 0);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-to[data-effect^='push-'] {
+  transform: translate3d(0, 0, 0);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-from[data-effect='push-left'] {
+  opacity: 0.54;
+  transform: translate3d(-28%, 0, 0);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-from[data-effect='push-right'] {
+  opacity: 0.54;
+  transform: translate3d(28%, 0, 0);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-from[data-effect='push-up'] {
+  opacity: 0.54;
+  transform: translate3d(0, -22%, 0);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-from[data-effect='push-down'] {
+  opacity: 0.54;
+  transform: translate3d(0, 22%, 0);
+}
+
+.poke-prototype-page.is-to[data-effect='fade'] {
+  z-index: 2;
+  opacity: 0;
+  transform: scale(1.025);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-from[data-effect='fade'] {
+  opacity: 0;
+  transform: scale(0.985);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-to[data-effect='fade'] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.poke-prototype-page.is-to[data-effect='modal'] {
+  z-index: 2;
+  overflow: hidden;
+  border-radius: 26px 26px 0 0;
+  box-shadow: 0 -16px 44px rgb(25 35 52 / 22%);
+  transform: translate3d(0, 102%, 0);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-from[data-effect='modal'] {
+  filter: brightness(0.72);
+  transform: scale(0.94) translateY(-1.5%);
+}
+
+.poke-prototype-stage.is-running .poke-prototype-page.is-to[data-effect='modal'] {
+  border-radius: 0;
+  transform: translate3d(0, 0, 0);
+}
+
+.poke-prototype-element {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  margin: 0;
+  border: 0;
+  appearance: none;
+  text-align: left;
+  white-space: pre-line;
+}
+
+button.poke-prototype-element {
+  cursor: pointer;
+}
+
+.poke-prototype-element.is-interactive {
+  -webkit-tap-highlight-color: transparent;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.poke-prototype-element.is-interactive:active {
+  filter: brightness(0.92);
+  transform: scale(0.975);
+}
+
+.poke-prototype-element.is-interactive:focus-visible,
+.poke-prototype-tabbar button:focus-visible,
+.poke-render-restart:focus-visible {
+  outline: 2px solid #6b95f5;
+  outline-offset: -2px;
+}
+
+.poke-prototype-element.is-input {
+  border: 1px solid rgb(35 48 69 / 13%);
+  box-shadow: 0 2px 9px rgb(28 39 58 / 7%);
+}
+
+.poke-prototype-element.is-image {
+  justify-content: center !important;
+  background-image:
+    linear-gradient(135deg, transparent 48%, rgb(255 255 255 / 56%) 49% 51%, transparent 52%),
+    linear-gradient(45deg, transparent 48%, rgb(255 255 255 / 56%) 49% 51%, transparent 52%);
+  color: rgb(45 56 73 / 58%) !important;
+  letter-spacing: 0.12em;
+}
+
+.poke-prototype-element.is-nav {
+  justify-content: space-around !important;
+  color: #738095;
+}
+
+.poke-prototype-element.is-nav > span {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+}
+
+.poke-prototype-element.is-nav b {
+  font-size: 13px;
+}
+
+.poke-prototype-element.is-nav small {
+  font-size: 7px;
+}
+
+.poke-prototype-statusbar {
+  position: absolute;
+  z-index: 30;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  height: 17px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  font-size: 6px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.poke-status-icons {
+  font-size: 5px;
+  letter-spacing: 1px;
+}
+
+.poke-prototype-tabbar {
+  position: absolute;
+  z-index: 30;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  height: 56px;
+  align-items: stretch;
+  border-top: 1px solid rgb(33 43 58 / 9%);
+  box-shadow: 0 -7px 22px rgb(32 41 56 / 4%);
+}
+
+.poke-prototype-tabbar button {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+  place-content: center;
+  gap: 3px;
+  padding: 4px 2px 3px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.poke-prototype-tabbar button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.poke-prototype-tabbar button:active:not(:disabled) {
+  background: rgb(67 87 121 / 6%);
+}
+
+.poke-prototype-tabbar b {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.poke-prototype-tabbar span {
+  overflow: hidden;
+  font-size: 7px;
+  font-weight: 650;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.poke-render-restart {
+  position: fixed;
+  z-index: 50;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgb(255 255 255 / 30%);
+  border-radius: 50%;
+  color: #fff;
+  background: rgb(17 23 37 / 64%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  cursor: pointer;
+  font-size: 18px;
+  backdrop-filter: blur(12px);
+}
+
+.poke-render-state {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 32px;
+  color: #eaf0fb;
+  text-align: center;
+}
+
+.poke-render-state > div {
+  max-width: 430px;
+}
+
+.poke-render-state small {
+  color: #8da7d6;
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.poke-render-state h1 {
+  margin: 14px 0 10px;
+  color: #fff;
+  font-size: clamp(1.8rem, 7vw, 3rem);
+}
+
+.poke-render-state p {
+  margin: 0 0 24px;
+  color: #aebbd1;
+  line-height: 1.7;
+}
+
+.poke-render-state a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 10px;
+  color: #172035;
+  background: #e8efff;
+  font-weight: 750;
+}
+
+.poke-render-loader {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgb(255 255 255 / 18%);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: poke-loader 700ms linear infinite;
+}
+
+@keyframes poke-loader {
+  to { transform: rotate(1turn); }
+}
+
+.poke-qr-page {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-content: center;
+  padding: 14px;
+  color: #445069;
+  background: #fff;
+  text-align: center;
+}
+
+.poke-qr-page canvas {
+  display: block;
+  width: min(224px, 78vw) !important;
+  height: auto !important;
+  margin: 0 auto;
+}
+
+.poke-qr-page p {
+  margin: 9px 0 2px;
+  color: #20293a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.poke-qr-page small {
+  font-size: 8px;
+}
+
+.poke-qr-error {
+  max-width: 220px;
+  color: #a23c4d;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+  .poke-render-scaled-frame {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .poke-render-restart {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poke-prototype-page,
+  .poke-prototype-element.is-interactive {
+    transition-duration: 1ms !important;
+  }
+
+  .poke-render-loader {
+    animation-duration: 1.6s;
+  }
+}
