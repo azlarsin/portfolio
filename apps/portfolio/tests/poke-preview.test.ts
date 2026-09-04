@@ -9,7 +9,7 @@ import {
 } from '../src/features/poke/protocol'
 
 const project: PokePrototype = {
-  version: 2,
+  version: 3,
   title: 'Interaction test',
   stage: { width: 280, height: 522 },
   statusBar: { color: '#111827', background: '#ffffff' },
@@ -42,6 +42,7 @@ const project: PokePrototype = {
               fill: '#2e67dd',
               radius: 16,
               opacity: 100,
+              rotation: 0,
               text: 'Open prototype →',
             },
             {
@@ -53,6 +54,7 @@ const project: PokePrototype = {
               fill: '#6d5bd0',
               radius: 24,
               opacity: 55,
+              rotation: 12,
               text: 'State changed',
             },
           ],
@@ -78,6 +80,7 @@ const project: PokePrototype = {
               fill: '#2e67dd',
               radius: 0,
               opacity: 100,
+              rotation: 0,
               text: '← Back',
             },
           ],
@@ -193,7 +196,7 @@ describe('Poke QR preview protocol', () => {
       ],
     })
 
-    expect(legacy?.version).toBe(2)
+    expect(legacy?.version).toBe(3)
     expect(legacy?.pages[0].elements[0].states[0].stateId).toBe('0')
     expect(legacy?.interactions[0]).toMatchObject({
       sourceState: '0',

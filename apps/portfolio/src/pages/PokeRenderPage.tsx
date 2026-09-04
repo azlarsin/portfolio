@@ -60,6 +60,8 @@ function elementStyle(
     background: isText ? 'transparent' : state.fill,
     color: isText ? state.fill : isButton ? '#fff' : '#556170',
     opacity: state.opacity / 100,
+    transform: `rotate(${state.rotation}deg)`,
+    transformOrigin: 'center center',
     fontFamily: isHeadline ? 'Georgia, Times New Roman, serif' : 'inherit',
     fontSize: isHeadline ? 29 : isBodyCopy ? 10 : 10,
     fontWeight: isButton ? 700 : isHeadline ? 500 : 500,

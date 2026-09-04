@@ -14,7 +14,7 @@
     .archive-bar { display: flex; height: 28px; align-items: center; justify-content: space-between; padding: 0 13px; color: #9da8bc; background: #171d28; font: 8px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .11em; }
     .archive-bar span:last-child { color: #68c7a5; }
     .app { display: grid; height: calc(100vh - 28px); grid-template-rows: 52px minmax(0,1fr) 25px; background: #eff1f3; }
-    .topbar { display: grid; grid-template-columns: 168px minmax(0,1fr) 220px; align-items: stretch; border-bottom: 1px solid #cfd3d8; background: linear-gradient(#f7f8f9,#e9ebed); box-shadow: 0 1px 2px rgba(41,47,56,.06); }
+    .topbar { display: grid; grid-template-columns: 276px minmax(0,1fr) 220px; align-items: stretch; border-bottom: 1px solid #cfd3d8; background: linear-gradient(#f7f8f9,#e9ebed); box-shadow: 0 1px 2px rgba(41,47,56,.06); }
     .top-group { display: flex; align-items: stretch; }
     .top-group.end { justify-content: flex-end; }
     .top-action { display: grid; min-width: 54px; place-items: center; gap: 1px; padding: 6px 8px 4px; border: 0; border-right: 1px solid rgba(184,189,197,.45); color: #747b86; background: transparent; cursor: pointer; font-size: 8px; }
@@ -100,9 +100,18 @@
     .container-hit.selected { border-color: #2f79ed; box-shadow: 0 0 0 1px rgba(255,255,255,.8), 0 0 0 2px #2f79ed; }
     .canvas-container.expanded .container-hit { border: 1px dashed rgba(47,121,237,.65); pointer-events: none; }
     .resize-overlay { position: absolute; z-index: 60; pointer-events: none; }
-    .resize-handle { position: absolute; width: 16px; height: 16px; padding: 0; border: 0; background: radial-gradient(circle, #2f79ed 0 3px, white 3.5px 4.5px, transparent 5px); cursor: nwse-resize; pointer-events: auto; touch-action: none; }
-    .resize-handle[data-resize-direction="nw"] { top: -8px; left: -8px; }
-    .resize-handle[data-resize-direction="se"] { right: -8px; bottom: -8px; }
+    .resize-handle { position: absolute; width: 16px; height: 16px; padding: 0; border: 0; background: radial-gradient(circle, #2f79ed 0 3px, white 3.5px 4.5px, transparent 5px); pointer-events: auto; touch-action: none; }
+    .resize-handle[data-resize-direction="nw"] { top: -8px; left: -8px; cursor: nwse-resize; }
+    .resize-handle[data-resize-direction="n"] { top: -8px; left: calc(50% - 8px); cursor: ns-resize; }
+    .resize-handle[data-resize-direction="ne"] { top: -8px; right: -8px; cursor: nesw-resize; }
+    .resize-handle[data-resize-direction="e"] { top: calc(50% - 8px); right: -8px; cursor: ew-resize; }
+    .resize-handle[data-resize-direction="se"] { right: -8px; bottom: -8px; cursor: nwse-resize; }
+    .resize-handle[data-resize-direction="s"] { bottom: -8px; left: calc(50% - 8px); cursor: ns-resize; }
+    .resize-handle[data-resize-direction="sw"] { bottom: -8px; left: -8px; cursor: nesw-resize; }
+    .resize-handle[data-resize-direction="w"] { top: calc(50% - 8px); left: -8px; cursor: ew-resize; }
+    .rotate-handle { position: absolute; top: -31px; left: calc(50% - 8px); width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: radial-gradient(circle, #fff 0 3px, #2f79ed 3.5px 5px, transparent 5.5px); cursor: grab; pointer-events: auto; touch-action: none; }
+    .rotate-handle::after { position: absolute; top: 13px; left: 7px; width: 1px; height: 12px; background: #2f79ed; content: ''; }
+    .rotate-handle:active { cursor: grabbing; }
     .inspector-head { display: flex; min-height: 44px; align-items: center; gap: 9px; padding: 0 12px; border-bottom: 1px solid #d8dce1; background: #f9fafb; }
     .inspector-icon { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #cdd2d9; border-radius: 5px; color: #617087; background: white; font-size: 9px; }
     .inspector-head strong { display: block; font-size: 10px; }
@@ -171,9 +180,16 @@
     .states { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
     .states button { min-height: 25px; padding: 0 7px; border: 0; border-radius: 5px; color: #68717f; background: #eceff3; cursor: pointer; font-size: 7px; }
     .states button.active { color: white; background: #2e67dd; }
-    .interaction-form { display: grid; grid-template-columns: minmax(112px,1.25fr) repeat(5,minmax(70px,1fr)) auto; align-content: start; gap: 8px; padding: 13px 14px; }
+    .interaction-form { display: grid; align-content: start; gap: 9px; padding: 13px 14px; }
     .interaction-form label { display: grid; grid-template-columns: 1fr; gap: 5px; }
     .interaction-form .save { align-self: end; height: 27px; padding: 0 12px; border: 0; border-radius: 6px; color: white; background: #2e67dd; cursor: pointer; font-size: 8px; font-weight: 700; }
+    .interaction-form .save:disabled { cursor: not-allowed; opacity: .42; }
+    .interaction-starter { display: flex; align-items: center; gap: 7px; }
+    .interaction-starter button { height: 30px; padding: 0 11px; border: 1px solid #b9c7e1; border-radius: 7px; color: #315fab; background: #f3f7ff; cursor: pointer; font-size: 8px; font-weight: 750; }
+    .interaction-starter button.primary { border-color: #2e67dd; color: white; background: #2e67dd; }
+    .interaction-starter span { margin-left: 3px; color: #929ba8; font-size: 7px; }
+    .interaction-fields { display: grid; grid-template-columns: minmax(112px,1.25fr) repeat(5,minmax(70px,1fr)) auto; gap: 8px; }
+    .interaction-fields[hidden], .interaction-starter[hidden] { display: none; }
     .interaction-field[hidden] { display: none; }
     .interaction-actions { display: flex; min-height: 30px; grid-column: 1 / -1; flex-wrap: wrap; gap: 6px; padding-top: 3px; }
     .interaction-action { display: inline-grid; min-height: 30px; grid-template-columns: auto auto; align-items: center; gap: 7px; padding: 5px 6px 5px 9px; border: 1px solid #d6dce6; border-radius: 7px; color: #536177; background: white; font-size: 7px; line-height: 1.35; }
@@ -181,6 +197,31 @@
     .interaction-action button { width: 19px; height: 19px; padding: 0; border: 0; border-radius: 5px; color: #a05f6b; background: #faedef; cursor: pointer; }
     .interaction-empty { align-self: center; color: #9aa2af; font-size: 8px; }
     .interaction-note { grid-column: 1 / -1; margin: 0; color: #929aa5; font-size: 7px; line-height: 1.5; }
+    .interaction-pick-layer { position: absolute; z-index: auto; pointer-events: none; inset: 0; }
+    .interaction-pick-layer[hidden] { display: none; }
+    .interaction-mask-shade { position: absolute; z-index: 32; background: rgba(20,27,39,.54); pointer-events: none; backdrop-filter: grayscale(.55); inset: 0; }
+    .interaction-mask-hint { position: absolute; z-index: 52; top: 16px; right: 242px; width: 260px; padding: 14px; border: 1px solid rgba(182,195,218,.52); border-radius: 11px; color: #eaf0fb; background: rgba(24,32,47,.95); box-shadow: 0 18px 50px rgba(14,20,30,.32); pointer-events: auto; backdrop-filter: blur(16px); }
+    .interaction-mask-hint small { display: block; margin-bottom: 5px; color: #8facf2; font: 7px ui-monospace,monospace; letter-spacing: .1em; }
+    .interaction-mask-hint strong { display: block; font-size: 10px; line-height: 1.45; }
+    .interaction-mask-hint p { margin: 6px 0 11px; color: #9eabc0; font-size: 8px; line-height: 1.55; }
+    .interaction-mask-actions { display: flex; justify-content: flex-end; gap: 6px; }
+    .interaction-mask-actions button { height: 27px; padding: 0 9px; border: 1px solid rgba(177,191,216,.35); border-radius: 6px; color: #c7d1e2; background: rgba(255,255,255,.06); cursor: pointer; font-size: 7px; }
+    .interaction-mask-actions button.primary { border-color: #4b78e0; color: white; background: #3769d8; font-weight: 750; }
+    .interaction-mask-actions button:disabled { cursor: not-allowed; opacity: .42; }
+    .workspace.interaction-picking .toolrail, .workspace.interaction-picking .left-panel, .workspace.interaction-picking .right-panel, .workspace.interaction-picking .interaction-panel { pointer-events: none; }
+    .workspace.interaction-picking .container-hit { pointer-events: none; }
+    .workspace.interaction-picking .resize-overlay { display: none; }
+    .canvas-element.interaction-candidate { cursor: crosshair !important; transition: filter 120ms ease, box-shadow 120ms ease; }
+    .canvas-element.interaction-candidate:hover { z-index: 38 !important; border-color: #8bb0ff; filter: brightness(1.08); box-shadow: 0 0 0 2px white, 0 0 0 4px #6692f2, 0 10px 28px rgba(23,42,79,.28); }
+    .canvas-element.interaction-edit-target { z-index: 40 !important; }
+    .workspace.interaction-editing .canvas-element:not(.interaction-edit-target):not(.state-ghost), .workspace.interaction-editing .container-hit { pointer-events: none; }
+    .workspace.interaction-editing .interaction-panel { z-index: 46; }
+    .workspace.interaction-editing .right-panel .element-states { opacity: .42; pointer-events: none; }
+    .workspace.interaction-editing .resize-overlay { z-index: 44; }
+    .canvas-element.interaction-draft-ghost { z-index: 37 !important; opacity: .46 !important; }
+    .state-link-svg { position: absolute; z-index: 39; overflow: visible; pointer-events: none; inset: 0; }
+    .state-link-svg line { stroke: #ff304f; stroke-width: 1.7; stroke-dasharray: 7 5; }
+    .state-link-svg circle { fill: white; stroke: #1b2432; stroke-width: 1.3; }
     .preview-modal { position: absolute; z-index: 60; display: grid; place-items: center; inset: 0; padding: 28px; background: rgba(20,26,36,.64); opacity: 0; pointer-events: none; transition: opacity 220ms ease; }
     .preview-modal.open { opacity: 1; pointer-events: auto; }
     .preview-window { width: min(742px,calc(100vw - 70px)); overflow: hidden; border: 1px solid #bbc2cc; border-radius: 14px; background: #edf0f4; box-shadow: 0 30px 80px rgba(12,17,25,.4); transform: translateY(12px) scale(.97); transition: transform 260ms cubic-bezier(.2,.8,.2,1); }
@@ -255,6 +296,8 @@
         <button class="top-action" id="backToProjects"><b>‹</b>项目</button>
         <button class="top-action" id="preview"><b>▦</b>扫码预览</button>
         <button class="top-action" data-command="save"><b>⇧</b>保存</button>
+        <button class="top-action" id="undo" title="撤销 · ⌘Z" disabled><b>↶</b>撤销</button>
+        <button class="top-action" id="redo" title="重做 · ⇧⌘Z" disabled><b>↷</b>重做</button>
       </div>
       <div class="top-center">
         <button class="top-action" data-command="component" id="componentCommand"><b>◇</b>创建组件</button>
@@ -297,9 +340,18 @@
           <div class="confirm-actions"><button id="confirmCancel">取消</button><button class="danger" id="confirmOk">删除</button></div>
         </div>
       </div>
+      <div class="interaction-pick-layer" id="interactionPickLayer" hidden>
+        <div class="interaction-mask-shade"></div>
+        <aside class="interaction-mask-hint" aria-live="polite">
+          <small id="interactionMaskStep">SELECT TARGET</small>
+          <strong id="interactionMaskTitle">Hover 高亮并点击一个目标元素</strong>
+          <p id="interactionMaskCopy">画布元素已进入可选状态；选择后可移动、缩放或旋转，当前 State 会作为 ghost 保留。</p>
+          <div class="interaction-mask-actions"><button id="cancelInteractionDraft">取消</button><button id="repickInteractionTarget" hidden>重新选择</button><button class="primary" id="commitInteractionDraft" disabled>选择目标中…</button></div>
+        </aside>
+      </div>
       <section class="interaction-panel" id="interactionPanel">
         <div class="interaction-side"><button class="close" id="closeInteraction">×</button><strong id="interactionTitle">按钮 · 交互事件</strong><div class="event-types"><button class="active" data-event-type="click">点击</button><button data-event-type="doubleClick">双击</button><button data-event-type="touch">长按</button><button data-event-type="swipeLeft">← 滑</button><button data-event-type="swipeRight">→ 滑</button><button data-event-type="swipeUp">↑ 滑</button><button data-event-type="swipeDown">↓ 滑</button></div><div class="states" id="interactionStates"></div></div>
-        <div class="interaction-form"><label>目标<select id="eventTarget"></select></label><label class="interaction-field" id="targetStateField">目标 State<select id="eventTargetState"></select></label><label class="interaction-field" id="effectField" hidden>页面转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>延迟<input id="eventDelay" type="number" min="0" max="5" step="0.05" value="0" /></label><label>时长<input id="eventDuration" type="number" min="0.05" max="3" step="0.05" value="0.3" /></label><button class="save" id="saveInteraction">添加动作</button><div class="interaction-actions" id="interactionActions"></div><p class="interaction-note">同一次触发可让多个本页元素切换到指定 State，并可同时执行一次页面跳转；每个动作独立保存延迟、时长和 easing。</p></div>
+        <div class="interaction-form"><div class="interaction-starter" id="interactionStarter"><button class="primary" id="beginElementInteraction">＋ 添加交互</button><button id="beginPageInteraction">＋ 页面跳转</button><span>先选择 Target，再编辑它的目标 State。</span></div><div class="interaction-fields" id="interactionFields" hidden><label>目标<select id="eventTarget"></select></label><label class="interaction-field" id="targetStateField">目标 State<select id="eventTargetState"></select></label><label class="interaction-field" id="effectField" hidden>页面转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>延迟<input id="eventDelay" type="number" min="0" max="5" step="0.05" value="0" /></label><label>时长<input id="eventDuration" type="number" min="0.05" max="3" step="0.05" value="0.3" /></label><button class="save" id="saveInteraction">保存页面动作</button></div><div class="interaction-actions" id="interactionActions"></div><p class="interaction-note">元素动作通过遮罩选择 Target；可直接选择已有 State，或在移动 / resize / rotate 后保存为新 State。</p></div>
       </section>
       <div class="preview-modal" id="previewModal">
         <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">SCAN PREVIEW · URL-EMBEDDED PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>用手机相机扫码，立即检查交互</strong><p>当前画布、全部 State、元素事件与系统栏配置都会写入同一份预览数据。</p><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">SERIALIZING</span></div></section><section class="preview-device-pane"><span id="previewRuntimeLabel">LIVE RUNTIME · WAITING</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
@@ -342,6 +394,11 @@
       const contextMenu = document.querySelector('#contextMenu');
       const confirmLayer = document.querySelector('#confirmLayer');
       const selectionChip = document.querySelector('#selectionChip');
+      const interactionPickLayer = document.querySelector('#interactionPickLayer');
+      const interactionMaskStep = document.querySelector('#interactionMaskStep');
+      const interactionMaskTitle = document.querySelector('#interactionMaskTitle');
+      const interactionMaskCopy = document.querySelector('#interactionMaskCopy');
+      const commitInteractionDraft = document.querySelector('#commitInteractionDraft');
       const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
       let elements = clone(originalElements);
@@ -359,12 +416,120 @@
       let clipboard = null;
       let eventElementIds = new Set();
       let interactionEvents = [];
+      let interactionDraft = null;
+      let suspendDraftTracking = false;
       let gesture = null;
       let replaying = false;
       let idSequence = 100;
       let toastTimer = null;
       let confirmAction = null;
       let menuContext = null;
+      let undoStack = [];
+      let redoStack = [];
+      let inputHistoryKey = null;
+      let historyRestoring = false;
+
+      function captureDocumentState() {
+        return {
+          elements:clone(elements),
+          containers:clone(containers),
+          components:clone(components),
+          pages:clone(pages),
+          selectedIds:Array.from(selectedIds),
+          lastHomeSelection:Array.from(lastHomeSelection),
+          activePanel:activePanel,
+          currentPage:currentPage,
+          expandedContainerId:expandedContainerId,
+          interactionEvents:clone(interactionEvents),
+          idSequence:idSequence
+        };
+      }
+
+      function pushHistoryState(state, label) {
+        if (historyRestoring || !state) return;
+        undoStack.push({state:clone(state),label:label || '编辑'});
+        if (undoStack.length > 80) undoStack.shift();
+        redoStack = [];
+        updateHistoryControls();
+      }
+
+      function checkpointHistory(label) {
+        pushHistoryState(captureDocumentState(), label);
+      }
+
+      function checkpointInput(key, label) {
+        if (inputHistoryKey === key) return;
+        inputHistoryKey = key;
+        checkpointHistory(label);
+      }
+
+      function finishInputHistory() {
+        inputHistoryKey = null;
+      }
+
+      function updateHistoryControls() {
+        const undo = document.querySelector('#undo');
+        const redo = document.querySelector('#redo');
+        if (!undo || !redo) return;
+        undo.disabled = undoStack.length === 0;
+        redo.disabled = redoStack.length === 0;
+        undo.title = undoStack.length ? '撤销 · ' + undoStack[undoStack.length-1].label + ' · ⌘Z' : '没有可撤销的操作';
+        redo.title = redoStack.length ? '重做 · ' + redoStack[redoStack.length-1].label + ' · ⇧⌘Z' : '没有可重做的操作';
+      }
+
+      function restoreDocumentState(state) {
+        historyRestoring = true;
+        gesture = null;
+        interactionDraft = null;
+        interactionPickLayer.hidden = true;
+        interactionPanel.classList.remove('open');
+        workspace.classList.remove('interaction-open','interaction-picking','interaction-editing');
+        previewModal.classList.remove('open');
+        confirmLayer.hidden = true;
+        closeContextMenu();
+        elements = clone(state.elements);
+        containers = clone(state.containers);
+        components = clone(state.components);
+        pages = clone(state.pages);
+        selectedIds = new Set(state.selectedIds);
+        lastHomeSelection = new Set(state.lastHomeSelection);
+        activePanel = state.activePanel;
+        currentPage = state.currentPage;
+        expandedContainerId = state.expandedContainerId;
+        interactionEvents = clone(state.interactionEvents);
+        idSequence = state.idSequence;
+        syncEventElementIds();
+        const page = pages.find(item => item.id === currentPage);
+        document.querySelector('#pageName').textContent = page ? page.name : currentPage;
+        syncTabs();
+        renderAll();
+        historyRestoring = false;
+        finishInputHistory();
+        updateHistoryControls();
+      }
+
+      function undoDocument() {
+        if (interactionDraft) {
+          discardInteractionDraft(true);
+          renderInteractionActions();
+          flash('已取消未保存的交互草稿');
+          return;
+        }
+        const entry = undoStack.pop();
+        if (!entry) return;
+        redoStack.push({state:captureDocumentState(),label:entry.label});
+        restoreDocumentState(entry.state);
+        flash('已撤销 · ' + entry.label);
+      }
+
+      function redoDocument() {
+        if (interactionDraft) return;
+        const entry = redoStack.pop();
+        if (!entry) return;
+        undoStack.push({state:captureDocumentState(),label:entry.label});
+        restoreDocumentState(entry.state);
+        flash('已重做 · ' + entry.label);
+      }
 
       function uid(prefix) {
         idSequence += 1;
@@ -393,7 +558,8 @@
           h:item.h,
           fill:item.fill,
           radius:item.radius,
-          opacity:item.opacity
+          opacity:item.opacity,
+          rotation:Number(item.rotation) || 0
         };
         if (Object.prototype.hasOwnProperty.call(item, 'text')) state.text = item.text;
         return state;
@@ -411,6 +577,12 @@
 
       function saveCurrentElementState(item) {
         if (!ensureElementStates(item)) return;
+        if (!suspendDraftTracking && interactionDraft && interactionDraft.mode === 'editing' && interactionDraft.targetId === item.id) {
+          interactionDraft.draftSnapshot = elementStateSnapshot(item);
+          interactionDraft.changed = JSON.stringify(interactionDraft.draftSnapshot) !== JSON.stringify(interactionDraft.editBaseSnapshot);
+          updateInteractionDraftControls();
+          return;
+        }
         item.states[item.nowState] = elementStateSnapshot(item);
       }
 
@@ -428,13 +600,14 @@
         return true;
       }
 
-      function addElementState(item, selectState) {
+      function addElementState(item, selectState, skipHistory) {
         if (!ensureElementStates(item)) return null;
         const ids = elementStateIds(item);
         if (ids.length >= 3) {
           flash('每个元素最多包含初始状态和 2 个扩展 State');
           return null;
         }
+        if (!skipHistory && !interactionDraft) checkpointHistory('创建元素 State');
         saveCurrentElementState(item);
         const stateId = String(Math.max.apply(null, ids.map(Number)) + 1);
         item.states[stateId] = clone(item.states[item.nowState]);
@@ -444,6 +617,7 @@
 
       function deleteElementState(item, stateId) {
         if (!ensureElementStates(item) || stateId === '0' || !item.states[stateId]) return;
+        if (!interactionDraft) checkpointHistory('删除元素 State');
         delete item.states[stateId];
         interactionEvents = interactionEvents.flatMap(event => {
           if (event.sourceId === item.id && event.sourceState === stateId) return [];
@@ -535,13 +709,13 @@
       }
 
       function geometrySnapshot(items) {
-        return items.map(item => ({id:item.id,x:item.x,y:item.y,w:item.w,h:item.h}));
+        return items.map(item => ({id:item.id,x:item.x,y:item.y,w:item.w,h:item.h,rotation:Number(item.rotation) || 0}));
       }
 
       function restoreGeometry(snapshot) {
         snapshot.forEach(origin => {
           const item = getElement(origin.id);
-          if (item) Object.assign(item, {x:origin.x,y:origin.y,w:origin.w,h:origin.h});
+          if (item) Object.assign(item, {x:origin.x,y:origin.y,w:origin.w,h:origin.h,rotation:origin.rotation || 0});
         });
         containers.forEach(syncContainer);
       }
@@ -591,7 +765,9 @@
       function createElementNode(item, offsetX, offsetY, selectId) {
         const node = document.createElement('div');
         const isSelected = selectedIds.has(selectId);
-        node.className = 'canvas-element ' + item.type + (isSelected ? ' selected' : '');
+        const interactionCandidate = interactionDraft && interactionDraft.mode === 'picking' && !isSystemElement(item);
+        const interactionEditTarget = interactionDraft && interactionDraft.mode === 'editing' && interactionDraft.targetId === item.id;
+        node.className = 'canvas-element ' + item.type + (isSelected ? ' selected' : '') + (interactionCandidate ? ' interaction-candidate' : '') + (interactionEditTarget ? ' interaction-edit-target' : '');
         node.dataset.id = item.id;
         node.dataset.selectId = selectId;
         Object.assign(node.style, {
@@ -602,6 +778,8 @@
           background:item.type === 'text' ? 'transparent' : item.fill,
           borderRadius:item.radius + (item.type === 'circle' ? '%' : 'px'),
           opacity:item.opacity/100,
+          transform:'rotate(' + (Number(item.rotation) || 0) + 'deg)',
+          transformOrigin:'center center',
           color:item.type === 'text' ? item.fill : (item.id === 'cta' ? 'white' : (item.color || '#556170')),
           fontSize:item.id === 'title' ? '29px' : (item.id === 'copy' ? '10px' : '10px'),
           fontFamily:item.id === 'title' ? 'Georgia,serif' : 'inherit',
@@ -674,6 +852,7 @@
         if (currentPage !== 'home' || selectedIds.size !== 1) return;
         const entity = selected();
         if (!entity || isSystemElement(entity)) return;
+        if (interactionPanel.classList.contains('open') && (!interactionDraft || interactionDraft.mode !== 'editing' || interactionDraft.targetId !== entity.id)) return;
         if (getContainer(entity.id)) syncContainer(entity);
         const overlay = document.createElement('div');
         overlay.className = 'resize-overlay';
@@ -681,17 +860,26 @@
           left:entity.x+'px',
           top:entity.y+'px',
           width:entity.w+'px',
-          height:entity.h+'px'
+          height:entity.h+'px',
+          transform:'rotate(' + (Number(entity.rotation) || 0) + 'deg)',
+          transformOrigin:'center center'
         });
-        ['nw','se'].forEach(direction => {
+        const resizeLabels = {nw:'调整左上角',n:'调整上边',ne:'调整右上角',e:'调整右边',se:'调整右下角',s:'调整下边',sw:'调整左下角',w:'调整左边'};
+        ['nw','n','ne','e','se','s','sw','w'].forEach(direction => {
           const handle = document.createElement('button');
           handle.type = 'button';
           handle.className = 'resize-handle';
           handle.dataset.resizeDirection = direction;
-          handle.setAttribute('aria-label', direction === 'nw' ? '调整左上角' : '调整右下角');
+          handle.setAttribute('aria-label', resizeLabels[direction]);
           handle.addEventListener('pointerdown', startResize);
           overlay.appendChild(handle);
         });
+        const rotateHandle = document.createElement('button');
+        rotateHandle.type = 'button';
+        rotateHandle.className = 'rotate-handle';
+        rotateHandle.setAttribute('aria-label', '旋转元素');
+        rotateHandle.addEventListener('pointerdown', startRotate);
+        overlay.appendChild(rotateHandle);
         artboard.appendChild(overlay);
       }
 
@@ -700,14 +888,45 @@
         const item = selected();
         if (!item || getContainer(item.id) || isSystemElement(item)) return;
         ensureElementStates(item);
-        if (item.nowState === '0' || !item.states['0']) return;
+        const draftActive = interactionDraft && interactionDraft.mode === 'editing' && interactionDraft.targetId === item.id;
+        if (!draftActive && (item.nowState === '0' || !item.states['0'])) return;
         const ghostItem = clone(item);
-        Object.assign(ghostItem, clone(item.states['0']));
+        const ghostSnapshot = draftActive ? interactionDraft.originSnapshot : item.states['0'];
+        Object.assign(ghostItem, clone(ghostSnapshot));
         const ghost = createElementNode(ghostItem, 0, 0, item.id);
         ghost.classList.remove('selected');
+        ghost.classList.remove('interaction-edit-target');
+        ghost.classList.remove('interaction-candidate');
         ghost.classList.add('state-ghost');
+        if (draftActive) ghost.classList.add('interaction-draft-ghost');
         ghost.removeAttribute('data-select-id');
         artboard.appendChild(ghost);
+        if (draftActive) renderStateLink(ghostSnapshot, item);
+      }
+
+      function renderStateLink(origin, target) {
+        const namespace = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(namespace, 'svg');
+        svg.classList.add('state-link-svg');
+        svg.setAttribute('width', '280');
+        svg.setAttribute('height', '522');
+        svg.setAttribute('viewBox', '0 0 280 522');
+        const start = {x:origin.x+origin.w/2,y:origin.y+origin.h/2};
+        const end = {x:target.x+target.w/2,y:target.y+target.h/2};
+        const line = document.createElementNS(namespace, 'line');
+        line.setAttribute('x1', start.x);
+        line.setAttribute('y1', start.y);
+        line.setAttribute('x2', end.x);
+        line.setAttribute('y2', end.y);
+        svg.appendChild(line);
+        [start,end].forEach(point => {
+          const circle = document.createElementNS(namespace, 'circle');
+          circle.setAttribute('cx', point.x);
+          circle.setAttribute('cy', point.y);
+          circle.setAttribute('r', '4');
+          svg.appendChild(circle);
+        });
+        artboard.appendChild(svg);
       }
 
       function renderCanvas() {
@@ -766,6 +985,7 @@
       }
 
       function setInteractionPanelOpen(open) {
+        if (!open && interactionDraft) discardInteractionDraft(true);
         interactionPanel.classList.toggle('open', Boolean(open));
         workspace.classList.toggle('interaction-open', Boolean(open));
         updateChrome();
@@ -776,18 +996,6 @@
         const direct = getElement(id);
         if (direct && !isSystemElement(direct)) return direct;
         return visualItemsForId(id).find(item => !isSystemElement(item)) || null;
-      }
-
-      function pickInteractionTarget(item, origin) {
-        if (!interactionPanel.classList.contains('open') || !item || isSystemElement(item)) return false;
-        const select = document.querySelector('#eventTarget');
-        const value = 'element:' + item.id;
-        if (!Array.from(select.options).some(option => option.value === value)) return false;
-        select.value = value;
-        select.dispatchEvent(new Event('change'));
-        revealCanvasElement(item.id, 'smooth');
-        flash((origin || '画布') + '已选 Target · ' + item.name);
-        return true;
       }
 
       function pointerScale() {
@@ -816,16 +1024,22 @@
         event.preventDefault();
         event.stopPropagation();
         closeContextMenu();
-        const id = event.currentTarget.dataset.selectId || event.currentTarget.dataset.id;
+        let id = event.currentTarget.dataset.selectId || event.currentTarget.dataset.id;
         if (interactionPanel.classList.contains('open')) {
-          const target = interactionTargetForId(id);
-          if (target) {
-            selectedIds = new Set([target.id]);
-            lastHomeSelection = new Set(selectedIds);
-            renderAll();
-            pickInteractionTarget(target, '画布');
+          const target = interactionTargetForId(event.currentTarget.dataset.id || id);
+          if (!interactionDraft) {
+            flash('先点击“添加交互”进入 Target 选择');
             return;
           }
+          if (interactionDraft.mode === 'picking' && target) {
+            selectInteractionDraftTarget(target);
+            return;
+          }
+          if (interactionDraft.mode !== 'editing' || !target || interactionDraft.targetId !== target.id) {
+            flash('当前仅可操作已选 Target · ' + (interactionDraft.targetName || ''));
+            return;
+          }
+          id = target.id;
         }
         const wasSelected = selectedIds.has(id);
         if (event.shiftKey) {
@@ -838,6 +1052,8 @@
         captureGesture(event, {
           mode:'move',
           label:selectedIds.size > 1 ? selectedIds.size + ' 个图层' : (getEntity(id) ? getEntity(id).name : '图层'),
+          historyState:interactionDraft ? null : captureDocumentState(),
+          historyLabel:'移动元素',
           snapshot:geometrySnapshot(movableItems)
         });
         renderCanvas();
@@ -861,23 +1077,46 @@
           direction:event.currentTarget.dataset.resizeDirection,
           entityId:entity.id,
           label:entity.name,
+          historyState:interactionDraft ? null : captureDocumentState(),
+          historyLabel:'调整元素大小',
           bounds:{x:entity.x,y:entity.y,w:entity.w,h:entity.h},
           snapshot:geometrySnapshot(items)
         });
       }
 
+      function startRotate(event) {
+        if (event.button !== 0 || event.isPrimary === false || gesture || currentPage !== 'home' || selectedIds.size !== 1) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const entity = selected();
+        if (!entity || getContainer(entity.id) || isSystemElement(entity)) return;
+        const artboardRect = artboard.getBoundingClientRect();
+        const centerX = artboardRect.left + (entity.x + entity.w/2) * artboardRect.width/artboard.clientWidth;
+        const centerY = artboardRect.top + (entity.y + entity.h/2) * artboardRect.height/artboard.clientHeight;
+        captureGesture(event, {
+          mode:'rotate',
+          entityId:entity.id,
+          label:entity.name,
+          centerX:centerX,
+          centerY:centerY,
+          startAngle:Math.atan2(event.clientY-centerY,event.clientX-centerX)*180/Math.PI,
+          startRotation:Number(entity.rotation) || 0,
+          historyState:interactionDraft ? null : captureDocumentState(),
+          historyLabel:'旋转元素',
+          snapshot:geometrySnapshot([entity])
+        });
+      }
+
       function resizedBounds(before, direction, dx, dy) {
-        if (direction === 'se') {
-          return {
-            x:before.x,
-            y:before.y,
-            w:Math.max(MIN_RESIZE_SIZE, before.w+dx),
-            h:Math.max(MIN_RESIZE_SIZE, before.h+dy)
-          };
-        }
-        const w = Math.max(MIN_RESIZE_SIZE, before.w-dx);
-        const h = Math.max(MIN_RESIZE_SIZE, before.h-dy);
-        return {x:before.x+before.w-w,y:before.y+before.h-h,w:w,h:h};
+        let left = before.x;
+        let top = before.y;
+        let right = before.x+before.w;
+        let bottom = before.y+before.h;
+        if (direction.includes('w')) left = Math.min(right-MIN_RESIZE_SIZE, left+dx);
+        if (direction.includes('e')) right = Math.max(left+MIN_RESIZE_SIZE, right+dx);
+        if (direction.includes('n')) top = Math.min(bottom-MIN_RESIZE_SIZE, top+dy);
+        if (direction.includes('s')) bottom = Math.max(top+MIN_RESIZE_SIZE, bottom+dy);
+        return {x:left,y:top,w:right-left,h:bottom-top};
       }
 
       function updateGesture(event) {
@@ -894,7 +1133,7 @@
             }
           });
           containers.forEach(syncContainer);
-        } else {
+        } else if (gesture.mode === 'resize') {
           const next = resizedBounds(gesture.bounds, gesture.direction, dx, dy);
           const container = getContainer(gesture.entityId);
           if (container) {
@@ -907,10 +1146,16 @@
               if (item.containerId) syncContainer(getContainer(item.containerId));
             }
           }
+        } else if (gesture.mode === 'rotate') {
+          const item = getElement(gesture.entityId);
+          if (item) {
+            const angle = Math.atan2(event.clientY-gesture.centerY,event.clientX-gesture.centerX)*180/Math.PI;
+            item.rotation = Math.round(gesture.startRotation + angle - gesture.startAngle);
+          }
         }
         gesture.changed = gesture.snapshot.some(origin => {
           const item = getElement(origin.id);
-          return item && (item.x !== origin.x || item.y !== origin.y || item.w !== origin.w || item.h !== origin.h);
+          return item && (item.x !== origin.x || item.y !== origin.y || item.w !== origin.w || item.h !== origin.h || (Number(item.rotation) || 0) !== (origin.rotation || 0));
         });
         renderCanvas();
         syncInspectorValues();
@@ -922,11 +1167,12 @@
         gesture = null;
         if (cancel) restoreGeometry(completed.snapshot);
         if (!cancel && completed.changed) {
+          if (completed.historyState) pushHistoryState(completed.historyState, completed.historyLabel);
           completed.snapshot.forEach(origin => saveCurrentElementState(getElement(origin.id)));
         }
         if (artboard.hasPointerCapture(completed.pointerId)) artboard.releasePointerCapture(completed.pointerId);
         renderAll();
-        if (!cancel && completed.changed) flash((completed.mode === 'resize' ? '已调整大小 ' : '已移动 ') + completed.label);
+        if (!cancel && completed.changed) flash((completed.mode === 'resize' ? '已调整大小 ' : (completed.mode === 'rotate' ? '已旋转 ' : '已移动 ')) + completed.label);
       }
 
       function cancelActiveGesture() {
@@ -998,13 +1244,13 @@
           button.addEventListener('click', event => {
             if (interactionPanel.classList.contains('open')) {
               const target = interactionTargetForId(button.dataset.layer);
-              if (target) {
-                selectedIds = new Set([target.id]);
-                lastHomeSelection = new Set(selectedIds);
-                renderAll();
-                pickInteractionTarget(target, '图层面板');
+              if (interactionDraft && interactionDraft.mode === 'picking' && target) {
+                selectInteractionDraftTarget(target);
                 return;
               }
+              if (!interactionDraft) flash('先点击“添加交互”进入 Target 选择');
+              else flash('Target 编辑中，请先保存或取消');
+              return;
             }
             setSelection(button.dataset.layer, event.shiftKey);
             renderAll();
@@ -1029,7 +1275,10 @@
           if (committed) return;
           committed = true;
           const next = input.value.trim();
-          if (accept && next) item.name = next;
+          if (accept && next && next !== previous) {
+            checkpointHistory('重命名图层');
+            item.name = next;
+          }
           renderAll();
           if (accept && next && next !== previous) flash('已重命名为 ' + next);
         };
@@ -1098,14 +1347,18 @@
           const choices = [{value:'#111827',label:'黑色'},{value:'#ffffff',label:'白色'}];
           inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">◫</div><div><strong>Status Bar</strong><span>UNIQUE ELEMENT · ALL PAGES</span></div></div><div class="inspector-section"><h3>样式</h3><div class="system-style-options">' + choices.map(choice => '<button class="system-style-choice ' + (item.color.toLowerCase() === choice.value ? 'active' : '') + '" data-status-color="' + choice.value + '" style="--choice-color:' + choice.value + '"><i></i><span>' + choice.label + '</span></button>').join('') + '</div><div class="full-field"><span>背景</span><input id="statusBackground" type="color" value="' + esc(item.fill) + '"></div></div><div class="inspector-section"><h3>行为</h3><p style="margin:0;color:#8b94a0;font-size:8px;line-height:1.65">Status Bar 是跨页面唯一元素。样式修改会同步进入扫码预览中的所有页面。</p></div>';
           inspector.querySelectorAll('[data-status-color]').forEach(button => button.addEventListener('click', () => {
+            checkpointHistory('修改 Status Bar');
             item.color = button.dataset.statusColor;
             renderAll();
             flash('Status Bar 已切换为' + button.textContent.trim());
           }));
           inspector.querySelector('#statusBackground').addEventListener('input', event => {
+            checkpointInput('status-bar:background', '修改 Status Bar');
             item.fill = event.target.value;
             renderCanvas();
           });
+          inspector.querySelector('#statusBackground').addEventListener('change', finishInputHistory);
+          inspector.querySelector('#statusBackground').addEventListener('blur', finishInputHistory);
           return true;
         }
 
@@ -1113,9 +1366,14 @@
         const iconOptions = ['⌂','◇','○','★','＋','☰'].map(icon => '<option value="' + esc(icon) + '">' + esc(icon) + '</option>').join('');
         inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">⌂</div><div><strong>Tab Bar</strong><span>UNIQUE ELEMENT · ALL PAGES</span></div></div><div class="inspector-section"><h3>颜色</h3><div class="fields"><label>常<input data-tabbar-color="normalColor" type="color" value="' + esc(item.normalColor) + '"></label><label>选<input data-tabbar-color="selectedColor" type="color" value="' + esc(item.selectedColor) + '"></label></div><div class="full-field"><span>背景</span><input data-tabbar-color="fill" type="color" value="' + esc(item.fill) + '"></div></div><div class="inspector-section"><h3>页面选项 · ' + item.tabs.length + ' / 5</h3><div class="tab-config-list">' + item.tabs.map(tab => '<div class="tab-config-row" data-tab-row="' + esc(tab.id) + '"><select data-tab-prop="icon" aria-label="Tab 图标">' + iconOptions + '</select><div class="tab-config-main"><input data-tab-prop="text" value="' + esc(tab.text) + '" aria-label="Tab 名称"><select data-tab-prop="pageId" aria-label="关联页面">' + pageOptions + '</select></div><button class="tab-config-remove" data-delete-tab="' + esc(tab.id) + '" aria-label="删除 Tab" ' + (item.tabs.length <= 1 ? 'disabled' : '') + '>×</button></div>').join('') + '</div><button class="tab-config-add" id="addTab" ' + (item.tabs.length >= 5 ? 'disabled' : '') + '>＋ 添加 Tab</button></div>';
         inspector.querySelectorAll('[data-tabbar-color]').forEach(input => input.addEventListener('input', () => {
+          checkpointInput('tab-bar:' + input.dataset.tabbarColor, '修改 Tab Bar');
           item[input.dataset.tabbarColor] = input.value;
           renderCanvas();
         }));
+        inspector.querySelectorAll('[data-tabbar-color]').forEach(input => {
+          input.addEventListener('change', finishInputHistory);
+          input.addEventListener('blur', finishInputHistory);
+        });
         inspector.querySelectorAll('[data-tab-row]').forEach(row => {
           const tab = item.tabs.find(candidate => candidate.id === row.dataset.tabRow);
           if (!tab) return;
@@ -1124,18 +1382,22 @@
           const page = row.querySelector('[data-tab-prop="pageId"]');
           icon.value = tab.icon;
           page.value = tab.pageId || '';
-          icon.addEventListener('change', () => { tab.icon = icon.value; renderCanvas(); });
-          name.addEventListener('input', () => { tab.text = name.value.slice(0, 24); renderCanvas(); });
-          page.addEventListener('change', () => { tab.pageId = page.value || null; renderCanvas(); });
+          icon.addEventListener('change', () => { checkpointHistory('修改 Tab 图标'); tab.icon = icon.value; renderCanvas(); });
+          name.addEventListener('input', () => { checkpointInput('tab-name:' + tab.id, '修改 Tab 名称'); tab.text = name.value.slice(0, 24); renderCanvas(); });
+          name.addEventListener('change', finishInputHistory);
+          name.addEventListener('blur', finishInputHistory);
+          page.addEventListener('change', () => { checkpointHistory('修改 Tab 页面'); tab.pageId = page.value || null; renderCanvas(); });
         });
         inspector.querySelectorAll('[data-delete-tab]').forEach(button => button.addEventListener('click', () => {
           if (item.tabs.length <= 1) return;
+          checkpointHistory('删除 Tab');
           item.tabs = item.tabs.filter(tab => tab.id !== button.dataset.deleteTab);
           renderAll();
           flash('已删除 Tab');
         }));
         inspector.querySelector('#addTab').addEventListener('click', () => {
           if (item.tabs.length >= 5) return;
+          checkpointHistory('添加 Tab');
           item.tabs.push({id:uid('tab'),icon:'○',text:'New Tab',pageId:null});
           renderAll();
           flash('已添加 Tab · 最多 5 个');
@@ -1180,11 +1442,12 @@
         }
 
         const hasText = Object.prototype.hasOwnProperty.call(item, 'text');
-        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div>' + elementStatesMarkup(item) + '<div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.h + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE · ' + (item.nowState === '0' ? '初始状态' : 'STATE ' + item.nowState) + '</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
+        inspector.innerHTML = '<div class="inspector-head"><div class="inspector-icon">' + elementLabel(item) + '</div><div><strong>' + esc(item.name) + '</strong><span>' + item.type.toUpperCase() + ' · ' + esc(item.id) + '</span></div></div>' + elementStatesMarkup(item) + '<div class="inspector-section"><h3>GEOMETRY</h3><div class="fields"><label>X<input data-prop="x" type="number" value="' + item.x + '"></label><label>Y<input data-prop="y" type="number" value="' + item.y + '"></label><label>W<input data-prop="w" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.w + '"></label><label>H<input data-prop="h" type="number" min="' + MIN_RESIZE_SIZE + '" value="' + item.h + '"></label><label>°<input data-prop="rotation" type="number" min="-180" max="180" value="' + (Number(item.rotation) || 0) + '"></label></div></div><div class="inspector-section"><h3>APPEARANCE</h3><div class="fields"><label>色<input data-prop="fill" type="color" value="' + item.fill + '"></label><label>R<input data-prop="radius" type="number" value="' + item.radius + '"></label></div><div class="full-field"><span>透明度</span><input data-prop="opacity" type="range" min="0" max="100" value="' + item.opacity + '"></div>' + (hasText ? '<div class="full-field"><span>文本</span><input data-prop="text" value="' + esc(item.text) + '"></div>' : '') + '</div><div class="inspector-section"><h3>PROTOTYPE · ' + (item.nowState === '0' ? '初始状态' : 'STATE ' + item.nowState) + '</h3><button class="interaction-button ' + (eventElementIds.has(item.id) ? 'has-event' : '') + '" id="openInteraction"><span>⌁ 配置交互事件</span></button></div>';
         bindElementStateControls(item);
         inspector.querySelectorAll('[data-prop]').forEach(input => input.addEventListener('input', () => {
           const prop = input.dataset.prop;
-          const value = ['x','y','w','h','radius','opacity'].includes(prop) ? Number(input.value) : input.value;
+          const value = ['x','y','w','h','radius','opacity','rotation'].includes(prop) ? Number(input.value) : input.value;
+          if (!interactionDraft) checkpointInput(item.id + ':' + prop, '修改元素属性');
           item[prop] = (prop === 'w' || prop === 'h') && Number.isFinite(value) ? Math.max(MIN_RESIZE_SIZE, value) : value;
           saveCurrentElementState(item);
           if (item.containerId) syncContainer(getContainer(item.containerId));
@@ -1192,11 +1455,16 @@
           renderLayers();
           updateChrome();
         }));
+        inspector.querySelectorAll('[data-prop]').forEach(input => {
+          input.addEventListener('change', finishInputHistory);
+          input.addEventListener('blur', finishInputHistory);
+        });
         inspector.querySelector('#openInteraction').addEventListener('click', openInteraction);
       }
 
       function updateContainerGeometry(container, prop, value) {
         if (!Number.isFinite(value)) return;
+        checkpointHistory('调整容器');
         const before = containerBounds(container);
         const members = container.childIds.map(getElement).filter(Boolean);
         const snapshot = geometrySnapshot(members);
@@ -1226,6 +1494,7 @@
 
       function updateChrome() {
         const rules = selectionRules();
+        updateHistoryControls();
         document.querySelector('#footerState').textContent = (elements.length + containers.length) + ' ELEMENTS · ' + pages.length + ' PAGES · ' + eventElementIds.size + ' EVENTS';
         document.querySelector('#componentCommand').disabled = !rules.canComponent;
         document.querySelector('#maskCommand').disabled = !rules.canMask;
@@ -1234,9 +1503,15 @@
         if (selectedIds.size > 1) {
           selectionChip.hidden = false;
           selectionChip.textContent = selectedIds.size + ' LAYERS SELECTED · SHIFT CLICK TO ADJUST';
-        } else if (interactionPanel.classList.contains('open') && selected() && !isSystemElement(selected())) {
+        } else if (interactionDraft && interactionDraft.mode === 'picking') {
           selectionChip.hidden = false;
-          selectionChip.textContent = 'INTERACTION TARGET · ' + selected().name + ' · SCROLL CANVAS TO PICK';
+          selectionChip.textContent = 'SELECT TARGET · HOVER TO HIGHLIGHT';
+        } else if (interactionDraft && interactionDraft.mode === 'editing' && selected() && !isSystemElement(selected())) {
+          selectionChip.hidden = false;
+          selectionChip.textContent = 'EDIT TARGET · ' + selected().name + ' · MOVE / RESIZE / ROTATE';
+        } else if (interactionPanel.classList.contains('open') && currentInteractionSource()) {
+          selectionChip.hidden = false;
+          selectionChip.textContent = 'INTERACTION SOURCE · ' + currentInteractionSource().name + ' · CHOOSE ADD INTERACTION';
         } else if (selected() && !getContainer(selected().id) && !isSystemElement(selected()) && selected().nowState !== '0') {
           selectionChip.hidden = false;
           selectionChip.textContent = 'EDITING STATE ' + selected().nowState + ' · INITIAL STATE SHOWN AS GHOST';
@@ -1293,6 +1568,7 @@
           flash('Launch 页面已删除，无法创建图层');
           return;
         }
+        checkpointHistory('创建元素');
         currentPage = 'home';
         const templates = {
           rect:{name:'Rectangle',w:110,h:66,fill:'#8fa4d7',radius:8},
@@ -1335,6 +1611,7 @@
           flash(type === 'component' ? '请选择根级图层创建组件' : '请选择至少两个同级图层');
           return null;
         }
+        checkpointHistory(type === 'group' ? '创建组合' : (type === 'mask' ? '创建 Mask' : '创建组件'));
         const childIds = Array.from(selectedIds);
         const container = {
           id:uid(type),
@@ -1377,6 +1654,7 @@
       function createComponentFromSelection() {
         const rules = selectionRules();
         if (rules.onlyContainer && rules.onlyContainer.type !== 'component') {
+          checkpointHistory('创建组件');
           const container = rules.onlyContainer;
           container.type = 'component';
           container.name = 'Component ' + (components.length+1);
@@ -1392,6 +1670,7 @@
         const rules = selectionRules();
         const container = rules.onlyContainer;
         if (!container || container.type !== 'group') return;
+        checkpointHistory('取消组合');
         const children = container.childIds.slice();
         children.forEach(id => {
           const item = getElement(id);
@@ -1452,6 +1731,7 @@
       function pasteSelection() {
         if (!clipboard || !clipboard.length) return;
         if (!pages.some(page => page.id === 'home')) return;
+        checkpointHistory('粘贴元素');
         currentPage = 'home';
         document.querySelector('#pageName').textContent = 'Launch';
         const pastedIds = [];
@@ -1500,6 +1780,7 @@
           flash('Status Bar 与 Tab Bar 是项目唯一元素，不能删除');
           return;
         }
+        checkpointHistory('删除元素');
         cancelActiveGesture();
         const elementIds = new Set();
         const containerIds = new Set();
@@ -1540,6 +1821,7 @@
       function insertComponent(componentId) {
         const component = components.find(item => item.id === componentId);
         if (!component || !pages.some(page => page.id === 'home')) return;
+        checkpointHistory('插入组件');
         currentPage = 'home';
         document.querySelector('#pageName').textContent = 'Launch';
         const offset = 24 + (containers.length % 4) * 14;
@@ -1617,13 +1899,15 @@
         });
       }
 
-      function interactionTargetOptions() {
+      function interactionTargetOptions(kind) {
         const source = currentInteractionSource();
         const elementOptions = elements.filter(item => !isSystemElement(item)).map(item => {
           ensureElementStates(item);
           return '<option value="element:' + esc(item.id) + '">' + esc(item.name) + (source && item.id === source.id ? '（自身）' : '') + ' · ' + elementStateIds(item).length + ' states</option>';
         }).join('');
         const pageOptions = pages.map(page => '<option value="page:' + esc(page.id) + '">' + esc(page.name) + ' 页面</option>').join('');
+        if (kind === 'page') return '<optgroup label="页面跳转">' + pageOptions + '</optgroup>';
+        if (kind === 'element') return '<optgroup label="本页面元素">' + elementOptions + '</optgroup>';
         return '<optgroup label="本页面元素">' + elementOptions + '</optgroup><optgroup label="页面跳转">' + pageOptions + '</optgroup>';
       }
 
@@ -1633,7 +1917,7 @@
         return {kind:value.slice(0, separator),id:value.slice(separator+1)};
       }
 
-      function syncInteractionTargetFields(preferredState) {
+      function syncInteractionTargetFields(preferredState, preferNew) {
         const target = selectedInteractionTarget();
         const stateField = document.querySelector('#targetStateField');
         const effectField = document.querySelector('#effectField');
@@ -1644,9 +1928,183 @@
         if (!element) return;
         ensureElementStates(element);
         const stateSelect = document.querySelector('#eventTargetState');
-        stateSelect.innerHTML = elementStateIds(element).map(stateId => '<option value="' + stateId + '">' + (stateId === '0' ? '初始状态' : 'State ' + stateId) + '</option>').join('') + (elementStateIds(element).length < 3 ? '<option value="__new__">＋ 新建 State</option>' : '');
+        stateSelect.innerHTML = elementStateIds(element).map(stateId => '<option value="' + stateId + '">' + (stateId === '0' ? '初始状态' : 'State ' + stateId) + '</option>').join('') + (elementStateIds(element).length < 3 ? '<option value="__new__">新建 State（基于当前态）</option>' : '');
         const fallbackState = elementStateIds(element).find(stateId => stateId !== '0') || '0';
-        stateSelect.value = preferredState && element.states[preferredState] ? preferredState : fallbackState;
+        stateSelect.value = preferNew && elementStateIds(element).length < 3 ? '__new__' : (preferredState && element.states[preferredState] ? preferredState : fallbackState);
+      }
+
+      function showInteractionFieldMode(kind) {
+        document.querySelector('#interactionStarter').hidden = true;
+        document.querySelector('#interactionFields').hidden = false;
+        document.querySelector('#targetStateField').hidden = kind !== 'element';
+        document.querySelector('#effectField').hidden = kind !== 'page';
+        document.querySelector('#saveInteraction').hidden = kind !== 'page';
+      }
+
+      function showInteractionIdle() {
+        document.querySelector('#interactionStarter').hidden = false;
+        document.querySelector('#interactionFields').hidden = true;
+      }
+
+      function discardInteractionDraft(restoreTarget) {
+        const draft = interactionDraft;
+        if (restoreTarget && draft && draft.kind === 'element' && draft.targetId && draft.originSnapshot) {
+          const target = getElement(draft.targetId);
+          if (target) {
+            suspendDraftTracking = true;
+            target.nowState = draft.originStateId;
+            Object.assign(target, clone(draft.originSnapshot));
+            suspendDraftTracking = false;
+            if (target.containerId) syncContainer(getContainer(target.containerId));
+          }
+        }
+        interactionDraft = null;
+        interactionPickLayer.hidden = true;
+        workspace.classList.remove('interaction-picking','interaction-editing');
+        showInteractionIdle();
+        if (restoreTarget) renderAll();
+      }
+
+      function beginElementInteractionDraft() {
+        if (interactionDraft) discardInteractionDraft(true);
+        const source = currentInteractionSource();
+        if (!source) return;
+        interactionDraft = {
+          kind:'element',
+          mode:'picking',
+          sourceId:source.id,
+          sourceState:interactionPanel.dataset.sourceState || source.nowState || '0',
+          trigger:activeInteractionTrigger(),
+          historyBefore:captureDocumentState()
+        };
+        document.querySelector('#interactionStarter').hidden = true;
+        document.querySelector('#interactionFields').hidden = true;
+        interactionPickLayer.hidden = false;
+        workspace.classList.add('interaction-picking');
+        workspace.classList.remove('interaction-editing');
+        interactionMaskStep.textContent = 'SELECT TARGET';
+        interactionMaskTitle.textContent = 'Hover 高亮并点击一个目标元素';
+        interactionMaskCopy.textContent = '画布元素已进入可选状态；选中后会将 Target 提到遮罩上方，并解锁移动、resize 与 rotate。';
+        commitInteractionDraft.textContent = '选择目标中…';
+        commitInteractionDraft.disabled = true;
+        document.querySelector('#repickInteractionTarget').hidden = true;
+        renderAll();
+        updateChrome();
+      }
+
+      function beginPageInteractionDraft() {
+        if (interactionDraft) discardInteractionDraft(true);
+        const source = currentInteractionSource();
+        if (!source) return;
+        interactionDraft = {kind:'page',mode:'editing',sourceId:source.id,sourceState:interactionPanel.dataset.sourceState || '0',trigger:activeInteractionTrigger(),historyBefore:captureDocumentState()};
+        interactionPickLayer.hidden = true;
+        workspace.classList.remove('interaction-picking','interaction-editing');
+        showInteractionFieldMode('page');
+        const select = document.querySelector('#eventTarget');
+        select.disabled = false;
+        select.innerHTML = interactionTargetOptions('page');
+        const interaction = findInteraction(source.id, interactionDraft.sourceState, interactionDraft.trigger, false);
+        const existing = interaction && interaction.pageAction;
+        const fallback = (pages.find(page => page.id !== currentPage) || pages[0] || {}).id;
+        select.value = 'page:' + (existing ? existing.targetPageId : fallback);
+        document.querySelector('#eventEffect').value = existing ? existing.effect : 'push-left';
+        document.querySelector('#eventEasing').value = existing ? existing.easing : 'ease-out';
+        document.querySelector('#eventDelay').value = existing ? existing.startTime : 0;
+        document.querySelector('#eventDuration').value = existing ? existing.duration : .3;
+        document.querySelector('#saveInteraction').disabled = false;
+      }
+
+      function selectInteractionDraftState(stateId) {
+        if (!interactionDraft || interactionDraft.kind !== 'element' || interactionDraft.mode !== 'editing') return;
+        const target = getElement(interactionDraft.targetId);
+        if (!target) return;
+        if (stateId === '__new__' && elementStateIds(target).length >= 3) return;
+        const snapshot = stateId === '__new__' ? interactionDraft.originSnapshot : target.states[stateId];
+        if (!snapshot) return;
+        suspendDraftTracking = true;
+        target.nowState = stateId === '__new__' ? interactionDraft.originStateId : stateId;
+        Object.assign(target, clone(snapshot));
+        suspendDraftTracking = false;
+        interactionDraft.targetState = stateId;
+        interactionDraft.editBaseSnapshot = clone(snapshot);
+        interactionDraft.draftSnapshot = clone(snapshot);
+        interactionDraft.changed = false;
+        if (target.containerId) syncContainer(getContainer(target.containerId));
+        renderAll();
+        updateInteractionDraftControls();
+      }
+
+      function selectInteractionDraftTarget(target) {
+        if (!interactionDraft || interactionDraft.kind !== 'element' || interactionDraft.mode !== 'picking' || !target || isSystemElement(target)) return;
+        ensureElementStates(target);
+        saveCurrentElementState(target);
+        const interaction = findInteraction(interactionDraft.sourceId, interactionDraft.sourceState, interactionDraft.trigger, false);
+        const existing = interaction ? interaction.elementActions.find(action => action.targetId === target.id) : null;
+        interactionDraft.mode = 'editing';
+        interactionDraft.targetId = target.id;
+        interactionDraft.targetName = target.name;
+        interactionDraft.originStateId = target.nowState;
+        interactionDraft.originSnapshot = clone(target.states[target.nowState]);
+        selectedIds = new Set([target.id]);
+        lastHomeSelection = new Set(selectedIds);
+        workspace.classList.remove('interaction-picking');
+        workspace.classList.add('interaction-editing');
+        showInteractionFieldMode('element');
+        const select = document.querySelector('#eventTarget');
+        select.innerHTML = interactionTargetOptions('element');
+        select.value = 'element:' + target.id;
+        select.disabled = true;
+        syncInteractionTargetFields(existing ? existing.targetState : null, !existing);
+        document.querySelector('#eventEasing').value = existing ? existing.easing : 'ease-out';
+        document.querySelector('#eventDelay').value = existing ? existing.startTime : 0;
+        document.querySelector('#eventDuration').value = existing ? existing.duration : .3;
+        selectInteractionDraftState(existing ? existing.targetState : document.querySelector('#eventTargetState').value);
+        revealCanvasElement(target.id, 'smooth');
+      }
+
+      function updateInteractionDraftControls() {
+        if (!interactionDraft || interactionDraft.kind !== 'element' || interactionDraft.mode !== 'editing') return;
+        const target = getElement(interactionDraft.targetId);
+        if (!target) return;
+        const targetState = interactionDraft.targetState;
+        const canSave = targetState === '__new__' ? Boolean(interactionDraft.changed) : Boolean(interactionDraft.changed || targetState !== interactionDraft.originStateId);
+        commitInteractionDraft.disabled = !canSave;
+        commitInteractionDraft.textContent = '保存';
+        interactionMaskStep.textContent = 'EDIT TARGET STATE';
+        interactionMaskTitle.textContent = '已选 Target · ' + target.name;
+        interactionMaskCopy.textContent = targetState === '__new__' ? '移动、resize 或 rotate 该元素；虚线 ghost 标注当前 State，红色连接线显示状态位移。完成后保存为新 State。' : '目标设为 ' + (targetState === '0' ? '初始状态' : 'State ' + targetState) + '；可继续调整该 State，或直接保存状态切换。';
+        document.querySelector('#repickInteractionTarget').hidden = false;
+      }
+
+      function commitElementInteractionDraft() {
+        if (!interactionDraft || interactionDraft.kind !== 'element' || interactionDraft.mode !== 'editing' || commitInteractionDraft.disabled) return;
+        const draft = interactionDraft;
+        const target = getElement(draft.targetId);
+        if (!target) return;
+        let targetState = draft.targetState;
+        suspendDraftTracking = true;
+        if (targetState === '__new__') {
+          const ids = elementStateIds(target);
+          targetState = String(Math.max.apply(null, ids.map(Number)) + 1);
+        }
+        target.states[targetState] = clone(draft.draftSnapshot || elementStateSnapshot(target));
+        target.nowState = targetState;
+        Object.assign(target, clone(target.states[targetState]));
+        suspendDraftTracking = false;
+        const interaction = findInteraction(draft.sourceId, draft.sourceState, draft.trigger, true);
+        const delayInput = Number(document.querySelector('#eventDelay').value);
+        const durationInput = Number(document.querySelector('#eventDuration').value);
+        interaction.elementActions = interaction.elementActions.filter(action => action.targetId !== target.id);
+        interaction.elementActions.push({targetId:target.id,targetState:targetState,startTime:Math.min(5,Math.max(0,Number.isFinite(delayInput) ? delayInput : 0)),duration:Math.min(3,Math.max(.05,Number.isFinite(durationInput) ? durationInput : .3)),easing:document.querySelector('#eventEasing').value});
+        pushHistoryState(draft.historyBefore, '保存元素交互');
+        interactionDraft = null;
+        interactionPickLayer.hidden = true;
+        workspace.classList.remove('interaction-picking','interaction-editing');
+        showInteractionIdle();
+        dropEmptyInteractions();
+        renderAll();
+        renderInteractionActions();
+        flash('已保存 · ' + target.name + ' → ' + (targetState === '0' ? '初始状态' : 'State ' + targetState));
       }
 
       function renderInteractionActions() {
@@ -1668,6 +2126,7 @@
         })() : '';
         host.innerHTML = elementActions + pageAction;
         host.querySelectorAll('[data-remove-element-action]').forEach(button => button.addEventListener('click', () => {
+          checkpointHistory('删除元素交互');
           interaction.elementActions = interaction.elementActions.filter(action => action.targetId !== button.dataset.removeElementAction);
           dropEmptyInteractions();
           renderInteractionActions();
@@ -1676,6 +2135,7 @@
         }));
         const removePage = host.querySelector('[data-remove-page-action]');
         if (removePage) removePage.addEventListener('click', () => {
+          checkpointHistory('删除页面交互');
           interaction.pageAction = null;
           dropEmptyInteractions();
           renderInteractionActions();
@@ -1687,22 +2147,10 @@
       function refreshInteractionPanel() {
         const source = currentInteractionSource();
         if (!source) return;
-        const sourceState = interactionPanel.dataset.sourceState || source.nowState || '0';
-        const interaction = findInteraction(source.id, sourceState, activeInteractionTrigger(), false);
-        const targetSelect = document.querySelector('#eventTarget');
-        const previousTarget = targetSelect.value;
-        targetSelect.innerHTML = interactionTargetOptions();
-        const preferredTarget = interaction && interaction.elementActions.length ? 'element:' + interaction.elementActions[0].targetId : (interaction && interaction.pageAction ? 'page:' + interaction.pageAction.targetPageId : previousTarget);
-        const hasPreferred = Array.from(targetSelect.options).some(option => option.value === preferredTarget);
-        targetSelect.value = hasPreferred ? preferredTarget : 'element:' + source.id;
-        const selected = selectedInteractionTarget();
-        const existingElementAction = interaction && selected.kind === 'element' ? interaction.elementActions.find(action => action.targetId === selected.id) : null;
-        const existingPageAction = interaction && selected.kind === 'page' ? interaction.pageAction : null;
-        syncInteractionTargetFields(existingElementAction ? existingElementAction.targetState : null);
-        document.querySelector('#eventEffect').value = existingPageAction ? existingPageAction.effect : 'push-left';
-        document.querySelector('#eventEasing').value = existingElementAction ? existingElementAction.easing : (existingPageAction ? existingPageAction.easing : 'ease-out');
-        document.querySelector('#eventDelay').value = existingElementAction ? existingElementAction.startTime : (existingPageAction ? existingPageAction.startTime : 0);
-        document.querySelector('#eventDuration').value = existingElementAction ? existingElementAction.duration : (existingPageAction ? existingPageAction.duration : .3);
+        if (interactionDraft) discardInteractionDraft(true);
+        interactionPickLayer.hidden = true;
+        workspace.classList.remove('interaction-picking','interaction-editing');
+        showInteractionIdle();
         renderInteractionActions();
       }
 
@@ -1844,6 +2292,7 @@
           return;
         }
         openConfirm('确认删除页面？', '“' + page.name + '” 删除后无法恢复；关联到该页面的演示事件也会被清理。', () => {
+          checkpointHistory('删除页面');
           pages = pages.filter(item => item.id !== pageId);
           interactionEvents.forEach(event => {
             if (event.pageAction && event.pageAction.targetPageId === pageId) event.pageAction = null;
@@ -1862,6 +2311,7 @@
         const component = components.find(item => item.id === componentId);
         if (!component) return;
         openConfirm('确认删除组件？', '组件库中的“' + component.name + '”将被移除；画布上的实例会保留并转为普通组合。', () => {
+          checkpointHistory('删除组件');
           components = components.filter(item => item.id !== componentId);
           containers.filter(item => item.symbolId === componentId).forEach(item => {
             item.type = 'group';
@@ -1884,9 +2334,15 @@
       function nudgeSelection(dx, dy) {
         const items = selectedVisualItems().filter(item => !isSystemElement(item));
         if (!items.length) return;
+        if (interactionPanel.classList.contains('open') && (!interactionDraft || interactionDraft.mode !== 'editing' || items.length !== 1 || items[0].id !== interactionDraft.targetId)) {
+          flash('Target 尚未进入可编辑状态');
+          return;
+        }
+        if (!interactionDraft) checkpointHistory('移动元素');
         items.forEach(item => {
           item.x += dx;
           item.y += dy;
+          saveCurrentElementState(item);
         });
         containers.forEach(syncContainer);
         renderAll();
@@ -1971,74 +2427,41 @@
         refreshInteractionPanel();
         flash('已选择' + button.textContent + '事件');
       }));
-      document.querySelector('#eventTarget').addEventListener('change', () => {
-        const source = currentInteractionSource();
-        const interaction = source ? findInteraction(source.id, interactionPanel.dataset.sourceState || '0', activeInteractionTrigger(), false) : null;
-        const target = selectedInteractionTarget();
-        const elementAction = interaction && target.kind === 'element' ? interaction.elementActions.find(action => action.targetId === target.id) : null;
-        const pageAction = interaction && target.kind === 'page' && interaction.pageAction && interaction.pageAction.targetPageId === target.id ? interaction.pageAction : null;
-        syncInteractionTargetFields(elementAction ? elementAction.targetState : null);
-        document.querySelector('#eventEffect').value = pageAction ? pageAction.effect : 'push-left';
-        document.querySelector('#eventEasing').value = elementAction ? elementAction.easing : (pageAction ? pageAction.easing : 'ease-out');
-        document.querySelector('#eventDelay').value = elementAction ? elementAction.startTime : (pageAction ? pageAction.startTime : 0);
-        document.querySelector('#eventDuration').value = elementAction ? elementAction.duration : (pageAction ? pageAction.duration : .3);
-      });
+      document.querySelector('#beginElementInteraction').addEventListener('click', beginElementInteractionDraft);
+      document.querySelector('#beginPageInteraction').addEventListener('click', beginPageInteractionDraft);
       document.querySelector('#eventTargetState').addEventListener('change', event => {
-        const target = selectedInteractionTarget();
-        const element = target.kind === 'element' ? getElement(target.id) : null;
-        if (!element) return;
-        let stateId = event.target.value;
-        if (stateId === '__new__') stateId = addElementState(element, true);
-        if (!stateId || !switchElementState(element, stateId)) return;
-        selectedIds = new Set([element.id]);
-        lastHomeSelection = new Set(selectedIds);
-        renderAll();
-        syncInteractionTargetFields(stateId);
-        flash('画布正在显示 ' + element.name + ' · ' + (stateId === '0' ? '初始状态' : 'State ' + stateId));
+        selectInteractionDraftState(event.target.value);
       });
       document.querySelector('#saveInteraction').addEventListener('click', () => {
+        if (!interactionDraft || interactionDraft.kind !== 'page') return;
         const source = currentInteractionSource();
         if (!source) return;
-        const sourceState = interactionPanel.dataset.sourceState || '0';
-        const trigger = activeInteractionTrigger();
         const target = selectedInteractionTarget();
-        const interaction = findInteraction(source.id, sourceState, trigger, true);
+        if (target.kind !== 'page' || !pages.some(page => page.id === target.id)) return;
+        const draft = interactionDraft;
+        const interaction = findInteraction(source.id, draft.sourceState, draft.trigger, true);
         const delayInput = Number(document.querySelector('#eventDelay').value);
         const durationInput = Number(document.querySelector('#eventDuration').value);
         const startTime = Math.min(5, Math.max(0, Number.isFinite(delayInput) ? delayInput : 0));
         const duration = Math.min(3, Math.max(.05, Number.isFinite(durationInput) ? durationInput : .3));
-        const easing = document.querySelector('#eventEasing').value;
-        if (target.kind === 'element') {
-          const targetElement = getElement(target.id);
-          if (!targetElement) return;
-          let targetState = document.querySelector('#eventTargetState').value;
-          if (targetState === '__new__') targetState = addElementState(targetElement, true);
-          if (!targetState) return;
-          interaction.elementActions = interaction.elementActions.filter(action => action.targetId !== target.id);
-          interaction.elementActions.push({
-            targetId:target.id,
-            targetState:targetState,
-            startTime:startTime,
-            duration:duration,
-            easing:easing
-          });
-          flash(activeInteractionTrigger() + ' · ' + targetElement.name + ' → ' + (targetState === '0' ? '初始状态' : 'State ' + targetState));
-        } else if (target.kind === 'page' && pages.some(page => page.id === target.id)) {
-          interaction.pageAction = {
-            targetPageId:target.id,
-            effect:document.querySelector('#eventEffect').value,
-            startTime:startTime,
-            duration:duration,
-            easing:easing
-          };
-          const targetPage = pages.find(page => page.id === target.id);
-          flash(activeInteractionTrigger() + ' · 页面 → ' + (targetPage ? targetPage.name : target.id));
-        }
+        interaction.pageAction = {targetPageId:target.id,effect:document.querySelector('#eventEffect').value,startTime:startTime,duration:duration,easing:document.querySelector('#eventEasing').value};
+        const targetPage = pages.find(page => page.id === target.id);
+        pushHistoryState(draft.historyBefore, '保存页面交互');
+        interactionDraft = null;
+        showInteractionIdle();
         dropEmptyInteractions();
         renderInteractionActions();
         renderInspector();
         updateChrome();
+        flash('已保存页面动作 → ' + (targetPage ? targetPage.name : target.id));
       });
+      document.querySelector('#cancelInteractionDraft').addEventListener('click', () => {
+        discardInteractionDraft(true);
+        renderInteractionActions();
+        updateChrome();
+      });
+      document.querySelector('#repickInteractionTarget').addEventListener('click', beginElementInteractionDraft);
+      commitInteractionDraft.addEventListener('click', commitElementInteractionDraft);
 
       document.querySelector('#preview').addEventListener('click', openPreview);
       document.querySelector('#closePreview').addEventListener('click', closePreview);
@@ -2061,6 +2484,7 @@
             fill:state.fill || (item.type === 'text' ? '#202735' : '#dfe6f2'),
             radius:Number(state.radius) || 0,
             opacity:state.opacity == null ? 100 : Number(state.opacity),
+            rotation:Number(state.rotation) || 0,
             text:state.text || ''
           }))
         };
@@ -2086,7 +2510,7 @@
           previewInteractions.push({sourceId:'details-back',sourceState:'0',trigger:'click',elementActions:[],pageAction:{targetPageId:'home',effect:'push-right',startTime:0,easing:'ease-out',duration:.3}});
         }
         return {
-          version:2,
+          version:3,
           title:'Poke · Synthetic Mobile Prototype',
           stage:{width:280,height:522},
           statusBar:{color:statusBar ? statusBar.color : '#111827',background:statusBar ? statusBar.fill : '#ffffff'},
@@ -2120,11 +2544,11 @@
         const effectCodes = {'push-left':'l','push-right':'r','push-up':'u','push-down':'d',fade:'f',modal:'m'};
         const easingCodes = {'ease-out':'o','ease-in-out':'b',linear:'l'};
         return [
-          2,
+          3,
           [project.stage.width,project.stage.height],
           [project.statusBar.color,project.statusBar.background],
           [project.tabBar.background,project.tabBar.normalColor,project.tabBar.selectedColor,project.tabBar.tabs.map(tab => [tab.text,tab.icon,tab.pageId])],
-          project.pages.map(page => [page.id,page.background,page.elements.map(element => [element.id,typeCodes[element.type],element.states.map(state => [state.stateId,state.x,state.y,state.width,state.height,state.fill,state.radius,state.opacity,state.text == null ? null : state.text])])]),
+          project.pages.map(page => [page.id,page.background,page.elements.map(element => [element.id,typeCodes[element.type],element.states.map(state => [state.stateId,state.x,state.y,state.width,state.height,state.fill,state.radius,state.opacity,state.rotation || 0,state.text == null ? null : state.text])])]),
           project.interactions.map(interaction => [interaction.sourceId,interaction.sourceState,triggerCodes[interaction.trigger],interaction.elementActions.map(action => [action.targetId,action.targetState,action.startTime,action.duration,easingCodes[action.easing]]),interaction.pageAction ? [interaction.pageAction.targetPageId,effectCodes[interaction.pageAction.effect],interaction.pageAction.startTime,interaction.pageAction.duration,easingCodes[interaction.pageAction.easing]] : null])
         ];
       }
@@ -2153,6 +2577,10 @@
 
       let previewRequest = 0;
       async function openPreview() {
+        if (interactionDraft) {
+          flash('请先保存或取消当前交互草稿');
+          return;
+        }
         closeContextMenu();
         const requestId = ++previewRequest;
         const loading = document.querySelector('#previewLoading');
@@ -2260,6 +2688,8 @@
       });
 
       document.querySelector('#backToProjects').addEventListener('click', () => flash('项目库 · Synthetic Mobile Prototype'));
+      document.querySelector('#undo').addEventListener('click', undoDocument);
+      document.querySelector('#redo').addEventListener('click', redoDocument);
       document.querySelector('#zoom').addEventListener('click', () => flash('画布比例 100%'));
       document.querySelector('#toggleLayers').addEventListener('click', () => {
         activePanel = 'layers';
@@ -2269,6 +2699,8 @@
 
       document.addEventListener('keydown', event => {
         const editable = event.target.matches('input, textarea, select, [contenteditable="true"]');
+        const commandHeld = event.metaKey || event.ctrlKey;
+        const commandKey = event.key.toLowerCase();
         if (event.key === 'Escape' && gesture) {
           event.preventDefault();
           cancelActiveGesture();
@@ -2279,11 +2711,26 @@
           return;
         }
         if (!contextMenu.hidden) return;
+        if (commandHeld && commandKey === 'z') {
+          event.preventDefault();
+          if (event.shiftKey) redoDocument();
+          else undoDocument();
+          return;
+        }
+        if (event.ctrlKey && !event.metaKey && commandKey === 'y') {
+          event.preventDefault();
+          redoDocument();
+          return;
+        }
         if (editable) return;
-        const commandHeld = event.metaKey || event.ctrlKey;
-        if (commandHeld && event.key.toLowerCase() === 'c') { event.preventDefault(); copySelection(); }
-        if (commandHeld && event.key.toLowerCase() === 'v') { event.preventDefault(); pasteSelection(); }
-        if (commandHeld && event.key.toLowerCase() === 'a') { event.preventDefault(); selectAll(); }
+        if (interactionDraft && (commandHeld || event.key === 'Delete' || event.key === 'Backspace')) {
+          event.preventDefault();
+          flash('交互草稿中仅允许操作 Target；请先保存或取消');
+          return;
+        }
+        if (commandHeld && commandKey === 'c') { event.preventDefault(); copySelection(); }
+        if (commandHeld && commandKey === 'v') { event.preventDefault(); pasteSelection(); }
+        if (commandHeld && commandKey === 'a') { event.preventDefault(); selectAll(); }
         if (!commandHeld && (event.key === 'Delete' || event.key === 'Backspace')) { event.preventDefault(); deleteSelection(); }
         if (!commandHeld && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) {
           event.preventDefault();
@@ -2292,6 +2739,11 @@
         }
         if (event.key === 'Escape') {
           if (previewModal.classList.contains('open')) closePreview();
+          else if (interactionDraft) {
+            discardInteractionDraft(true);
+            renderInteractionActions();
+            updateChrome();
+          }
           else if (interactionPanel.classList.contains('open')) setInteractionPanelOpen(false);
           else if (expandedContainerId) {
             selectedIds = new Set([expandedContainerId]);
@@ -2321,6 +2773,7 @@
         closePreview();
         closeContextMenu();
         setInteractionPanelOpen(false);
+        checkpointHistory('重放演示');
         elements = clone(originalElements);
         containers = [];
         components = [];
@@ -2358,7 +2811,7 @@
         });
         await step('04 / 06 · 创建标题 State 1', () => {
           const title = getElement('title');
-          addElementState(title, true);
+          addElementState(title, true, true);
           title.x = 38;
           title.opacity = 45;
           title.fill = '#6d5bd0';

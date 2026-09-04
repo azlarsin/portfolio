@@ -1,4 +1,4 @@
-export const POKE_PREVIEW_VERSION = 2 as const
+export const POKE_PREVIEW_VERSION = 3 as const
 export const POKE_RENDER_PATH = '/poke/render'
 export const POKE_CANONICAL_ORIGIN = 'https://me.azlar.cc'
 
@@ -38,6 +38,7 @@ export interface PokeElementState {
   fill: string
   radius: number
   opacity: number
+  rotation: number
   text?: string
 }
 
@@ -184,6 +185,7 @@ function normalizeState(
     fill: color(value.fill, '#dfe6f2'),
     radius: number(value.radius, 0, 0, 999),
     opacity: number(value.opacity, 100, 0, 100),
+    rotation: number(value.rotation, 0, -360, 360),
   }
   if (typeof value.text === 'string') result.text = value.text.slice(0, 280)
   return result
@@ -252,7 +254,7 @@ function normalizePageAction(
 }
 
 export function normalizePokePrototype(value: unknown): PokePrototype | null {
-  if (!isRecord(value) || (value.version !== 1 && value.version !== 2)) return null
+  if (!isRecord(value) || ![1, 2, 3].includes(Number(value.version))) return null
 
   const rawStage = isRecord(value.stage) ? value.stage : {}
   const stageWidth = number(rawStage.width, 280, 240, 1024)
@@ -454,6 +456,7 @@ function compactPokePrototype(project: PokePrototype) {
           state.fill,
           state.radius,
           state.opacity,
+          state.rotation,
           state.text ?? null,
         ]),
       ]),
@@ -493,6 +496,7 @@ function expandCompactPokePrototype(value: unknown) {
   const tabBar = array(root[3])
   const pages = array(root[4])
   const interactions = array(root[5])
+  const compactVersion = Number(root[0])
   return {
     version: root[0],
     title: 'Poke Prototype',
@@ -530,7 +534,8 @@ function expandCompactPokePrototype(value: unknown) {
                 fill: state[5],
                 radius: state[6],
                 opacity: state[7],
-                text: state[8],
+                rotation: compactVersion >= 3 ? state[8] : 0,
+                text: compactVersion >= 3 ? state[9] : state[8],
               }
             }),
           }
