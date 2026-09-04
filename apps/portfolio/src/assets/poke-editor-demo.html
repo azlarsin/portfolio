@@ -71,8 +71,15 @@
     .stage-top { position: absolute; z-index: 8; top: 10px; left: 50%; display: flex; align-items: center; gap: 8px; padding: 5px 8px; border: 1px solid rgba(157,164,174,.4); border-radius: 8px; color: #737c89; background: rgba(250,251,252,.9); box-shadow: 0 5px 13px rgba(43,51,63,.08); font: 8px ui-monospace,monospace; transform: translateX(-50%); }
     .selection-chip { position: absolute; z-index: 9; top: 42px; left: 50%; padding: 4px 8px; border-radius: 99px; color: #285dbb; background: rgba(234,241,255,.94); box-shadow: 0 3px 10px rgba(42,74,132,.12); font: 7px ui-monospace,monospace; transform: translateX(-50%); }
     .selection-chip[hidden] { display: none; }
-    .canvas-wrap { position: absolute; inset: 48px 28px 24px; display: grid; place-items: center; }
-    .phone-shell { position: relative; width: 300px; height: 558px; padding: 17px 10px 19px; border: 1px solid #bcc2ca; border-radius: 34px; background: #f7f8f9; box-shadow: 0 26px 56px rgba(44,51,62,.18), inset 0 0 0 4px white; }
+    .canvas-wrap { position: absolute; display: flex; overflow: auto; align-items: flex-start; justify-content: center; padding: 8px 16px 18px; outline: 0; overscroll-behavior: contain; scrollbar-color: #aeb7c4 transparent; scrollbar-gutter: stable both-edges; inset: 48px 12px 12px; }
+    .canvas-wrap:focus-visible { box-shadow: inset 0 0 0 2px rgba(46,103,221,.28); }
+    .canvas-wrap::-webkit-scrollbar { width: 9px; height: 9px; }
+    .canvas-wrap::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 99px; background: #aeb7c4; background-clip: padding-box; }
+    .workspace.interaction-open .canvas-wrap { padding-bottom: 286px; scroll-padding: 54px 16px 286px; }
+    .workspace.interaction-open .canvas-element:not(.status-bar):not(.tab-bar), .workspace.interaction-open .container-hit { cursor: crosshair; }
+    .workspace.interaction-open .canvas-element.selected, .workspace.interaction-open .container-hit.selected { border-color: #7058d7; box-shadow: 0 0 0 1px rgba(255,255,255,.82), 0 0 0 2px #7058d7; }
+    .phone-shell { position: relative; width: 300px; height: 558px; flex: 0 0 auto; margin: auto 0; padding: 17px 10px 19px; border: 1px solid #bcc2ca; border-radius: 34px; background: #f7f8f9; box-shadow: 0 26px 56px rgba(44,51,62,.18), inset 0 0 0 4px white; }
+    .workspace.interaction-open .phone-shell { margin-top: 0; margin-bottom: 0; }
     .phone-shell::before { position: absolute; top: 7px; left: 50%; width: 43px; height: 4px; border-radius: 99px; background: #ced3d9; content: ''; transform: translateX(-50%); }
     .phone-shell::after { position: absolute; bottom: 6px; left: 50%; width: 27px; height: 4px; border-radius: 99px; background: #d3d7dc; content: ''; transform: translateX(-50%); }
     .artboard { position: relative; width: 280px; height: 522px; overflow: hidden; background: #f8f9fc; box-shadow: 0 0 0 1px #ccd1d8; touch-action: none; }
@@ -279,7 +286,7 @@
       <section class="stage">
         <div class="stage-top"><span>iPhone · 375 × 667</span><span>·</span><span id="pageName">Launch</span><span>· 右键打开 Context Menu</span></div>
         <div class="selection-chip" id="selectionChip" hidden></div>
-        <div class="canvas-wrap"><div class="phone-shell"><div class="artboard" id="artboard"></div></div></div>
+        <div class="canvas-wrap" id="canvasScroll" tabindex="0" aria-label="可滚动画布区域"><div class="phone-shell"><div class="artboard" id="artboard"></div></div></div>
       </section>
       <aside class="right-panel" id="inspector"></aside>
       <div class="toast" id="toast"></div>
@@ -325,6 +332,8 @@
       const MIN_RESIZE_SIZE = 16;
       const artboard = document.querySelector('#artboard');
       const stage = document.querySelector('.stage');
+      const workspace = document.querySelector('.workspace');
+      const canvasScroll = document.querySelector('#canvasScroll');
       const leftContent = document.querySelector('#leftContent');
       const inspector = document.querySelector('#inspector');
       const toast = document.querySelector('#toast');
@@ -740,6 +749,47 @@
         if (currentPage === 'home') lastHomeSelection = new Set(selectedIds);
       }
 
+      function revealCanvasElement(id, behavior) {
+        requestAnimationFrame(() => {
+          const node = artboard.querySelector('[data-id="' + CSS.escape(id) + '"]');
+          if (!node) return;
+          const wrapRect = canvasScroll.getBoundingClientRect();
+          const nodeRect = node.getBoundingClientRect();
+          const panelRect = interactionPanel.getBoundingClientRect();
+          const visibleTop = wrapRect.top + 8;
+          const visibleBottom = interactionPanel.classList.contains('open') ? Math.min(wrapRect.bottom - 8, panelRect.top - 12) : wrapRect.bottom - 8;
+          let delta = 0;
+          if (nodeRect.bottom > visibleBottom) delta = nodeRect.bottom - visibleBottom;
+          if (nodeRect.top < visibleTop) delta = nodeRect.top - visibleTop;
+          if (delta) canvasScroll.scrollBy({top:delta,behavior:behavior || 'smooth'});
+        });
+      }
+
+      function setInteractionPanelOpen(open) {
+        interactionPanel.classList.toggle('open', Boolean(open));
+        workspace.classList.toggle('interaction-open', Boolean(open));
+        updateChrome();
+        if (open && currentInteractionSource()) revealCanvasElement(currentInteractionSource().id, 'smooth');
+      }
+
+      function interactionTargetForId(id) {
+        const direct = getElement(id);
+        if (direct && !isSystemElement(direct)) return direct;
+        return visualItemsForId(id).find(item => !isSystemElement(item)) || null;
+      }
+
+      function pickInteractionTarget(item, origin) {
+        if (!interactionPanel.classList.contains('open') || !item || isSystemElement(item)) return false;
+        const select = document.querySelector('#eventTarget');
+        const value = 'element:' + item.id;
+        if (!Array.from(select.options).some(option => option.value === value)) return false;
+        select.value = value;
+        select.dispatchEvent(new Event('change'));
+        revealCanvasElement(item.id, 'smooth');
+        flash((origin || '画布') + '已选 Target · ' + item.name);
+        return true;
+      }
+
       function pointerScale() {
         const rect = artboard.getBoundingClientRect();
         return {
@@ -767,6 +817,16 @@
         event.stopPropagation();
         closeContextMenu();
         const id = event.currentTarget.dataset.selectId || event.currentTarget.dataset.id;
+        if (interactionPanel.classList.contains('open')) {
+          const target = interactionTargetForId(id);
+          if (target) {
+            selectedIds = new Set([target.id]);
+            lastHomeSelection = new Set(selectedIds);
+            renderAll();
+            pickInteractionTarget(target, '画布');
+            return;
+          }
+        }
         const wasSelected = selectedIds.has(id);
         if (event.shiftKey) {
           setSelection(id, true);
@@ -936,11 +996,21 @@
         leftContent.innerHTML = '<div class="section-label"><span>Launch · 图层</span><b>＋</b></div><div class="layer-list">' + rows.join('') + '</div>';
         leftContent.querySelectorAll('[data-layer]').forEach(button => {
           button.addEventListener('click', event => {
+            if (interactionPanel.classList.contains('open')) {
+              const target = interactionTargetForId(button.dataset.layer);
+              if (target) {
+                selectedIds = new Set([target.id]);
+                lastHomeSelection = new Set(selectedIds);
+                renderAll();
+                pickInteractionTarget(target, '图层面板');
+                return;
+              }
+            }
             setSelection(button.dataset.layer, event.shiftKey);
             renderAll();
           });
           button.addEventListener('contextmenu', event => openElementContext(event, button.dataset.layer));
-          button.addEventListener('dblclick', () => beginRename(button));
+          button.addEventListener('dblclick', () => { if (!interactionPanel.classList.contains('open')) beginRename(button); });
         });
       }
 
@@ -1164,6 +1234,9 @@
         if (selectedIds.size > 1) {
           selectionChip.hidden = false;
           selectionChip.textContent = selectedIds.size + ' LAYERS SELECTED · SHIFT CLICK TO ADJUST';
+        } else if (interactionPanel.classList.contains('open') && selected() && !isSystemElement(selected())) {
+          selectionChip.hidden = false;
+          selectionChip.textContent = 'INTERACTION TARGET · ' + selected().name + ' · SCROLL CANVAS TO PICK';
         } else if (selected() && !getContainer(selected().id) && !isSystemElement(selected()) && selected().nowState !== '0') {
           selectionChip.hidden = false;
           selectionChip.textContent = 'EDITING STATE ' + selected().nowState + ' · INITIAL STATE SHOWN AS GHOST';
@@ -1192,7 +1265,7 @@
         if (!pages.some(page => page.id === pageId)) return;
         cancelActiveGesture();
         closeContextMenu();
-        interactionPanel.classList.remove('open');
+        setInteractionPanelOpen(false);
         currentPage = pageId;
         expandedContainerId = null;
         if (pageId === 'home') {
@@ -1650,7 +1723,7 @@
         document.querySelectorAll('.event-types button').forEach(button => button.classList.toggle('active', button.dataset.eventType === trigger));
         renderInteractionStates(source);
         refreshInteractionPanel();
-        interactionPanel.classList.add('open');
+        setInteractionPanelOpen(true);
         flash('正在编排 ' + source.name + ' · ' + (source.nowState === '0' ? '初始状态' : 'State ' + source.nowState));
       }
 
@@ -1892,7 +1965,7 @@
         if (command === 'export') flash('已生成本地预览包');
       }));
 
-      document.querySelector('#closeInteraction').addEventListener('click', () => interactionPanel.classList.remove('open'));
+      document.querySelector('#closeInteraction').addEventListener('click', () => setInteractionPanelOpen(false));
       document.querySelectorAll('.event-types button').forEach(button => button.addEventListener('click', () => {
         document.querySelectorAll('.event-types button').forEach(item => item.classList.toggle('active', item === button));
         refreshInteractionPanel();
@@ -2204,7 +2277,7 @@
         }
         if (event.key === 'Escape') {
           if (previewModal.classList.contains('open')) closePreview();
-          else if (interactionPanel.classList.contains('open')) interactionPanel.classList.remove('open');
+          else if (interactionPanel.classList.contains('open')) setInteractionPanelOpen(false);
           else if (expandedContainerId) {
             selectedIds = new Set([expandedContainerId]);
             expandedContainerId = null;
@@ -2232,7 +2305,7 @@
         replaying = true;
         closePreview();
         closeContextMenu();
-        interactionPanel.classList.remove('open');
+        setInteractionPanelOpen(false);
         elements = clone(originalElements);
         containers = [];
         components = [];
@@ -2282,7 +2355,7 @@
         await step('06 / 06 · 保存并扫码预览', () => {
           interactionEvents = [{sourceId:'cta',sourceState:'0',trigger:'click',elementActions:[{targetId:'title',targetState:'1',startTime:0,duration:.35,easing:'ease-out'}],pageAction:{targetPageId:'details',effect:'push-left',startTime:.55,duration:.35,easing:'ease-out'}}];
           syncEventElementIds();
-          interactionPanel.classList.remove('open');
+          setInteractionPanelOpen(false);
           renderInspector();
           updateChrome();
           openPreview();
