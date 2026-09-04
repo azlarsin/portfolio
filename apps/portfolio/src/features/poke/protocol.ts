@@ -385,6 +385,189 @@ export function normalizePokePrototype(value: unknown): PokePrototype | null {
   }
 }
 
+const elementTypeCodes: Record<PokeElementType, string> = {
+  rect: 'r',
+  circle: 'c',
+  text: 't',
+  image: 'i',
+  input: 'n',
+  nav: 'v',
+}
+const triggerCodes: Record<PokeTrigger, string> = {
+  click: 'c',
+  doubleClick: 'd',
+  touch: 'h',
+  swipeLeft: 'l',
+  swipeRight: 'r',
+  swipeUp: 'u',
+  swipeDown: 'n',
+}
+const effectCodes: Record<PokeTransitionEffect, string> = {
+  'push-left': 'l',
+  'push-right': 'r',
+  'push-up': 'u',
+  'push-down': 'd',
+  fade: 'f',
+  modal: 'm',
+}
+const easingCodes: Record<PokeEasing, string> = {
+  'ease-out': 'o',
+  'ease-in-out': 'b',
+  linear: 'l',
+}
+
+function reverseCodes<T extends string>(codes: Record<T, string>) {
+  return Object.fromEntries(Object.entries(codes).map(([key, code]) => [code, key])) as Record<
+    string,
+    T
+  >
+}
+
+const elementTypesByCode = reverseCodes(elementTypeCodes)
+const triggersByCode = reverseCodes(triggerCodes)
+const effectsByCode = reverseCodes(effectCodes)
+const easingsByCode = reverseCodes(easingCodes)
+
+function compactPokePrototype(project: PokePrototype) {
+  return [
+    POKE_PREVIEW_VERSION,
+    [project.stage.width, project.stage.height],
+    [project.statusBar.color, project.statusBar.background],
+    [
+      project.tabBar.background,
+      project.tabBar.normalColor,
+      project.tabBar.selectedColor,
+      project.tabBar.tabs.map((tab) => [tab.text, tab.icon, tab.pageId]),
+    ],
+    project.pages.map((page) => [
+      page.id,
+      page.background,
+      page.elements.map((element) => [
+        element.id,
+        elementTypeCodes[element.type],
+        element.states.map((state) => [
+          state.stateId,
+          state.x,
+          state.y,
+          state.width,
+          state.height,
+          state.fill,
+          state.radius,
+          state.opacity,
+          state.text ?? null,
+        ]),
+      ]),
+    ]),
+    project.interactions.map((interaction) => [
+      interaction.sourceId,
+      interaction.sourceState,
+      triggerCodes[interaction.trigger],
+      interaction.elementActions.map((action) => [
+        action.targetId,
+        action.targetState,
+        action.startTime,
+        action.duration,
+        easingCodes[action.easing],
+      ]),
+      interaction.pageAction
+        ? [
+            interaction.pageAction.targetPageId,
+            effectCodes[interaction.pageAction.effect],
+            interaction.pageAction.startTime,
+            interaction.pageAction.duration,
+            easingCodes[interaction.pageAction.easing],
+          ]
+        : null,
+    ]),
+  ]
+}
+
+function array(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+function expandCompactPokePrototype(value: unknown) {
+  const root = array(value)
+  const stage = array(root[1])
+  const statusBar = array(root[2])
+  const tabBar = array(root[3])
+  const pages = array(root[4])
+  const interactions = array(root[5])
+  return {
+    version: root[0],
+    title: 'Poke Prototype',
+    stage: { width: stage[0], height: stage[1] },
+    statusBar: { color: statusBar[0], background: statusBar[1] },
+    tabBar: {
+      background: tabBar[0],
+      normalColor: tabBar[1],
+      selectedColor: tabBar[2],
+      tabs: array(tabBar[3]).map((rawTab, tabIndex) => {
+        const tab = array(rawTab)
+        return { id: `tab-${tabIndex}`, text: tab[0], icon: tab[1], pageId: tab[2] }
+      }),
+    },
+    pages: pages.map((rawPage) => {
+      const page = array(rawPage)
+      return {
+        id: page[0],
+        name: page[0],
+        background: page[1],
+        elements: array(page[2]).map((rawElement) => {
+          const element = array(rawElement)
+          return {
+            id: element[0],
+            name: element[0],
+            type: elementTypesByCode[String(element[1])],
+            states: array(element[2]).map((rawState) => {
+              const state = array(rawState)
+              return {
+                stateId: state[0],
+                x: state[1],
+                y: state[2],
+                width: state[3],
+                height: state[4],
+                fill: state[5],
+                radius: state[6],
+                opacity: state[7],
+                text: state[8],
+              }
+            }),
+          }
+        }),
+      }
+    }),
+    interactions: interactions.map((rawInteraction) => {
+      const interaction = array(rawInteraction)
+      const rawPageAction = Array.isArray(interaction[4]) ? interaction[4] : null
+      return {
+        sourceId: interaction[0],
+        sourceState: interaction[1],
+        trigger: triggersByCode[String(interaction[2])],
+        elementActions: array(interaction[3]).map((rawAction) => {
+          const action = array(rawAction)
+          return {
+            targetId: action[0],
+            targetState: action[1],
+            startTime: action[2],
+            duration: action[3],
+            easing: easingsByCode[String(action[4])],
+          }
+        }),
+        pageAction: rawPageAction
+          ? {
+              targetPageId: rawPageAction[0],
+              effect: effectsByCode[String(rawPageAction[1])],
+              startTime: rawPageAction[2],
+              duration: rawPageAction[3],
+              easing: easingsByCode[String(rawPageAction[4])],
+            }
+          : null,
+      }
+    }),
+  }
+}
+
 function bytesToBase64Url(bytes: Uint8Array) {
   let binary = ''
   const chunkSize = 0x8000
@@ -418,13 +601,13 @@ async function transformBytes(
 export async function encodePokePrototype(project: PokePrototype) {
   const normalized = normalizePokePrototype(project)
   if (!normalized) throw new Error('Poke preview data is invalid.')
-  const raw = new TextEncoder().encode(JSON.stringify(normalized))
+  const raw = new TextEncoder().encode(JSON.stringify(compactPokePrototype(normalized)))
 
   if (typeof CompressionStream !== 'undefined') {
     const compressed = await transformBytes(raw, new CompressionStream('gzip'))
-    if (compressed.length < raw.length) return `g.${bytesToBase64Url(compressed)}`
+    if (compressed.length < raw.length) return `c.${bytesToBase64Url(compressed)}`
   }
-  return `j.${bytesToBase64Url(raw)}`
+  return `k.${bytesToBase64Url(raw)}`
 }
 
 export async function decodePokePrototype(encoded: string) {
@@ -436,12 +619,12 @@ export async function decodePokePrototype(encoded: string) {
   const mode = encoded.slice(0, separator)
   let bytes = base64UrlToBytes(encoded.slice(separator + 1))
 
-  if (mode === 'g') {
+  if (mode === 'g' || mode === 'c') {
     if (typeof DecompressionStream === 'undefined') {
       throw new Error('This browser cannot open compressed Poke previews.')
     }
     bytes = await transformBytes(bytes, new DecompressionStream('gzip'))
-  } else if (mode !== 'j') {
+  } else if (mode !== 'j' && mode !== 'k') {
     throw new Error('Poke preview data has an unknown format.')
   }
 
@@ -449,7 +632,10 @@ export async function decodePokePrototype(encoded: string) {
     throw new Error('Poke preview data expands beyond the supported size.')
   }
 
-  const decoded = normalizePokePrototype(JSON.parse(new TextDecoder().decode(bytes)))
+  const parsed = JSON.parse(new TextDecoder().decode(bytes))
+  const decoded = normalizePokePrototype(
+    mode === 'c' || mode === 'k' ? expandCompactPokePrototype(parsed) : parsed,
+  )
   if (!decoded) throw new Error('Poke preview data is incomplete.')
   return decoded
 }

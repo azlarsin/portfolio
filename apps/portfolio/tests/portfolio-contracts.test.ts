@@ -992,9 +992,15 @@ describe('portfolio acceptance contracts', () => {
       new URL('../src/assets/poke-editor-demo.html', import.meta.url),
     )
     const source = readFileSync(assetPath, 'utf8')
+    const renderCss = readFileSync(
+      fileURLToPath(new URL('../src/styles/poke-render.css', import.meta.url)),
+      'utf8',
+    )
 
     expect(source).toContain("new URL('/poke/render', 'https://me.azlar.cc')")
     expect(source).toContain("new CompressionStream('gzip')")
+    expect(source).toContain('compactPreviewProject(project)')
+    expect(source).toContain("data:'c.' + bytesToBase64Url(compressed)")
     expect(source).toContain("version:2")
     expect(source).toContain('elementActions:[]')
     expect(source).toContain('pageAction:null')
@@ -1005,6 +1011,8 @@ describe('portfolio acceptance contracts', () => {
     expect(source).toContain('.workspace.interaction-open .canvas-wrap')
     expect(source).toContain("pickInteractionTarget(target, '画布')")
     expect(source).toContain("setInteractionPanelOpen(true)")
+    expect(renderCss).toContain('html.poke-qr-document')
+    expect(renderCss).toContain('width: min(188px, calc(100vw - 24px))')
     expect(source).toContain('data-event-type="swipeLeft"')
     expect(source).toContain('data-event-type="touch"')
     expect(source).toContain("item.type === 'status-bar'")

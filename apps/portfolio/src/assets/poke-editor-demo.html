@@ -187,12 +187,12 @@
     .preview-modal.open .preview-window { transform: none; }
     .preview-titlebar { display: flex; height: 34px; align-items: center; justify-content: space-between; padding: 0 11px; border-bottom: 1px solid #d2d7de; color: #76808e; background: #f8f9fa; font-size: 8px; }
     .preview-titlebar button { border: 0; color: #66717f; background: transparent; cursor: pointer; }
-    .preview-body { display: grid; min-height: 558px; grid-template-columns: 230px 280px; place-content: center; align-items: center; gap: 34px; padding: 24px 28px; background: #e2e5e9; }
+    .preview-body { display: grid; min-height: 558px; grid-template-columns: 210px 280px; place-content: center; align-items: center; gap: 30px; padding: 24px 28px; background: #e2e5e9; }
     .preview-share { display: grid; align-content: center; gap: 10px; }
     .preview-share > strong { color: #303a4b; font-size: 13px; line-height: 1.35; }
     .preview-share > p { margin: 0; color: #7a8595; font-size: 9px; line-height: 1.6; }
-    .preview-qr-shell { position: relative; display: grid; width: 230px; min-height: 282px; place-items: center; overflow: hidden; border: 1px solid #d3d9e2; border-radius: 12px; background: white; box-shadow: 0 10px 30px rgba(34,44,59,.1); }
-    .preview-qr-shell iframe { width: 100%; height: 282px; border: 0; background: white; }
+    .preview-qr-shell { position: relative; display: grid; width: 210px; min-height: 250px; place-items: center; overflow: hidden; border: 1px solid #d3d9e2; border-radius: 12px; background: white; box-shadow: 0 10px 30px rgba(34,44,59,.1); }
+    .preview-qr-shell iframe { width: 100%; height: 250px; border: 0; background: white; }
     .preview-loading { position: absolute; display: grid; place-items: center; color: #8490a2; background: white; font-size: 9px; inset: 0; }
     .preview-loading[hidden], .preview-loading.is-done { display: none; }
     .preview-share-actions { display: flex; align-items: center; gap: 7px; }
@@ -2114,17 +2114,32 @@
         return new Uint8Array(await new Response(transformed).arrayBuffer());
       }
 
+      function compactPreviewProject(project) {
+        const typeCodes = {rect:'r',circle:'c',text:'t',image:'i',input:'n',nav:'v'};
+        const triggerCodes = {click:'c',doubleClick:'d',touch:'h',swipeLeft:'l',swipeRight:'r',swipeUp:'u',swipeDown:'n'};
+        const effectCodes = {'push-left':'l','push-right':'r','push-up':'u','push-down':'d',fade:'f',modal:'m'};
+        const easingCodes = {'ease-out':'o','ease-in-out':'b',linear:'l'};
+        return [
+          2,
+          [project.stage.width,project.stage.height],
+          [project.statusBar.color,project.statusBar.background],
+          [project.tabBar.background,project.tabBar.normalColor,project.tabBar.selectedColor,project.tabBar.tabs.map(tab => [tab.text,tab.icon,tab.pageId])],
+          project.pages.map(page => [page.id,page.background,page.elements.map(element => [element.id,typeCodes[element.type],element.states.map(state => [state.stateId,state.x,state.y,state.width,state.height,state.fill,state.radius,state.opacity,state.text == null ? null : state.text])])]),
+          project.interactions.map(interaction => [interaction.sourceId,interaction.sourceState,triggerCodes[interaction.trigger],interaction.elementActions.map(action => [action.targetId,action.targetState,action.startTime,action.duration,easingCodes[action.easing]]),interaction.pageAction ? [interaction.pageAction.targetPageId,effectCodes[interaction.pageAction.effect],interaction.pageAction.startTime,interaction.pageAction.duration,easingCodes[interaction.pageAction.easing]] : null])
+        ];
+      }
+
       async function encodePreviewProject(project) {
-        const raw = new TextEncoder().encode(JSON.stringify(project));
+        const raw = new TextEncoder().encode(JSON.stringify(compactPreviewProject(project)));
         if (typeof CompressionStream !== 'undefined') {
           try {
             const compressed = await transformPreviewBytes(raw, new CompressionStream('gzip'));
-            if (compressed.length < raw.length) return {data:'g.' + bytesToBase64Url(compressed),bytes:compressed.length,rawBytes:raw.length};
+            if (compressed.length < raw.length) return {data:'c.' + bytesToBase64Url(compressed),bytes:compressed.length,rawBytes:raw.length};
           } catch (error) {
             console.warn('Poke preview compression unavailable', error);
           }
         }
-        return {data:'j.' + bytesToBase64Url(raw),bytes:raw.length,rawBytes:raw.length};
+        return {data:'k.' + bytesToBase64Url(raw),bytes:raw.length,rawBytes:raw.length};
       }
 
       function previewPayloadId(data) {
