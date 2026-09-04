@@ -45,8 +45,8 @@ async function loadPlanner() {
 
 test("static manifest is connected, unique, and parent-complete", () => {
   assert.equal(manifest.analysisMode, "route-ast+source-feature-scan");
-  assert.equal(manifest.routeSchemas.length, 12);
-  assert.equal(manifest.routeInstances.length, 16);
+  assert.equal(manifest.routeSchemas.length, 31);
+  assert.equal(manifest.routeInstances.length, 35);
   assert.equal(manifest.surfaces.length, 3);
   assert.equal(manifest.actions.length, 7);
   assert.match(manifest.sourceHash, /^[a-f0-9]{12}$/);
@@ -66,6 +66,8 @@ test("product 2 demo branch is parent-complete", () => {
     "/product/2",
     "/product/2/orders",
     "/product/2/order/2",
+    "/product/2/order/2/fulfillment",
+    "/product/2/order/2/fulfillment/tracking",
   ];
   const instances = new Map(
     manifest.routeInstances.map((route) => [route.path, route]),
@@ -75,6 +77,41 @@ test("product 2 demo branch is parent-complete", () => {
   assert.equal(instances.get(productPaths[1]).parentPath, productPaths[0]);
   assert.equal(instances.get(productPaths[2]).parentPath, productPaths[1]);
   assert.equal(instances.get(productPaths[3]).parentPath, productPaths[2]);
+  assert.equal(instances.get(productPaths[4]).parentPath, productPaths[3]);
+  assert.equal(instances.get(productPaths[5]).parentPath, productPaths[4]);
+});
+
+test("behavior graph exposes deep routes and multiple outgoing branches", () => {
+  const instances = new Map(
+    manifest.routeInstances.map((route) => [route.path, route]),
+  );
+
+  assert.deepEqual(instances.get("/products").childPaths, [
+    "/product/1",
+    "/product/2",
+  ]);
+  assert.deepEqual(instances.get("/product/1").childPaths, [
+    "/product/1/orders",
+    "/product/1/settings",
+    "/product/1/orders/paid",
+  ]);
+  assert.deepEqual(instances.get("/product/1/order/2").childPaths, [
+    "/product/1/order/2/edit",
+    "/product/1/order/2/timeline",
+  ]);
+  assert.deepEqual(instances.get("/product/1/settings").childPaths, [
+    "/product/1/settings/permissions",
+    "/product/1/settings/integrations",
+  ]);
+
+  const deepestPath = "/product/1/order/2/edit/review/confirm";
+  let current = instances.get(deepestPath);
+  let depth = 0;
+  while (current) {
+    depth += 1;
+    current = current.parentPath ? instances.get(current.parentPath) : null;
+  }
+  assert.equal(depth, 7);
 });
 
 test("employee lookup branch is a complete four-level route chain", () => {
@@ -93,6 +130,20 @@ test("employee lookup branch is a complete four-level route chain", () => {
   assert.equal(instances.get(employeePaths[1]).parentPath, employeePaths[0]);
   assert.equal(instances.get(employeePaths[2]).parentPath, employeePaths[1]);
   assert.equal(instances.get(employeePaths[3]).parentPath, employeePaths[2]);
+});
+
+test("employee behavior branch includes expense review and schedule shift routes", () => {
+  const instances = new Map(
+    manifest.routeInstances.map((route) => [route.path, route]),
+  );
+  assert.deepEqual(instances.get("/employee/A-17").childPaths, [
+    "/employee/A-17/orders",
+    "/employee/A-17/schedule",
+  ]);
+  assert.ok(instances.has("/employee/A-17/order/1/expense/review"));
+  assert.ok(
+    instances.has("/employee/A-17/schedule/day/2026-08-06/shift/lunch"),
+  );
 });
 
 test("local planner validates public entities and keeps model optional", async () => {

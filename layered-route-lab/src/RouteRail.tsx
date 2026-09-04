@@ -21,6 +21,8 @@ interface RouteRailProps {
   temporaryPresenters: TemporaryPresenterLayer[];
   activeSurfaceCount: number;
   updatesPaused: boolean;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
   onNavigateRoute: (path: string) => void;
   onCloseUntilUid: (uid: string) => void;
 }
@@ -32,12 +34,17 @@ export default function RouteRail({
   temporaryPresenters,
   activeSurfaceCount,
   updatesPaused,
+  collapsed,
+  onToggleCollapsed,
   onNavigateRoute,
   onCloseUntilUid,
 }: RouteRailProps) {
   const currentRoute = routeStack[routeStack.length - 1];
   const mountedPaths = new Set(routeStack.map((route) => route.path));
   const routeListRef = useRef<HTMLDivElement>(null);
+  const currentNodeIndex = routeNodes.findIndex(
+    (node) => node.path === currentRoute.path,
+  );
   const [menuOpenForPath, setMenuOpenForPath] = useState<string | null>(null);
   const routeMenuOpen = menuOpenForPath === currentRoute.path;
 
@@ -59,7 +66,9 @@ export default function RouteRail({
 
   return (
     <aside
-      className={`route-rail ${routeMenuOpen ? "is-menu-open" : ""}`}
+      className={`route-rail ${routeMenuOpen ? "is-menu-open" : ""} ${
+        collapsed ? "is-collapsed" : ""
+      }`}
       aria-label="Layered Route Lab navigation"
       aria-busy={updatesPaused}
     >
@@ -69,7 +78,23 @@ export default function RouteRail({
           <strong>Layered Route Lab</strong>
           <span>Route and Presenter stack</span>
         </div>
+        <button
+          type="button"
+          className="route-rail-collapse-toggle"
+          aria-label={collapsed ? "展开 Routes" : "折叠 Routes"}
+          aria-expanded={!collapsed}
+          aria-controls="route-rail-routes"
+          onClick={onToggleCollapsed}
+        >
+          <span aria-hidden="true">{collapsed ? "›" : "‹"}</span>
+          <strong>{collapsed ? "Open" : "Fold"}</strong>
+        </button>
       </header>
+
+      <div className="route-rail-collapsed-status" aria-label="折叠后的路由状态">
+        <span>{String(Math.max(0, currentNodeIndex) + 1).padStart(2, "0")}</span>
+        <strong>{String(activeSurfaceCount).padStart(2, "0")}</strong>
+      </div>
 
       <section className="route-rail-current" aria-label="Current surface stack">
         <span className="route-rail-section-label">Current stack</span>

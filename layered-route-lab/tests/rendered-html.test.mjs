@@ -119,6 +119,14 @@ test("deep links are served by the frontend catch-all", async () => {
   assert.equal(html.match(/data-reconstructible="true"/g)?.length, 5);
 });
 
+test("deep behavior routes rebuild a seven-presenter route stack", async () => {
+  const response = await render("/product/1/order/2/edit/review/confirm");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.equal(html.match(/data-reconstructible="true"/g)?.length, 7);
+  assert.match(html, /Confirm order 2/);
+});
+
 test("server rendering starts from the requested route instead of the default deep stack", async () => {
   const response = await render("/products");
   assert.equal(response.status, 200);
@@ -603,9 +611,13 @@ test("route rail combines route navigation with route-less presenters", async ()
 
   assert.match(app, /<RouteRail/);
   assert.match(app, /temporaryPresenters=\{temporaryPresenterLayers\}/);
+  assert.match(app, /data-route-rail-collapsed=\{routeRailCollapsed\}/);
+  assert.match(app, /onToggleCollapsed=\{\(\) => setRouteRailCollapsed/);
   assert.match(app, /onCloseUntilUid=\{closeUntilUid\}/);
   assert.match(routeRail, /className=\{`route-rail /);
   assert.match(routeRail, /className="route-composition-path"/);
+  assert.match(routeRail, /className="route-rail-collapse-toggle"/);
+  assert.match(routeRail, /aria-label=\{collapsed \? "展开 Routes" : "折叠 Routes"\}/);
   assert.match(routeRail, /className="route-presenter-array"/);
   assert.match(routeRail, /flattenDemoRouteTree\(\)/);
   assert.match(routeRail, /ref=\{routeListRef\}/);
@@ -619,11 +631,34 @@ test("route rail combines route navigation with route-less presenters", async ()
   assert.match(app, /<span>Derive modal<\/span>[\s\S]*?<kbd>⇧ M<\/kbd>/);
   assert.match(css, /--route-rail-width: 300px/);
   assert.match(css, /\.route-rail \{/);
+  assert.match(css, /\.workbench\[data-route-rail-collapsed="true"\]/);
+  assert.match(css, /\.route-rail\.is-collapsed nav/);
   assert.match(css, /\.lab-route-list \{/);
   assert.match(
     css,
     /\.route-presenter-array \{[\s\S]*?flex-wrap: wrap/,
   );
+});
+
+test("manifest-backed behavior viewer and page branch controls share route edges", async () => {
+  const [app, graph, presenter, routes, css] = await Promise.all([
+    readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/BehaviorGraphViewer.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/core/Presenter.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/router/routes.ts", import.meta.url), "utf8"),
+    readFile(new URL("../src/layered-route-lab.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(app, /<span>Behavior graph<\/span>/);
+  assert.match(app, /<BehaviorGraphViewer/);
+  assert.match(graph, /const graphNodes = behaviorManifest\.routeInstances/);
+  assert.match(graph, /selectedNode\.childPaths\.map/);
+  assert.match(graph, /onNavigateRoute\(path\)/);
+  assert.match(presenter, /className="route-branch-actions"/);
+  assert.match(presenter, /route\.childPaths\.map/);
+  assert.match(routes, /export function getDemoRouteChildPaths/);
+  assert.match(css, /\.behavior-graph-viewer \{/);
+  assert.match(css, /\.route-branch-action-list \{/);
 });
 
 test("mobile layout keeps controls, content, and the Agent launcher in bounds", async () => {

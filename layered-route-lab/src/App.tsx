@@ -14,6 +14,8 @@ import Presenter from "./core/Presenter";
 import ExperienceGuide from "./ExperienceGuide";
 import RouteRail from "./RouteRail";
 import AgentDemoOverlay from "./agent/AgentDemoOverlay";
+import BehaviorGraphViewer from "./BehaviorGraphViewer";
+import { behaviorManifest } from "./agent/generated/behaviorManifest";
 import {
   APP_INSPECTION_SETTLE_MS,
   APP_NORMAL_SETTLE_MS,
@@ -190,6 +192,8 @@ export default function App({
   const [agentPlaybackMode, setAgentPlaybackMode] =
     useState<AgentPlaybackMode>("paced");
   const [agentRunning, setAgentRunning] = useState(false);
+  const [behaviorGraphOpen, setBehaviorGraphOpen] = useState(false);
+  const [routeRailCollapsed, setRouteRailCollapsed] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [agentOpenRequest, setAgentOpenRequest] = useState(0);
   const embedded = new URL(currentUrl, "http://localhost").searchParams.get(
@@ -971,12 +975,18 @@ export default function App({
 
   return (
     <AppContext.Provider value={appContext}>
-      <main className="workbench" data-agent-playback={agentPlaybackMode}>
+      <main
+        className="workbench"
+        data-agent-playback={agentPlaybackMode}
+        data-route-rail-collapsed={routeRailCollapsed}
+      >
         <RouteRail
           routeStack={routeStack}
           temporaryPresenters={temporaryPresenterLayers}
           activeSurfaceCount={activeSurfaceCount}
           updatesPaused={agentRunning}
+          collapsed={routeRailCollapsed}
+          onToggleCollapsed={() => setRouteRailCollapsed((value) => !value)}
           onNavigateRoute={navigate}
           onCloseUntilUid={closeUntilUid}
         />
@@ -1009,6 +1019,16 @@ export default function App({
               <button type="button" onClick={openModal}>
                 <span>Derive modal</span>
                 <kbd>⇧ M</kbd>
+              </button>
+              <button
+                type="button"
+                className={behaviorGraphOpen ? "active" : ""}
+                aria-pressed={behaviorGraphOpen}
+                aria-controls="behavior-graph-viewer"
+                onClick={() => setBehaviorGraphOpen((value) => !value)}
+              >
+                <span>Behavior graph</span>
+                <kbd>{String(behaviorManifest.routeInstances.length).padStart(2, "0")}</kbd>
               </button>
               <button
                 type="button"
@@ -1090,6 +1110,7 @@ export default function App({
                   onDidLeave={finishPresenterLeave}
                   onSelect={() => closeUntilUid(route.path)}
                   onPush={pushNext}
+                  onNavigateRoute={navigate}
                 />
               ))}
 
@@ -1117,6 +1138,7 @@ export default function App({
                     onDidLeave={finishPushedPresenterLeave}
                     onSelect={() => closeUntilUid(presenter.id)}
                     onPush={pushNext}
+                    onNavigateRoute={navigate}
                   />
                 );
               })}
@@ -1153,6 +1175,14 @@ export default function App({
             </div>
           </div>
         </section>
+        {behaviorGraphOpen ? (
+          <BehaviorGraphViewer
+            currentRoute={currentRoute}
+            routeStack={routeStack}
+            onClose={() => setBehaviorGraphOpen(false)}
+            onNavigateRoute={navigate}
+          />
+        ) : null}
         <AgentDemoOverlay
           openRequest={agentOpenRequest}
           onOpenGuide={embedded ? undefined : () => setGuideOpen(true)}
