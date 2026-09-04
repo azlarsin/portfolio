@@ -10,8 +10,10 @@
 
 html.poke-qr-document,
 html:has(.poke-qr-page) {
+  height: 100%;
   width: 100%;
   min-width: 0;
+  overflow: hidden;
   background: #fff;
 }
 
@@ -19,8 +21,10 @@ html.poke-qr-document body,
 html.poke-qr-document #root,
 html:has(.poke-qr-page) body,
 html:has(.poke-qr-page) #root {
+  height: 100%;
   width: 100%;
   min-width: 0;
+  overflow: hidden;
 }
 
 .poke-render-shell {
@@ -163,7 +167,6 @@ button.poke-prototype-element {
 
 .poke-prototype-element.is-interactive:active {
   filter: brightness(0.92);
-  transform: scale(0.975);
 }
 
 .poke-prototype-element.is-interactive:focus-visible,
@@ -356,10 +359,11 @@ button.poke-prototype-element {
 
 .poke-qr-page {
   display: grid;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   place-content: center;
-  padding: 14px;
+  padding: 6px;
   color: #445069;
   background: #fff;
   text-align: center;
@@ -373,14 +377,15 @@ button.poke-prototype-element {
 }
 
 .poke-qr-page p {
-  margin: 9px 0 2px;
+  margin: 5px 0 0;
   color: #20293a;
   font-size: 12px;
   font-weight: 800;
 }
 
 .poke-qr-page small {
-  font-size: 8px;
+  font-size: 7px;
+  line-height: 1.25;
 }
 
 .poke-qr-error {
