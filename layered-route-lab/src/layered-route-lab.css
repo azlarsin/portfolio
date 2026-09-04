@@ -212,6 +212,13 @@
   border-color: var(--signal);
 }
 
+.route-rail[aria-busy="true"] .lab-route-link.mounted,
+.route-rail[aria-busy="true"] .lab-route-link.active {
+  color: #83847b;
+  background: transparent;
+  border-color: transparent;
+}
+
 .lab-route-link > span:first-child {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 9px;

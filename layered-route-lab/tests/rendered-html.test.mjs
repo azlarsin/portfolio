@@ -183,10 +183,12 @@ test("employee order deep links preserve the synthetic query for client reconstr
 });
 
 test("agent execution keeps every step visible and reveals deep routes progressively", async () => {
-  const overlay = await readFile(
-    new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url),
-    "utf8",
-  );
+  const [app, overlay, routeRail, css] = await Promise.all([
+    readFile(new URL("../src/App.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/agent/AgentDemoOverlay.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/RouteRail.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../src/layered-route-lab.css", import.meta.url), "utf8"),
+  ]);
 
   assert.match(overlay, /const AGENT_STEP_DELAY_MS = 500/);
   assert.match(overlay, /function buildProgressiveNavigationTargets/);
@@ -204,6 +206,15 @@ test("agent execution keeps every step visible and reveals deep routes progressi
   assert.match(overlay, /data-step-state=/);
   assert.match(overlay, /STEP DELAY:/);
   assert.doesNotMatch(overlay, /await wait\(260\)/);
+  assert.match(overlay, /onRunningChange\?\.\(running\)/);
+  assert.match(app, /updatesPaused=\{agentRunning\}/);
+  assert.match(app, /onRunningChange=\{setAgentRunning\}/);
+  assert.match(routeRail, /if \(updatesPaused\) return;/);
+  assert.match(routeRail, /aria-busy=\{updatesPaused\}/);
+  assert.match(
+    css,
+    /\.route-rail\[aria-busy="true"\] \.lab-route-link\.active/,
+  );
 });
 
 test("agent commands are acknowledged by the host App bridge without conflicting Alt+S capture", async () => {
@@ -249,6 +260,10 @@ test("route navigation preserves only explicit shell query parameters", async ()
   );
 
   assert.match(browserLocation, /PRESERVED_SHELL_QUERY_PARAMS = \["embed", "agent_demo"\]/);
+  assert.match(
+    browserLocation,
+    /PRESERVED_SHELL_QUERY_PARAMS\.forEach\(\(key\) => params\.delete\(key\)\)/,
+  );
   assert.match(browserLocation, /if \(!targetParams\.has\(key\) && browserParams\.has\(key\)\)/);
   assert.match(browserLocation, /targetParams\.delete\(STATIC_ROUTE_QUERY_PARAM\)/);
   assert.doesNotMatch(browserLocation, /agent_cmd/);

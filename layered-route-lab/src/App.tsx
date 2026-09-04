@@ -189,6 +189,7 @@ export default function App({
     useState<InspectionMode>("off");
   const [agentPlaybackMode, setAgentPlaybackMode] =
     useState<AgentPlaybackMode>("paced");
+  const [agentRunning, setAgentRunning] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [agentOpenRequest, setAgentOpenRequest] = useState(0);
   const embedded = new URL(currentUrl, "http://localhost").searchParams.get(
@@ -975,6 +976,7 @@ export default function App({
           routeStack={routeStack}
           temporaryPresenters={temporaryPresenterLayers}
           activeSurfaceCount={activeSurfaceCount}
+          updatesPaused={agentRunning}
           onNavigateRoute={navigate}
           onCloseUntilUid={closeUntilUid}
         />
@@ -1154,6 +1156,7 @@ export default function App({
         <AgentDemoOverlay
           openRequest={agentOpenRequest}
           onOpenGuide={embedded ? undefined : () => setGuideOpen(true)}
+          onRunningChange={setAgentRunning}
         />
       </main>
     </AppContext.Provider>

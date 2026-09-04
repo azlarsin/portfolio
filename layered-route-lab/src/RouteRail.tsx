@@ -20,6 +20,7 @@ interface RouteRailProps {
   routeStack: ResolvedRoute[];
   temporaryPresenters: TemporaryPresenterLayer[];
   activeSurfaceCount: number;
+  updatesPaused: boolean;
   onNavigateRoute: (path: string) => void;
   onCloseUntilUid: (uid: string) => void;
 }
@@ -30,6 +31,7 @@ export default function RouteRail({
   routeStack,
   temporaryPresenters,
   activeSurfaceCount,
+  updatesPaused,
   onNavigateRoute,
   onCloseUntilUid,
 }: RouteRailProps) {
@@ -40,10 +42,11 @@ export default function RouteRail({
   const routeMenuOpen = menuOpenForPath === currentRoute.path;
 
   useEffect(() => {
+    if (updatesPaused) return;
     routeListRef.current
       ?.querySelector<HTMLElement>('[aria-current="page"]')
       ?.scrollIntoView({ block: "nearest", inline: "center" });
-  }, [currentRoute.path]);
+  }, [currentRoute.path, updatesPaused]);
 
   useEffect(() => {
     if (!routeMenuOpen) return;
@@ -58,6 +61,7 @@ export default function RouteRail({
     <aside
       className={`route-rail ${routeMenuOpen ? "is-menu-open" : ""}`}
       aria-label="Layered Route Lab navigation"
+      aria-busy={updatesPaused}
     >
       <header className="route-rail-brand">
         <span className="route-rail-mark" aria-hidden="true">LR</span>
