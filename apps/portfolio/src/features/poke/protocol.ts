@@ -1,4 +1,4 @@
-export const POKE_PREVIEW_VERSION = 1 as const
+export const POKE_PREVIEW_VERSION = 2 as const
 export const POKE_RENDER_PATH = '/poke/render'
 export const POKE_CANONICAL_ORIGIN = 'https://me.azlar.cc'
 
@@ -29,10 +29,8 @@ export type PokeTransitionEffect =
 
 export type PokeEasing = 'ease-out' | 'ease-in-out' | 'linear'
 
-export interface PokeElement {
-  id: string
-  name: string
-  type: PokeElementType
+export interface PokeElementState {
+  stateId: string
   x: number
   y: number
   width: number
@@ -43,6 +41,13 @@ export interface PokeElement {
   text?: string
 }
 
+export interface PokeElement {
+  id: string
+  name: string
+  type: PokeElementType
+  states: PokeElementState[]
+}
+
 export interface PokePage {
   id: string
   name: string
@@ -50,13 +55,28 @@ export interface PokePage {
   elements: PokeElement[]
 }
 
-export interface PokeInteraction {
-  sourceId: string
-  trigger: PokeTrigger
+export interface PokeElementAction {
+  targetId: string
+  targetState: string
+  startTime: number
+  duration: number
+  easing: PokeEasing
+}
+
+export interface PokePageAction {
   targetPageId: string
   effect: PokeTransitionEffect
-  easing: PokeEasing
+  startTime: number
   duration: number
+  easing: PokeEasing
+}
+
+export interface PokeInteraction {
+  sourceId: string
+  sourceState: string
+  trigger: PokeTrigger
+  elementActions: PokeElementAction[]
+  pageAction: PokePageAction | null
 }
 
 export interface PokeTab {
@@ -139,6 +159,36 @@ function color(value: unknown, fallback: string) {
   return fallback
 }
 
+function normalizeEasing(value: unknown): PokeEasing {
+  return easings.has(value as PokeEasing) ? (value as PokeEasing) : 'ease-out'
+}
+
+function normalizeEffect(value: unknown): PokeTransitionEffect {
+  return effects.has(value as PokeTransitionEffect)
+    ? (value as PokeTransitionEffect)
+    : 'push-left'
+}
+
+function normalizeState(
+  value: Record<string, unknown>,
+  fallbackId: string,
+  stageWidth: number,
+  stageHeight: number,
+): PokeElementState {
+  const result: PokeElementState = {
+    stateId: text(value.stateId, fallbackId, 20),
+    x: number(value.x, 0, -stageWidth * 2, stageWidth * 3),
+    y: number(value.y, 0, -stageHeight * 2, stageHeight * 3),
+    width: number(value.width, 80, 1, stageWidth * 3),
+    height: number(value.height, 44, 1, stageHeight * 3),
+    fill: color(value.fill, '#dfe6f2'),
+    radius: number(value.radius, 0, 0, 999),
+    opacity: number(value.opacity, 100, 0, 100),
+  }
+  if (typeof value.text === 'string') result.text = value.text.slice(0, 280)
+  return result
+}
+
 function normalizeElement(
   value: unknown,
   index: number,
@@ -150,47 +200,77 @@ function normalizeElement(
   }
 
   const type = value.type as PokeElementType
-  const width = number(value.width, 80, 1, stageWidth * 3)
-  const height = number(value.height, 44, 1, stageHeight * 3)
-  const result: PokeElement = {
+  const legacyInitial = normalizeState(
+    {
+      ...value,
+      stateId: '0',
+      fill: color(value.fill, type === 'text' ? '#202735' : '#dfe6f2'),
+    },
+    '0',
+    stageWidth,
+    stageHeight,
+  )
+  const rawStates = Array.isArray(value.states) ? value.states : []
+  const seenStates = new Set<string>()
+  const states = rawStates.slice(0, 3).flatMap((rawState, stateIndex) => {
+    if (!isRecord(rawState)) return []
+    const state = normalizeState(rawState, String(stateIndex), stageWidth, stageHeight)
+    if (seenStates.has(state.stateId)) return []
+    seenStates.add(state.stateId)
+    return [state]
+  })
+
+  if (!seenStates.has('0')) states.unshift(legacyInitial)
+  states.sort((left, right) => {
+    if (left.stateId === '0') return -1
+    if (right.stateId === '0') return 1
+    return Number(left.stateId) - Number(right.stateId)
+  })
+
+  return {
     id: text(value.id, `element-${index}`, 80),
     name: text(value.name, `Element ${index + 1}`, 100),
     type,
-    x: number(value.x, 0, -stageWidth * 2, stageWidth * 3),
-    y: number(value.y, 0, -stageHeight * 2, stageHeight * 3),
-    width,
-    height,
-    fill: color(value.fill, type === 'text' ? '#202735' : '#dfe6f2'),
-    radius: number(value.radius, type === 'circle' ? 50 : 0, 0, 999),
-    opacity: number(value.opacity, 100, 0, 100),
+    states: states.slice(0, 3),
   }
+}
 
-  if (typeof value.text === 'string') {
-    result.text = value.text.slice(0, 280)
+function normalizePageAction(
+  value: unknown,
+  pageIds: Set<string>,
+): PokePageAction | null {
+  if (!isRecord(value)) return null
+  const targetPageId = text(value.targetPageId, '', 80)
+  if (!pageIds.has(targetPageId)) return null
+  return {
+    targetPageId,
+    effect: normalizeEffect(value.effect),
+    startTime: number(value.startTime, 0, 0, 5),
+    duration: number(value.duration ?? value.endTime, 0.35, 0.05, 3),
+    easing: normalizeEasing(value.easing),
   }
-  return result
 }
 
 export function normalizePokePrototype(value: unknown): PokePrototype | null {
-  if (!isRecord(value) || value.version !== POKE_PREVIEW_VERSION) return null
+  if (!isRecord(value) || (value.version !== 1 && value.version !== 2)) return null
 
   const rawStage = isRecord(value.stage) ? value.stage : {}
   const stageWidth = number(rawStage.width, 280, 240, 1024)
   const stageHeight = number(rawStage.height, 522, 360, 1366)
   if (!Array.isArray(value.pages) || value.pages.length === 0) return null
 
-  const seenPageIds = new Set<string>()
+  const pageIds = new Set<string>()
   const pages = value.pages.slice(0, 12).flatMap((rawPage, pageIndex) => {
     if (!isRecord(rawPage)) return []
     let id = text(rawPage.id, `page-${pageIndex}`, 80)
-    if (seenPageIds.has(id)) id = `${id}-${pageIndex}`
-    seenPageIds.add(id)
+    if (pageIds.has(id)) id = `${id}-${pageIndex}`
+    pageIds.add(id)
     const rawElements = Array.isArray(rawPage.elements) ? rawPage.elements : []
-    const seenElementIds = new Set<string>()
+    const seenElements = new Set<string>()
     const elements = rawElements.slice(0, 180).flatMap((rawElement, elementIndex) => {
       const element = normalizeElement(rawElement, elementIndex, stageWidth, stageHeight)
-      if (!element || seenElementIds.has(element.id)) return []
-      seenElementIds.add(element.id)
+      if (!element || seenElements.has(element.id)) return []
+      seenElements.add(element.id)
       return [element]
     })
     return [
@@ -210,7 +290,7 @@ export function normalizePokePrototype(value: unknown): PokePrototype | null {
   const tabs = rawTabs.slice(0, 5).flatMap((rawTab, tabIndex): PokeTab[] => {
     if (!isRecord(rawTab)) return []
     const pageId =
-      typeof rawTab.pageId === 'string' && seenPageIds.has(rawTab.pageId)
+      typeof rawTab.pageId === 'string' && pageIds.has(rawTab.pageId)
         ? rawTab.pageId
         : null
     return [
@@ -223,32 +303,65 @@ export function normalizePokePrototype(value: unknown): PokePrototype | null {
     ]
   })
 
-  const elementIds = new Set(pages.flatMap((page) => page.elements.map((item) => item.id)))
+  const elements = pages.flatMap((page) => page.elements)
+  const elementMap = new Map(elements.map((element) => [element.id, element]))
+  const elementPage = new Map(
+    pages.flatMap((page) => page.elements.map((element) => [element.id, page.id] as const)),
+  )
   const rawInteractions = Array.isArray(value.interactions) ? value.interactions : []
   const interactions = rawInteractions.slice(0, 180).flatMap((rawEvent): PokeInteraction[] => {
     if (!isRecord(rawEvent)) return []
     const sourceId = text(rawEvent.sourceId, '', 80)
-    const targetPageId = text(rawEvent.targetPageId, '', 80)
-    if (!elementIds.has(sourceId) || !seenPageIds.has(targetPageId)) return []
+    const source = elementMap.get(sourceId)
+    if (!source) return []
+    const sourceStateCandidate = text(rawEvent.sourceState, '0', 20)
+    const sourceState = source.states.some((state) => state.stateId === sourceStateCandidate)
+      ? sourceStateCandidate
+      : '0'
     const trigger = triggers.has(rawEvent.trigger as PokeTrigger)
       ? (rawEvent.trigger as PokeTrigger)
       : 'click'
-    const effect = effects.has(rawEvent.effect as PokeTransitionEffect)
-      ? (rawEvent.effect as PokeTransitionEffect)
-      : 'push-left'
-    const easing = easings.has(rawEvent.easing as PokeEasing)
-      ? (rawEvent.easing as PokeEasing)
-      : 'ease-out'
-    return [
-      {
-        sourceId,
-        targetPageId,
-        trigger,
-        effect,
-        easing,
-        duration: number(rawEvent.duration, 0.35, 0.08, 2.4),
+
+    if (value.version === 1 || 'targetPageId' in rawEvent) {
+      const legacyPageAction = normalizePageAction(
+        { ...rawEvent, startTime: 0, duration: rawEvent.duration },
+        pageIds,
+      )
+      return legacyPageAction
+        ? [{ sourceId, sourceState, trigger, elementActions: [], pageAction: legacyPageAction }]
+        : []
+    }
+
+    const rawElementActions = Array.isArray(rawEvent.elementActions)
+      ? rawEvent.elementActions
+      : []
+    const elementActions = rawElementActions.slice(0, 32).flatMap(
+      (rawAction): PokeElementAction[] => {
+        if (!isRecord(rawAction)) return []
+        const targetId = text(rawAction.targetId, '', 80)
+        const target = elementMap.get(targetId)
+        const targetState = text(rawAction.targetState, '0', 20)
+        if (
+          !target ||
+          elementPage.get(targetId) !== elementPage.get(sourceId) ||
+          !target.states.some((state) => state.stateId === targetState)
+        ) {
+          return []
+        }
+        return [
+          {
+            targetId,
+            targetState,
+            startTime: number(rawAction.startTime, 0, 0, 5),
+            duration: number(rawAction.duration, 0.3, 0.05, 3),
+            easing: normalizeEasing(rawAction.easing),
+          },
+        ]
       },
-    ]
+    )
+    const pageAction = normalizePageAction(rawEvent.pageAction, pageIds)
+    if (!elementActions.length && !pageAction) return []
+    return [{ sourceId, sourceState, trigger, elementActions, pageAction }]
   })
 
   return {
@@ -348,4 +461,13 @@ export function createPokeRenderUrl(
   const url = new URL(POKE_RENDER_PATH, origin)
   url.searchParams.set('data', encoded)
   return url.toString()
+}
+
+export function createPokePayloadId(encoded: string) {
+  let hash = 2166136261
+  for (let index = 0; index < encoded.length; index += 1) {
+    hash ^= encoded.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(16).padStart(8, '0').toUpperCase()
 }

@@ -995,7 +995,12 @@ describe('portfolio acceptance contracts', () => {
 
     expect(source).toContain("new URL('/poke/render', 'https://me.azlar.cc')")
     expect(source).toContain("new CompressionStream('gzip')")
-    expect(source).toContain('interactionEvents[targetId] = {')
+    expect(source).toContain("version:2")
+    expect(source).toContain('elementActions:[]')
+    expect(source).toContain('pageAction:null')
+    expect(source).toContain('data-element-state=')
+    expect(source).toContain('本页面元素')
+    expect(source).toContain("message.type === 'poke:qr-ready'")
     expect(source).toContain('data-event-type="swipeLeft"')
     expect(source).toContain('data-event-type="touch"')
     expect(source).toContain("item.type === 'status-bar'")
@@ -1004,6 +1009,7 @@ describe('portfolio acceptance contracts', () => {
     expect(source).toContain('data-tab-prop="pageId"')
     expect(source).toContain('id="previewQrFrame"')
     expect(source).toContain('id="previewLiveFrame"')
+    expect(source).not.toContain('id="previewUrl"')
     expect(source).not.toContain('id="previewCta"')
   })
 

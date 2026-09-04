@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  createPokePayloadId,
   createPokeRenderUrl,
   decodePokePrototype,
   encodePokePrototype,
@@ -8,7 +9,7 @@ import {
 } from '../src/features/poke/protocol'
 
 const project: PokePrototype = {
-  version: 1,
+  version: 2,
   title: 'Interaction test',
   stage: { width: 280, height: 522 },
   statusBar: { color: '#111827', background: '#ffffff' },
@@ -31,14 +32,30 @@ const project: PokePrototype = {
           id: 'cta',
           name: 'Primary Button',
           type: 'rect',
-          x: 24,
-          y: 252,
-          width: 232,
-          height: 48,
-          fill: '#2e67dd',
-          radius: 16,
-          opacity: 100,
-          text: 'Open prototype →',
+          states: [
+            {
+              stateId: '0',
+              x: 24,
+              y: 252,
+              width: 232,
+              height: 48,
+              fill: '#2e67dd',
+              radius: 16,
+              opacity: 100,
+              text: 'Open prototype →',
+            },
+            {
+              stateId: '1',
+              x: 34,
+              y: 252,
+              width: 212,
+              height: 48,
+              fill: '#6d5bd0',
+              radius: 24,
+              opacity: 55,
+              text: 'State changed',
+            },
+          ],
         },
       ],
     },
@@ -51,14 +68,19 @@ const project: PokePrototype = {
           id: 'back',
           name: 'Back',
           type: 'text',
-          x: 24,
-          y: 48,
-          width: 80,
-          height: 24,
-          fill: '#2e67dd',
-          radius: 0,
-          opacity: 100,
-          text: '← Back',
+          states: [
+            {
+              stateId: '0',
+              x: 24,
+              y: 48,
+              width: 80,
+              height: 24,
+              fill: '#2e67dd',
+              radius: 0,
+              opacity: 100,
+              text: '← Back',
+            },
+          ],
         },
       ],
     },
@@ -66,11 +88,24 @@ const project: PokePrototype = {
   interactions: [
     {
       sourceId: 'cta',
+      sourceState: '0',
       trigger: 'swipeLeft',
-      targetPageId: 'details',
-      effect: 'modal',
-      easing: 'ease-in-out',
-      duration: 0.45,
+      elementActions: [
+        {
+          targetId: 'cta',
+          targetState: '1',
+          startTime: 0.1,
+          duration: 0.3,
+          easing: 'ease-out',
+        },
+      ],
+      pageAction: {
+        targetPageId: 'details',
+        effect: 'modal',
+        startTime: 0.55,
+        easing: 'ease-in-out',
+        duration: 0.45,
+      },
     },
   ],
 }
@@ -84,9 +119,9 @@ describe('Poke QR preview protocol', () => {
     expect(decoded).toEqual(project)
     expect(decoded.interactions[0]).toMatchObject({
       trigger: 'swipeLeft',
-      effect: 'modal',
-      easing: 'ease-in-out',
-      duration: 0.45,
+      sourceState: '0',
+      elementActions: [{ targetId: 'cta', targetState: '1' }],
+      pageAction: { effect: 'modal', easing: 'ease-in-out', duration: 0.45 },
     })
     expect(decoded.tabBar.tabs[1].pageId).toBe('details')
     expect(decoded.statusBar.color).toBe('#111827')
@@ -124,5 +159,40 @@ describe('Poke QR preview protocol', () => {
     expect(createPokeRenderUrl('g.abc_123')).toBe(
       'https://me.azlar.cc/poke/render?data=g.abc_123',
     )
+    expect(createPokePayloadId('g.abc_123')).toMatch(/^[A-F0-9]{8}$/)
+  })
+
+  it('migrates version 1 page-only links into the complete interaction model', () => {
+    const legacy = normalizePokePrototype({
+      ...project,
+      version: 1,
+      pages: project.pages.map((page) => ({
+        ...page,
+        elements: page.elements.map((element) => ({
+          id: element.id,
+          name: element.name,
+          type: element.type,
+          ...element.states[0],
+        })),
+      })),
+      interactions: [
+        {
+          sourceId: 'cta',
+          trigger: 'click',
+          targetPageId: 'details',
+          effect: 'fade',
+          easing: 'linear',
+          duration: 0.4,
+        },
+      ],
+    })
+
+    expect(legacy?.version).toBe(2)
+    expect(legacy?.pages[0].elements[0].states[0].stateId).toBe('0')
+    expect(legacy?.interactions[0]).toMatchObject({
+      sourceState: '0',
+      elementActions: [],
+      pageAction: { targetPageId: 'details', effect: 'fade', duration: 0.4 },
+    })
   })
 })

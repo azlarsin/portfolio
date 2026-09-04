@@ -134,6 +134,7 @@
   border: 0;
   appearance: none;
   text-align: left;
+  transition-property: left, top, width, height, background-color, color, border-radius, opacity;
   white-space: pre-line;
 }
 
@@ -143,7 +144,6 @@ button.poke-prototype-element {
 
 .poke-prototype-element.is-interactive {
   -webkit-tap-highlight-color: transparent;
-  transition: filter 120ms ease, transform 120ms ease;
 }
 
 .poke-prototype-element.is-interactive:active {
