@@ -8,6 +8,21 @@
   background: #111725;
 }
 
+html.poke-qr-document,
+html:has(.poke-qr-page) {
+  width: 100%;
+  min-width: 0;
+  background: #fff;
+}
+
+html.poke-qr-document body,
+html.poke-qr-document #root,
+html:has(.poke-qr-page) body,
+html:has(.poke-qr-page) #root {
+  width: 100%;
+  min-width: 0;
+}
+
 .poke-render-shell {
   position: fixed;
   display: grid;
@@ -352,7 +367,7 @@ button.poke-prototype-element {
 
 .poke-qr-page canvas {
   display: block;
-  width: min(224px, 78vw) !important;
+  width: min(188px, calc(100vw - 24px)) !important;
   height: auto !important;
   margin: 0 auto;
 }

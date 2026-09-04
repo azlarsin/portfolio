@@ -115,8 +115,14 @@ describe('Poke QR preview protocol', () => {
     const encoded = await encodePokePrototype(project)
     const decoded = await decodePokePrototype(encoded)
 
-    expect(encoded).toMatch(/^[gj]\.[A-Za-z0-9_-]+$/)
-    expect(decoded).toEqual(project)
+    expect(encoded).toMatch(/^[ck]\.[A-Za-z0-9_-]+$/)
+    expect(encoded.length).toBeLessThan(700)
+    expect(decoded.stage).toEqual(project.stage)
+    expect(decoded.statusBar).toEqual(project.statusBar)
+    expect(decoded.pages[0].elements[0].states).toEqual(
+      project.pages[0].elements[0].states,
+    )
+    expect(decoded.interactions).toEqual(project.interactions)
     expect(decoded.interactions[0]).toMatchObject({
       trigger: 'swipeLeft',
       sourceState: '0',

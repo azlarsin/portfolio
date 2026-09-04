@@ -502,13 +502,26 @@ function PokeQrPreview({ encoded, payloadId }: { encoded: string; payloadId: str
   const [error, setError] = useState(false)
   const target = useMemo(() => createPokeRenderUrl(encoded), [encoded])
 
+  useLayoutEffect(() => {
+    document.documentElement.classList.add('poke-qr-document')
+    return () => document.documentElement.classList.remove('poke-qr-document')
+  }, [])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || !encoded) return
     setError(false)
+    try {
+      canvas.dataset.qrVersion = String(
+        QRCode.create(target, { errorCorrectionLevel: 'L' }).version,
+      )
+    } catch {
+      setError(true)
+      return
+    }
     void QRCode.toCanvas(canvas, target, {
-      width: 224,
-      margin: 2,
+      width: 188,
+      margin: 4,
       errorCorrectionLevel: 'L',
       color: { dark: '#172035', light: '#ffffff' },
     })
