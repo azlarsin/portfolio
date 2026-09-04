@@ -28,6 +28,7 @@ type AgentTab = "run" | "knowledge" | "trace";
 interface AgentDemoOverlayProps {
   openRequest?: number;
   onOpenGuide?: () => void;
+  onRunningChange?: (running: boolean) => void;
 }
 
 const AGENT_STEP_DELAY_MS = 500;
@@ -318,6 +319,7 @@ function StepStatus({
 export default function AgentDemoOverlay({
   openRequest = 0,
   onOpenGuide,
+  onRunningChange,
 }: AgentDemoOverlayProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<AgentTab>("run");
@@ -334,6 +336,15 @@ export default function AgentDemoOverlay({
   const runSequence = useRef(0);
   const pacedPlaybackRef = useRef(true);
   const commandInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    onRunningChange?.(running);
+  }, [onRunningChange, running]);
+
+  useEffect(
+    () => () => onRunningChange?.(false),
+    [onRunningChange],
+  );
 
   const knowledgeStats = useMemo(
     () => [

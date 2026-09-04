@@ -10,6 +10,7 @@ import {
  * refresh or a copied URL has all the state needed to restore the route stack.
  */
 export const STATIC_ROUTE_QUERY_PARAM = "route";
+const PRESERVED_SHELL_QUERY_PARAMS = ["embed", "agent_demo"] as const;
 
 export function isStaticDemoBuild() {
   return import.meta.env.VITE_STATIC_DEMO === "1";
@@ -40,11 +41,10 @@ export function getRouteLocationFromBrowserUrl(url = currentUrl()) {
   const routePath = getRoutePathFromBrowserUrl(url);
   const params = new URLSearchParams(url.searchParams);
   params.delete(STATIC_ROUTE_QUERY_PARAM);
+  PRESERVED_SHELL_QUERY_PARAMS.forEach((key) => params.delete(key));
   const search = params.toString();
   return `${routePath}${search ? `?${search}` : ""}`;
 }
-
-const PRESERVED_SHELL_QUERY_PARAMS = ["embed", "agent_demo"] as const;
 
 function mergeShellQueryParams(
   targetParams: URLSearchParams,
