@@ -532,26 +532,75 @@ export default function DemoBusinessSurface({
     );
   }
 
+  if (route.id === "product-settings") {
+    return (
+      <div className="demo-business-surface">
+        <div className="demo-section-heading">
+          <div>
+            <span>SETTINGS</span>
+            <h3>Product {route.params.productId} 设置</h3>
+          </div>
+          <span className="demo-safe-badge">READ ONLY</span>
+        </div>
+        <div className="demo-settings-list">
+          {[
+            ["路由行为", "由静态分析生成可执行清单"],
+            ["查询缓存", "返回页面时恢复筛选上下文"],
+            ["操作确认", "写操作必须由用户再次确认"],
+          ].map(([title, description]) => (
+            <div key={title}>
+              <span><strong>{title}</strong><small>{description}</small></span>
+              <span>ON</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const parameterEntries = Object.entries(route.params);
+  const behaviorNodeIndex = behaviorManifest.routeInstances.findIndex(
+    (node) => node.path === route.path,
+  );
   return (
-    <div className="demo-business-surface">
+    <div className="demo-business-surface" data-behavior-route={route.id}>
       <div className="demo-section-heading">
         <div>
-          <span>SETTINGS</span>
-          <h3>Product {route.params.productId} 设置</h3>
+          <span>{route.eyebrow.toUpperCase()}</span>
+          <h3>{route.title}</h3>
         </div>
-        <span className="demo-safe-badge">READ ONLY</span>
+        <span className="demo-safe-badge">BEHAVIOR NODE</span>
+      </div>
+      <div className="demo-kpi-grid">
+        <article>
+          <span>GRAPH NODE</span>
+          <strong>{String(behaviorNodeIndex + 1).padStart(2, "0")}</strong>
+          <p>{route.id}</p>
+        </article>
+        <article>
+          <span>INPUTS</span>
+          <strong>{String(parameterEntries.length).padStart(2, "0")}</strong>
+          <p>{parameterEntries.map(([key]) => key).join(" · ") || "none"}</p>
+        </article>
+        <article>
+          <span>OUTGOING</span>
+          <strong>{String(route.childPaths.length).padStart(2, "0")}</strong>
+          <p>{route.childPaths.length ? "选择下方行为分支" : "terminal state"}</p>
+        </article>
       </div>
       <div className="demo-settings-list">
-        {[
-          ["路由行为", "由静态分析生成可执行清单"],
-          ["查询缓存", "返回页面时恢复筛选上下文"],
-          ["操作确认", "写操作必须由用户再次确认"],
-        ].map(([title, description]) => (
-          <div key={title}>
-            <span><strong>{title}</strong><small>{description}</small></span>
-            <span>ON</span>
-          </div>
-        ))}
+        <div>
+          <span><strong>前置状态</strong><small>{route.parentPath || "ROOT"}</small></span>
+          <span>READY</span>
+        </div>
+        <div>
+          <span><strong>当前可验证状态</strong><small>{route.path}</small></span>
+          <span>ACTIVE</span>
+        </div>
+        <div>
+          <span><strong>行为合同</strong><small>navigate · back · inspect</small></span>
+          <span>SAFE</span>
+        </div>
       </div>
     </div>
   );

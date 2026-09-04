@@ -46,6 +46,7 @@ interface PresenterProps {
   onDidLeave: (surfaceId: string) => void;
   onSelect: () => void;
   onPush: () => void;
+  onNavigateRoute: (path: string) => void;
 }
 
 export function getPresenterOverviewInsets(
@@ -97,6 +98,7 @@ export default function Presenter({
   onDidLeave,
   onSelect,
   onPush,
+  onNavigateRoute,
 }: PresenterProps) {
   const [entered, setEntered] = useState(index === 0);
   const didLeaveRef = useRef(false);
@@ -302,6 +304,36 @@ export default function Presenter({
             presenter.push()
           </button>
         </div>
+        {route?.childPaths.length ? (
+          <nav
+            className="route-branch-actions"
+            aria-label={`${displayTitle} 的行为图出口`}
+          >
+            <div>
+              <span>BEHAVIOR GRAPH</span>
+              <strong>{route.childPaths.length} 个可达分支</strong>
+            </div>
+            <div className="route-branch-action-list">
+              {route.childPaths.map((path) => {
+                const branch = resolveRoute(path);
+                return (
+                  <button
+                    type="button"
+                    key={path}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onNavigateRoute(path);
+                    }}
+                  >
+                    <span>{branch?.eyebrow || "Route"}</span>
+                    <strong>{branch?.title || path}</strong>
+                    <code>{path}</code>
+                  </button>
+                );
+              })}
+            </div>
+          </nav>
+        ) : null}
         {route ? (
           <DemoBusinessSurface
             route={route}

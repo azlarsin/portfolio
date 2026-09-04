@@ -12,6 +12,25 @@ import {
   useDesktopGuidePosition,
 } from '../components/layout/Sidebar'
 
+interface FullscreenDocument extends Document {
+  webkitExitFullscreen?: () => Promise<void> | void
+  webkitFullscreenElement?: Element | null
+  webkitFullscreenEnabled?: boolean
+}
+
+interface FullscreenElement extends HTMLElement {
+  webkitRequestFullscreen?: () => Promise<void> | void
+}
+
+function activeFullscreenElement() {
+  const fullscreenDocument = document as FullscreenDocument
+  return (
+    document.fullscreenElement ||
+    fullscreenDocument.webkitFullscreenElement ||
+    null
+  )
+}
+
 function playerExperience(route: ResolvedRoute) {
   return getDemoExperience(new URLSearchParams(route.search).get('experience'))
 }
@@ -109,6 +128,9 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
   const [loaded, setLoaded] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [fullscreenSupported, setFullscreenSupported] = useState(false)
+  const playerRef = useRef<HTMLElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstLinkRef = useRef<HTMLAnchorElement>(null)
   const wasDrawerOpen = useRef(false)
@@ -149,6 +171,28 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
     return () => window.clearTimeout(timeout)
   }, [attempt, experience?.source, loaded, timedOut])
 
+  useEffect(() => {
+    const fullscreenDocument = document as FullscreenDocument
+    const syncFullscreenState = () => {
+      setFullscreen(activeFullscreenElement() === playerRef.current)
+    }
+    setFullscreenSupported(
+      Boolean(
+        document.fullscreenEnabled ||
+          fullscreenDocument.webkitFullscreenEnabled ||
+          playerRef.current?.requestFullscreen ||
+          (playerRef.current as FullscreenElement | null)?.webkitRequestFullscreen,
+      ),
+    )
+    syncFullscreenState()
+    document.addEventListener('fullscreenchange', syncFullscreenState)
+    document.addEventListener('webkitfullscreenchange', syncFullscreenState)
+    return () => {
+      document.removeEventListener('fullscreenchange', syncFullscreenState)
+      document.removeEventListener('webkitfullscreenchange', syncFullscreenState)
+    }
+  }, [])
+
   if (!experience?.source) return <UnavailableDemo route={route} />
 
   const retry = () => {
@@ -158,9 +202,31 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
   }
 
   const title = experienceLabel(experience, language)
+  const fullscreenLabel = fullscreen
+    ? copy.demo.player.exitFullscreen
+    : copy.demo.player.enterFullscreen
+  const toggleFullscreen = async () => {
+    const fullscreenDocument = document as FullscreenDocument
+    const player = playerRef.current as FullscreenElement | null
+    try {
+      if (activeFullscreenElement()) {
+        const exit =
+          document.exitFullscreen?.bind(document) ||
+          fullscreenDocument.webkitExitFullscreen?.bind(fullscreenDocument)
+        await exit?.()
+        return
+      }
+      const request =
+        player?.requestFullscreen?.bind(player) ||
+        player?.webkitRequestFullscreen?.bind(player)
+      await request?.()
+    } catch {
+      setFullscreen(false)
+    }
+  }
 
   return (
-    <main className="demo-player-page">
+    <main ref={playerRef} className="demo-player-page">
       <div className="demo-player-content" inert={drawerOpen ? true : undefined}>
         <section className="demo-player-stage">
           <iframe
@@ -207,6 +273,19 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
             <strong>{title}</strong>
           </div>
           <div className="demo-player-actions">
+            <button
+              type="button"
+              className="demo-player-fullscreen"
+              aria-label={fullscreenLabel}
+              aria-pressed={fullscreen}
+              disabled={!fullscreenSupported}
+              onClick={() => void toggleFullscreen()}
+            >
+              <span className="demo-player-fullscreen-icon" aria-hidden="true">
+                ⛶
+              </span>
+              <span className="demo-player-fullscreen-label">{fullscreenLabel}</span>
+            </button>
             <button
               type="button"
               className="demo-guide-toggle"
