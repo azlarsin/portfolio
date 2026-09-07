@@ -382,7 +382,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Solution design and team collaboration',
         paragraphs: [
           'As the internal open-source lead, I designed the overall plan and module architecture, then led three engineers in developing the modules.',
-          'I directly handled code migration, BJH_UE modularization, selected plugins, and multi-instance fixes. I also wrote the plan and code to replace Baijiahao\'s production article editor with the internally open-sourced editor. The team developed the Driver, builds, and other plugins.',
+          'I directly handled code migration, BJH_UE modularization, selected plugins, and multi-instance fixes. I also wrote the plan and code to replace Baijiahao\'s production article editor with the internally open-sourced editor.',
         ],
         phase: 'Team delivery',
       },
