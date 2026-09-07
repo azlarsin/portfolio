@@ -73,7 +73,8 @@ export const profileEn: ProfileTranslation = {
           title: 'Baijiahao editor',
           bullets: [
             'Contributed to the long-term evolution of Baijiahao’s article editor, building business plugins on UEditor 1.4.3 and addressing selection, paste, toolbar-state, and multi-instance rich-text edge cases.',
-            'Helped turn years of customized UEditor code into an internal reusable package by modularizing the core, cleaning dependencies and plugin boundaries, and supporting both React imports and browser-script integration.',
+            'Led the editor\'s internal open-source initiative, designed the overall plan and architecture modules, and led three engineers in developing the modules with support for React imports and browser-script integration.',
+            'Wrote the plan and code to replace Baijiahao\'s production article editor with the internally open-sourced editor.',
           ],
         },
       ],

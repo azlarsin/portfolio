@@ -303,20 +303,22 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     shortTitle: 'Baijiahao Editor Evolution',
     eyebrow: 'PRODUCTION SYSTEM',
     thesis:
-      'At Baidu, I contributed to the long-term evolution of the Baijiahao article editor: first by developing business plugins and resolving rich-text edge cases on a heavily customized UEditor 1.4.3 baseline, then by helping reorganize that accumulated code into an internal reusable editor package with clearer core, driver, plugin, and content-block boundaries.',
+      'Baijiahao\'s article editor was built on a heavily customized UEditor 1.4.3 baseline. As the internal open-source lead, I designed the overall plan and module architecture, then led three engineers in migrating, cleaning up, and modularizing the legacy code into a reusable package for React and browser-script integration.',
     period: '2019 · Baidu production project',
-    role: 'Legacy cleanup · Editor core · Plugin model · Engineering',
+    role: 'Internal open-source lead · Architecture design · Led three engineers',
     status: 'Production experience · Public details sanitized',
     technologies: ['JavaScript', 'React', 'UEditor', 'Rich Text', 'Webpack', 'Browser SDK'],
     impact: [
+      'Designed the overall internal open-source plan and module boundaries, then led three engineers in developing the modules.',
       'Sustained delivery on a mature article editor while resolving selection, paste, toolbar-state, and multi-instance edge cases.',
       'Separated the customized BJH_UE core from product dependencies and tightened plugin and content-block contracts.',
       'Produced both React-import and browser-script forms so the editor could be reused across internal integration contexts.',
+      'Wrote the plan and code to replace Baijiahao\'s production article editor with the internally open-sourced editor.',
     ],
-    scope: ['UEditor 1.4.3 customization', 'Business rich-text plugins', 'Core isolation and dependency cleanup', 'Driver, plugin, and content-block contracts', 'React and browser-script builds'],
+    scope: ['Internal open-source plan and architecture', 'UEditor 1.4.3 customization', 'Business rich-text plugins', 'Core isolation and dependency cleanup', 'Driver, plugin, and content-block contracts', 'React and browser-script builds', 'Production editor replacement plan and code'],
     facts: [
       { label: 'Type', value: 'Production rich-text editor' },
-      { label: 'Role', value: 'Core development · Refactoring · Package boundaries' },
+      { label: 'Role', value: 'Internal open-source lead · Architecture · Led three engineers' },
       { label: 'Baseline', value: 'Deeply customized UEditor 1.4.3' },
       { label: 'Output', value: 'React import · Browser script · Plugin build' },
     ],
@@ -377,15 +379,16 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       },
       {
         id: 'responsibility-boundary',
-        title: 'Role and collaboration boundary',
+        title: 'Solution design and team collaboration',
         paragraphs: [
-          'I contributed core implementation, migration, dependency cleanup, and packaging within a larger team effort. This public case avoids claiming sole ownership of the product or revealing internal screens and business data.',
+          'As the internal open-source lead, I designed the overall plan and module architecture, then led three engineers in developing the modules.',
+          'I directly handled code migration, BJH_UE modularization, selected plugins, and multi-instance fixes. I also wrote the plan and code to replace Baijiahao\'s production article editor with the internally open-sourced editor. The team developed the Driver, builds, and other plugins.',
         ],
         phase: 'Team delivery',
       },
     ],
     provenanceNote:
-      'This case is based on production work at Baidu. Names of public technologies are retained; internal screens, data, product metrics, and proprietary implementation details are omitted.',
+      'This case draws on my project experience, code, and engineering documents, with public details sanitized. Internal open source refers to reuse and collaboration within Baidu, not a public GitHub project.',
   },
   'layered-agent': {
     title: 'Layered Route × Verified Agent',
