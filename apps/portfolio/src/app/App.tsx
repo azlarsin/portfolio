@@ -26,11 +26,11 @@ import {
 } from './router'
 import { useDocumentMeta } from './useDocumentMeta'
 import { useLanguage } from '../i18n/LanguageContext'
-import { getLocalizedRouteMeta } from '../i18n/routeMeta'
 import { getLocalizedProject } from '../data/localized'
 import { trackGoogleAnalyticsPageView } from './analytics'
+import { getPortfolioSeo } from './seo'
 
-function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
+export function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
   const { language } = useLanguage()
   const localized = (project: Parameters<typeof getLocalizedProject>[0]) =>
     getLocalizedProject(project, language)
@@ -110,7 +110,7 @@ function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute> }) {
 export function App() {
   const route = useCurrentRoute()
   const { language } = useLanguage()
-  useDocumentMeta(getLocalizedRouteMeta(route, language))
+  useDocumentMeta(getPortfolioSeo(route, language))
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual'

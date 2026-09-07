@@ -24,9 +24,10 @@ const mimeTypes = {
   '.webp': 'image/webp',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
+  '.xml': 'application/xml; charset=utf-8',
 }
 
-const compressibleExtensions = new Set(['.css', '.html', '.js', '.json', '.svg', '.txt'])
+const compressibleExtensions = new Set(['.css', '.html', '.js', '.json', '.svg', '.txt', '.xml'])
 
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error(`Invalid portfolio port: ${port}`)
@@ -47,14 +48,24 @@ function getFilePath(requestUrl) {
   }
 
   if (existsSync(candidate) && statSync(candidate).isFile()) {
-    return candidate
+    return { filePath: candidate, statusCode: 200 }
+  }
+
+  const directoryIndex = resolve(candidate, 'index.html')
+  if (
+    existsSync(candidate) &&
+    statSync(candidate).isDirectory() &&
+    existsSync(directoryIndex) &&
+    statSync(directoryIndex).isFile()
+  ) {
+    return { filePath: directoryIndex, statusCode: 200 }
   }
 
   if (relativePath.startsWith('assets/')) {
     return undefined
   }
 
-  return resolve(distRoot, 'index.html')
+  return { filePath: resolve(distRoot, '404.html'), statusCode: 404 }
 }
 
 function parseRange(rangeHeader, size) {
@@ -99,29 +110,30 @@ const server = createServer((request, response) => {
     return
   }
 
-  let filePath
+  let fileResult
   try {
-    filePath = getFilePath(request.url)
+    fileResult = getFilePath(request.url)
   } catch {
     response.writeHead(400).end('Bad Request')
     return
   }
 
-  if (filePath === null) {
+  if (fileResult === null) {
     response.writeHead(403).end('Forbidden')
     return
   }
 
-  if (!filePath) {
+  if (!fileResult) {
     response.writeHead(404).end('Not Found')
     return
   }
 
+  const { filePath, statusCode } = fileResult
   const stats = statSync(filePath)
   const extension = extname(filePath).toLowerCase()
   const requestPath = new URL(request.url, 'http://portfolio.local').pathname
   const isHashedAsset = requestPath.startsWith('/assets/')
-  const range = parseRange(request.headers.range, stats.size)
+  const range = statusCode === 200 ? parseRange(request.headers.range, stats.size) : null
   const commonHeaders = {
     'Accept-Ranges': 'bytes',
     'Cache-Control': isHashedAsset
@@ -150,7 +162,7 @@ const server = createServer((request, response) => {
   const acceptsGzip = /\bgzip\b/.test(request.headers['accept-encoding'] || '')
   const shouldGzip = acceptsGzip && stats.size > 1024 && compressibleExtensions.has(extension)
 
-  response.writeHead(200, {
+  response.writeHead(statusCode, {
     ...commonHeaders,
     ...(shouldGzip
       ? { 'Content-Encoding': 'gzip', Vary: 'Accept-Encoding' }

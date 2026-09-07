@@ -312,6 +312,10 @@ test('core generated pages preserve accessible viewport and static search/discov
   assert.match(notFoundHtml, /<link rel="canonical" href="https:\/\/blog\.azlar\.cc\/404\.html"/u, '404 canonical must point to the generated file');
   expectedHtml('rss.xml', 'RSS feed must be generated');
   expectedHtml('sitemap.xml', 'sitemap must be generated');
+  const robots = expectedHtml('robots.txt', 'robots.txt must be generated');
+  assert.match(robots, /^User-agent: \*$/mu, 'robots.txt must address all crawlers');
+  assert.match(robots, /^Allow: \/$/mu, 'robots.txt must explicitly allow public crawling');
+  assert.match(robots, /^Sitemap: https:\/\/blog\.azlar\.cc\/sitemap\.xml$/mu, 'robots.txt must advertise the canonical sitemap');
   expectedHtml('pagefind/pagefind-entry.json', 'Pagefind index must be generated');
   assert.equal(read(output('CNAME')).trim(), 'blog.azlar.cc', 'build artifact must preserve the Blog CNAME');
   assert.ok(existsSync(output('.nojekyll')), 'build artifact must opt out of Jekyll');

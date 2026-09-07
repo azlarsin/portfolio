@@ -38,6 +38,10 @@ import {
 import { resolvePreferredLanguage } from '../src/i18n/LanguageContext'
 import { siteCopy } from '../src/i18n/copy'
 import { getLocalizedRouteMeta } from '../src/i18n/routeMeta'
+import {
+  getPortfolioSeo,
+  isIndexableRoute,
+} from '../src/app/seo'
 
 function collectSourceFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -158,6 +162,35 @@ describe('portfolio acceptance contracts', () => {
     const pokeRenderRoute = resolveRoute('/poke/render?data=j.example')
     expect(pokeRenderRoute.route).toBe(ROUTES.POKE_RENDER)
     expect(pokeRenderRoute.search).toBe('?data=j.example')
+  })
+
+  it('1a. maps routes to canonical, social, structured, and indexability metadata', () => {
+    const caseSeo = getPortfolioSeo(resolveRoute('/work/meican-platform'), 'zh')
+    const englishSeo = getPortfolioSeo(resolveRoute('/experience'), 'en')
+    const demoRoute = resolveRoute('/demo?experience=layered-route-agent')
+
+    expect(caseSeo).toMatchObject({
+      canonicalUrl: 'https://me.azlar.cc/work/meican-platform/',
+      imageUrl: null,
+      locale: 'zh_CN',
+      openGraphType: 'article',
+      twitterCard: 'summary',
+    })
+    expect(getPortfolioSeo(resolveRoute('/')).imageUrl).toBe(
+      'https://me.azlar.cc/og.png',
+    )
+    expect(caseSeo.robots).toContain('index,follow')
+    expect(caseSeo.jsonLd).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'CreativeWork',
+      url: caseSeo.canonicalUrl,
+    })
+    expect(englishSeo.locale).toBe('en_US')
+    expect(englishSeo.title).toBe('Experience | Chen Cheng Portfolio')
+    expect(isIndexableRoute(demoRoute)).toBe(false)
+    expect(getPortfolioSeo(demoRoute).robots).toBe('noindex,follow')
+    expect(isIndexableRoute(resolveRoute('/poke/render'))).toBe(false)
+    expect(isIndexableRoute(resolveRoute('/not-found'))).toBe(false)
   })
 
   it('1a. resolves player experiences through the finite trusted registry only', () => {
@@ -906,8 +939,17 @@ describe('portfolio acceptance contracts', () => {
     )
   })
 
-  it('keeps the public phone number in the shared contact profile', () => {
-    expect(profile.contact.phone).toBe('+86 176 1171 2655')
+  it('does not render the phone number or email address in the site footer', () => {
+    const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
+    const footer = readFileSync(
+      `${sourceRoot}/components/layout/SiteFooter.tsx`,
+      'utf8',
+    )
+
+    expect(footer).not.toContain('profile.contact.phone')
+    expect(footer).not.toContain('profile.contact.email')
+    expect(footer).not.toContain('mailto:')
+    expect(footer).not.toContain('tel:')
   })
 
   it('supports complete English content and a persistent language preference', () => {
