@@ -5,8 +5,6 @@ import { fileURLToPath } from "node:url";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const index = resolve(root, "apps/portfolio/dist/index.html");
 const fallback = resolve(root, "apps/portfolio/dist/404.html");
-const pokeRenderDirectory = resolve(root, "apps/portfolio/dist/poke/render");
-const pokeRenderIndex = resolve(pokeRenderDirectory, "index.html");
 
 try {
   await stat(index);
