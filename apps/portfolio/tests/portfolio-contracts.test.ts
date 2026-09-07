@@ -1031,7 +1031,26 @@ describe('portfolio acceptance contracts', () => {
     expect(source).not.toMatch(/\.selected::(?:before|after)/)
   })
 
-  it('12a. serializes the edited Poke document into a QR preview with real runtime controls', () => {
+  it('12a. snaps drag and resize geometry to element and canvas anchors', () => {
+    const assetPath = fileURLToPath(
+      new URL('../src/assets/poke-editor-demo.html', import.meta.url),
+    )
+    const source = readFileSync(assetPath, 'utf8')
+
+    expect(source).toContain('const SNAP_DISTANCE = 8')
+    expect(source).toContain('function createSnapTargets(movingItems)')
+    expect(source).toContain('function bestAxisSnap(')
+    expect(source).toContain('function snapBoundsForMove(')
+    expect(source).toContain('function snapBoundsForResize(')
+    expect(source).toContain('function renderSnapGuides()')
+    expect(source).toContain("line.className = 'snap-guide ' + guide.axis")
+    expect(source).toContain("marker.className = 'snap-distance-marker ' + distance.axis")
+    expect(source).toContain('gesture.snapResult = snapBoundsForMove(')
+    expect(source).toContain('gesture.snapResult = snapBoundsForResize(')
+    expect(source).toContain("targets.push(snapRect({id:'__canvas__'")
+  })
+
+  it('12b. serializes the edited Poke document into a QR preview with real runtime controls', () => {
     const assetPath = fileURLToPath(
       new URL('../src/assets/poke-editor-demo.html', import.meta.url),
     )

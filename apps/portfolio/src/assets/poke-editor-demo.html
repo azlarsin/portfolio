@@ -112,6 +112,18 @@
     .rotate-handle { position: absolute; top: -31px; left: calc(50% - 8px); width: 16px; height: 16px; padding: 0; border: 0; border-radius: 50%; background: radial-gradient(circle, #fff 0 3px, #2f79ed 3.5px 5px, transparent 5.5px); cursor: grab; pointer-events: auto; touch-action: none; }
     .rotate-handle::after { position: absolute; top: 13px; left: 7px; width: 1px; height: 12px; background: #2f79ed; content: ''; }
     .rotate-handle:active { cursor: grabbing; }
+    .snap-overlay { position: absolute; z-index: 58; overflow: visible; pointer-events: none; inset: 0; }
+    .snap-guide { position: absolute; background: #fc585d; box-shadow: 0 0 0 .35px rgba(255,255,255,.8); }
+    .snap-guide.horizontal { height: 1px; }
+    .snap-guide.vertical { width: 1px; }
+    .snap-distance-marker { position: absolute; display: flex; color: white; font: 700 7px/13px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .snap-distance-marker::before { position: absolute; background: #fc585d; content: ''; }
+    .snap-distance-marker span { position: relative; z-index: 1; min-width: 13px; height: 13px; margin: auto; padding: 0 3px; border-radius: 3px; background: #fc585d; text-align: center; }
+    .snap-distance-marker.horizontal { height: 15px; margin-top: -7px; border-right: 1px solid #fc585d; border-left: 1px solid #fc585d; align-items: center; }
+    .snap-distance-marker.horizontal::before { top: 7px; right: 0; left: 0; height: 1px; }
+    .snap-distance-marker.vertical { width: 15px; margin-left: -7px; border-top: 1px solid #fc585d; border-bottom: 1px solid #fc585d; justify-content: center; }
+    .snap-distance-marker.vertical::before { top: 0; bottom: 0; left: 7px; width: 1px; }
+    .snap-distance-marker.vertical span { position: absolute; top: 50%; left: 11px; transform: translateY(-50%); }
     .inspector-head { display: flex; min-height: 44px; align-items: center; gap: 9px; padding: 0 12px; border-bottom: 1px solid #d8dce1; background: #f9fafb; }
     .inspector-icon { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid #cdd2d9; border-radius: 5px; color: #617087; background: white; font-size: 9px; }
     .inspector-head strong { display: block; font-size: 10px; }
@@ -382,6 +394,7 @@
 
       const clone = value => JSON.parse(JSON.stringify(value));
       const MIN_RESIZE_SIZE = 16;
+      const SNAP_DISTANCE = 8;
       const artboard = document.querySelector('#artboard');
       const stage = document.querySelector('.stage');
       const workspace = document.querySelector('.workspace');
@@ -708,6 +721,216 @@
         return {x:x,y:y,w:right-x,h:bottom-y};
       }
 
+      function snapRect(value, fallbackId, fallbackName) {
+        const x = Number(value.x) || 0;
+        const y = Number(value.y) || 0;
+        const w = Math.max(0, Number(value.w) || 0);
+        const h = Math.max(0, Number(value.h) || 0);
+        return {
+          id:value.id || fallbackId || '',
+          name:value.name || fallbackName || '',
+          x:x,
+          y:y,
+          w:w,
+          h:h,
+          x2:x+w,
+          y2:y+h,
+          cx:x+w/2,
+          cy:y+h/2,
+          isCanvas:Boolean(value.isCanvas)
+        };
+      }
+
+      function createSnapTargets(movingItems) {
+        const excludedIds = new Set(Array.from(selectedIds));
+        movingItems.forEach(item => {
+          excludedIds.add(item.id);
+          if (item.containerId) excludedIds.add(item.containerId);
+        });
+        const targets = getTopEntityIds().map(getEntity).filter(entity => entity && !isSystemElement(entity) && !excludedIds.has(entity.id)).map(entity => {
+          if (getContainer(entity.id)) syncContainer(entity);
+          return snapRect(entity);
+        });
+        targets.push(snapRect({id:'__canvas__',name:'画布',x:0,y:0,w:artboard.clientWidth,h:artboard.clientHeight,isCanvas:true}));
+        return targets;
+      }
+
+      function axisAnchors(rect, axis) {
+        return axis === 'x'
+          ? [{key:'start',value:rect.x},{key:'center',value:rect.cx},{key:'end',value:rect.x2}]
+          : [{key:'start',value:rect.y},{key:'center',value:rect.cy},{key:'end',value:rect.y2}];
+      }
+
+      function snapPairPriority(sourceKey, targetKey) {
+        if (sourceKey === 'center' && targetKey === 'center') return 0;
+        if (sourceKey === targetKey) return 1;
+        if ((sourceKey === 'start' && targetKey === 'end') || (sourceKey === 'end' && targetKey === 'start')) return 2;
+        return 3;
+      }
+
+      function perpendicularGap(source, target, axis) {
+        if (axis === 'x') {
+          if (source.y2 < target.y) return target.y-source.y2;
+          if (target.y2 < source.y) return source.y-target.y2;
+          return 0;
+        }
+        if (source.x2 < target.x) return target.x-source.x2;
+        if (target.x2 < source.x) return source.x-target.x2;
+        return 0;
+      }
+
+      function isBetterSnap(candidate, current) {
+        if (!current) return true;
+        const candidateRank = [candidate.distance,candidate.target.isCanvas ? 1 : 0,candidate.gap,candidate.priority];
+        const currentRank = [current.distance,current.target.isCanvas ? 1 : 0,current.gap,current.priority];
+        for (let index = 0; index < candidateRank.length; index += 1) {
+          if (candidateRank[index] !== currentRank[index]) return candidateRank[index] < currentRank[index];
+        }
+        return false;
+      }
+
+      function bestAxisSnap(bounds, targets, axis, threshold, sourceKeys) {
+        const source = snapRect(bounds);
+        const allowed = sourceKeys || ['start','center','end'];
+        let best = null;
+        targets.forEach(target => {
+          axisAnchors(source, axis).filter(anchor => allowed.includes(anchor.key)).forEach(sourceAnchor => {
+            axisAnchors(target, axis).forEach(targetAnchor => {
+              const delta = targetAnchor.value-sourceAnchor.value;
+              const distance = Math.abs(delta);
+              if (distance > threshold) return;
+              const candidate = {
+                axis:axis,
+                delta:delta,
+                distance:distance,
+                coordinate:targetAnchor.value,
+                sourceAnchor:sourceAnchor.key,
+                targetAnchor:targetAnchor.key,
+                target:target,
+                gap:perpendicularGap(source,target,axis),
+                priority:snapPairPriority(sourceAnchor.key,targetAnchor.key)
+              };
+              if (isBetterSnap(candidate,best)) best = candidate;
+            });
+          });
+        });
+        return best;
+      }
+
+      function snapGuideFor(match, bounds) {
+        const moving = snapRect(bounds);
+        const target = match.target;
+        if (match.axis === 'x') {
+          const top = target.isCanvas ? 0 : Math.min(moving.y,target.y);
+          const bottom = target.isCanvas ? artboard.clientHeight : Math.max(moving.y2,target.y2);
+          return {axis:'vertical',left:match.coordinate,top:top,length:Math.max(1,bottom-top),targetId:target.id};
+        }
+        const left = target.isCanvas ? 0 : Math.min(moving.x,target.x);
+        const right = target.isCanvas ? artboard.clientWidth : Math.max(moving.x2,target.x2);
+        return {axis:'horizontal',left:left,top:match.coordinate,length:Math.max(1,right-left),targetId:target.id};
+      }
+
+      function snapDistanceFor(match, bounds) {
+        if (match.target.isCanvas) return null;
+        const moving = snapRect(bounds);
+        const target = match.target;
+        if (match.axis === 'x') {
+          let top = null;
+          let bottom = null;
+          if (moving.y2 < target.y) { top = moving.y2; bottom = target.y; }
+          else if (target.y2 < moving.y) { top = target.y2; bottom = moving.y; }
+          if (top == null || bottom-top < 1) return null;
+          return {axis:'vertical',left:match.coordinate,top:top,length:bottom-top,value:Math.round(bottom-top)};
+        }
+        let left = null;
+        let right = null;
+        if (moving.x2 < target.x) { left = moving.x2; right = target.x; }
+        else if (target.x2 < moving.x) { left = target.x2; right = moving.x; }
+        if (left == null || right-left < 1) return null;
+        return {axis:'horizontal',left:left,top:match.coordinate,length:right-left,value:Math.round(right-left)};
+      }
+
+      function snapResult(bounds, matches) {
+        const activeMatches = matches.filter(Boolean);
+        return {
+          bounds:bounds,
+          matches:activeMatches,
+          guides:activeMatches.map(match => snapGuideFor(match,bounds)),
+          distances:activeMatches.map(match => snapDistanceFor(match,bounds)).filter(Boolean)
+        };
+      }
+
+      function snapBoundsForMove(rawBounds, targets, thresholds) {
+        const source = snapRect(rawBounds);
+        const xMatch = bestAxisSnap(source,targets,'x',thresholds.x);
+        const yMatch = bestAxisSnap(source,targets,'y',thresholds.y);
+        const bounds = {x:source.x+(xMatch ? xMatch.delta : 0),y:source.y+(yMatch ? yMatch.delta : 0),w:source.w,h:source.h};
+        return snapResult(bounds,[xMatch,yMatch]);
+      }
+
+      function snapBoundsForResize(rawBounds, direction, targets, thresholds) {
+        const source = snapRect(rawBounds);
+        let xMatch = null;
+        let yMatch = null;
+        const bounds = {x:source.x,y:source.y,w:source.w,h:source.h};
+        if (direction.includes('w') || direction.includes('e')) {
+          const sourceKey = direction.includes('w') ? 'start' : 'end';
+          xMatch = bestAxisSnap(source,targets,'x',thresholds.x,[sourceKey]);
+          if (xMatch) {
+            if (sourceKey === 'start' && source.x2-(source.x+xMatch.delta) >= MIN_RESIZE_SIZE) {
+              bounds.x = source.x+xMatch.delta;
+              bounds.w = source.x2-bounds.x;
+            } else if (sourceKey === 'end' && source.w+xMatch.delta >= MIN_RESIZE_SIZE) {
+              bounds.w = source.w+xMatch.delta;
+            } else {
+              xMatch = null;
+            }
+          }
+        }
+        if (direction.includes('n') || direction.includes('s')) {
+          const sourceKey = direction.includes('n') ? 'start' : 'end';
+          yMatch = bestAxisSnap(source,targets,'y',thresholds.y,[sourceKey]);
+          if (yMatch) {
+            if (sourceKey === 'start' && source.y2-(source.y+yMatch.delta) >= MIN_RESIZE_SIZE) {
+              bounds.y = source.y+yMatch.delta;
+              bounds.h = source.y2-bounds.y;
+            } else if (sourceKey === 'end' && source.h+yMatch.delta >= MIN_RESIZE_SIZE) {
+              bounds.h = source.h+yMatch.delta;
+            } else {
+              yMatch = null;
+            }
+          }
+        }
+        return snapResult(bounds,[xMatch,yMatch]);
+      }
+
+      function renderSnapGuides() {
+        if (!gesture || !gesture.snapResult || !gesture.snapResult.matches.length) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'snap-overlay';
+        gesture.snapResult.guides.forEach(guide => {
+          const line = document.createElement('div');
+          line.className = 'snap-guide ' + guide.axis;
+          line.dataset.snapAxis = guide.axis;
+          line.dataset.snapTarget = guide.targetId;
+          Object.assign(line.style, guide.axis === 'vertical'
+            ? {left:guide.left+'px',top:guide.top+'px',height:guide.length+'px'}
+            : {left:guide.left+'px',top:guide.top+'px',width:guide.length+'px'});
+          overlay.appendChild(line);
+        });
+        gesture.snapResult.distances.forEach(distance => {
+          const marker = document.createElement('div');
+          marker.className = 'snap-distance-marker ' + distance.axis;
+          marker.dataset.snapDistance = String(distance.value);
+          Object.assign(marker.style, distance.axis === 'vertical'
+            ? {left:distance.left+'px',top:distance.top+'px',height:distance.length+'px'}
+            : {left:distance.left+'px',top:distance.top+'px',width:distance.length+'px'});
+          marker.innerHTML = '<span>' + distance.value + '</span>';
+          overlay.appendChild(marker);
+        });
+        artboard.appendChild(overlay);
+      }
+
       function geometrySnapshot(items) {
         return items.map(item => ({id:item.id,x:item.x,y:item.y,w:item.w,h:item.h,rotation:Number(item.rotation) || 0}));
       }
@@ -953,6 +1176,7 @@
           }
         });
         renderResizeOverlay();
+        renderSnapGuides();
       }
 
       function setSelection(id, additive) {
@@ -1014,8 +1238,15 @@
           startY:event.clientY,
           scaleX:scale.x,
           scaleY:scale.y,
-          changed:false
+          changed:false,
+          snapResult:null
         }, details);
+        if (gesture.bounds && gesture.snapTargets) {
+          gesture.snapThresholds = {
+            x:Math.min(SNAP_DISTANCE*scale.x,Math.max(1,gesture.bounds.w/2)),
+            y:Math.min(SNAP_DISTANCE*scale.y,Math.max(1,gesture.bounds.h/2))
+          };
+        }
         artboard.setPointerCapture(event.pointerId);
       }
 
@@ -1049,11 +1280,14 @@
           setSelection(id, false);
         }
         const movableItems = selectedVisualItems();
+        const movingBounds = boundsForItems(movableItems);
         captureGesture(event, {
           mode:'move',
           label:selectedIds.size > 1 ? selectedIds.size + ' 个图层' : (getEntity(id) ? getEntity(id).name : '图层'),
           historyState:interactionDraft ? null : captureDocumentState(),
           historyLabel:'移动元素',
+          bounds:movingBounds,
+          snapTargets:createSnapTargets(movableItems),
           snapshot:geometrySnapshot(movableItems)
         });
         renderCanvas();
@@ -1080,6 +1314,7 @@
           historyState:interactionDraft ? null : captureDocumentState(),
           historyLabel:'调整元素大小',
           bounds:{x:entity.x,y:entity.y,w:entity.w,h:entity.h},
+          snapTargets:createSnapTargets(items),
           snapshot:geometrySnapshot(items)
         });
       }
@@ -1125,16 +1360,22 @@
         const dx = Math.round((event.clientX-gesture.startX)*gesture.scaleX);
         const dy = Math.round((event.clientY-gesture.startY)*gesture.scaleY);
         if (gesture.mode === 'move') {
+          const rawBounds = {x:gesture.bounds.x+dx,y:gesture.bounds.y+dy,w:gesture.bounds.w,h:gesture.bounds.h};
+          gesture.snapResult = snapBoundsForMove(rawBounds,gesture.snapTargets,gesture.snapThresholds);
+          const snappedDx = gesture.snapResult.bounds.x-gesture.bounds.x;
+          const snappedDy = gesture.snapResult.bounds.y-gesture.bounds.y;
           gesture.snapshot.forEach(origin => {
             const item = getElement(origin.id);
             if (item) {
-              item.x = origin.x+dx;
-              item.y = origin.y+dy;
+              item.x = origin.x+snappedDx;
+              item.y = origin.y+snappedDy;
             }
           });
           containers.forEach(syncContainer);
         } else if (gesture.mode === 'resize') {
-          const next = resizedBounds(gesture.bounds, gesture.direction, dx, dy);
+          const rawBounds = resizedBounds(gesture.bounds,gesture.direction,dx,dy);
+          gesture.snapResult = snapBoundsForResize(rawBounds,gesture.direction,gesture.snapTargets,gesture.snapThresholds);
+          const next = gesture.snapResult.bounds;
           const container = getContainer(gesture.entityId);
           if (container) {
             applyBoundsToSnapshot(gesture.snapshot, gesture.bounds, next);
@@ -1149,6 +1390,7 @@
         } else if (gesture.mode === 'rotate') {
           const item = getElement(gesture.entityId);
           if (item) {
+            gesture.snapResult = null;
             const angle = Math.atan2(event.clientY-gesture.centerY,event.clientX-gesture.centerX)*180/Math.PI;
             item.rotation = Math.round(gesture.startRotation + angle - gesture.startAngle);
           }
@@ -1164,6 +1406,7 @@
       function finishGesture(event, cancel) {
         if (!gesture || (event && gesture.pointerId !== event.pointerId)) return;
         const completed = gesture;
+        const snapped = completed.snapResult && completed.snapResult.matches.length > 0;
         gesture = null;
         if (cancel) restoreGeometry(completed.snapshot);
         if (!cancel && completed.changed) {
@@ -1172,7 +1415,7 @@
         }
         if (artboard.hasPointerCapture(completed.pointerId)) artboard.releasePointerCapture(completed.pointerId);
         renderAll();
-        if (!cancel && completed.changed) flash((completed.mode === 'resize' ? '已调整大小 ' : (completed.mode === 'rotate' ? '已旋转 ' : '已移动 ')) + completed.label);
+        if (!cancel && completed.changed) flash((completed.mode === 'resize' ? '已调整大小 ' : (completed.mode === 'rotate' ? '已旋转 ' : '已移动 ')) + completed.label + (snapped ? ' · 已贴合' : ''));
       }
 
       function cancelActiveGesture() {
