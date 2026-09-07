@@ -8,6 +8,8 @@
   },
   "pnpm": {
     "overrides": {
+      "fast-uri": "3.1.6",
+      "js-yaml": "4.3.2",
       "vitefu": "1.1.2"
     }
   },
@@ -18,7 +20,7 @@
     "dev:layered-route-lab": "pnpm --filter layered-route-lab dev",
     "resume:generate": "python3 scripts/generate_public_resume.py",
     "build": "pnpm --recursive --if-present run build",
-    "build:static-site": "pnpm --filter layered-route-lab build:static && node scripts/stage-static-demo.mjs && pnpm --filter @portfolio/web build && node scripts/create-spa-fallback.mjs",
+    "build:static-site": "pnpm --filter layered-route-lab build:static && node scripts/stage-static-demo.mjs && pnpm --filter @portfolio/web build && node scripts/create-spa-fallback.mjs && pnpm --filter @portfolio/web test:built",
     "build:github-pages": "VITE_LAYERED_ROUTE_LAB_URL=https://me.azlar.cc/demos/layered-route-lab pnpm run build:static-site",
     "build:blog": "pnpm --filter @azlar/blog build",
     "check:blog": "pnpm --filter @azlar/blog check",
@@ -28,7 +30,7 @@
     "build:local": "ALLOW_LOCAL_DEMO_URL=1 NEXT_PUBLIC_SITE_URL=http://localhost:3000 VITE_LAYERED_ROUTE_LAB_URL=http://localhost:3000 pnpm build",
     "check": "pnpm --recursive --if-present run check",
     "test": "pnpm --filter @azlar/blog test && pnpm --filter @portfolio/web test && pnpm --filter layered-route-lab test",
-    "verify:local": "pnpm check && pnpm build:local && pnpm --filter @portfolio/web test && pnpm --filter layered-route-lab test:built",
+    "verify:local": "pnpm check && pnpm build:local && pnpm --filter @portfolio/web test && pnpm --filter @portfolio/web test:built && pnpm --filter layered-route-lab test:built",
     "start": "pnpm --recursive --parallel --stream --if-present run start",
     "start:local": "ALLOW_LOCAL_DEMO_URL=1 NEXT_PUBLIC_SITE_URL=http://localhost:3000 pnpm start",
     "start:portfolio": "pnpm --filter @portfolio/web start",

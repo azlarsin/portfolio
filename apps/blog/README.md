@@ -15,6 +15,10 @@ pnpm build:blog
 
 The current content boundary is local Markdown only. A future importer may read a reviewed publication snapshot from `https://admin.azlar.cc/_api/` (later movable to `api.azlar.cc`), but the public build must remain independent of that API. Images remain static GitHub Pages assets.
 
+## Google Analytics 4
+
+Set `PUBLIC_GA_MEASUREMENT_ID` at build time to include the GA4 tag in every static page. The variable is optional for local builds, so development and preview output stay untracked unless explicitly configured. The publishing workflow supplies the current Measurement ID for `blog.azlar.cc`.
+
 ## GitHub Pages hand-off
 
 The manual workflow in `../../.github/workflows/publish-blog-pages.yml` builds this app and publishes only `apps/blog/dist` to `azlarsin/azlarsin.github.io`.

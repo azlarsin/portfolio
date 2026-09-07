@@ -5,6 +5,7 @@ type ThemePreference = 'system' | 'light' | 'dark'
 
 const storageKey = 'portfolio-theme'
 function readPreference(): ThemePreference {
+  if (typeof window === 'undefined') return 'system'
   const stored = window.localStorage.getItem(storageKey)
   return stored === 'light' || stored === 'dark' ? stored : 'system'
 }

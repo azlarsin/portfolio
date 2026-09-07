@@ -74,6 +74,19 @@
 | `turntable-motion-lab` | `/archive/turntable-motion-lab` |
 | `bezier-easing-picker` | `/archive/bezier-easing-picker` |
 
+## SEO 与静态发布
+
+Portfolio 构建会为每个公开路由生成独立的静态 HTML，而不是只发布一个空的 SPA 入口。每个页面都包含可直接抓取的正文，以及独立的 title、description、canonical、Open Graph、Twitter Card 和 JSON-LD。`/demo`、`/not-found` 与 `404.html` 使用 `noindex`；旧的 `/work/elpis` 入口保留静态兼容页，并将 canonical 指向 `/archive/elpis/`。
+
+GitHub Pages 使用目录形式提供详情页，因此公开 canonical 与 sitemap URL 统一带尾部斜杠。构建同时生成：
+
+- `dist/sitemap.xml`：只收录可索引的 Portfolio 页面。
+- `dist/robots.txt`：允许常规搜索抓取并声明 sitemap。
+- `dist/og.png`：首页与集合 / 资料页使用的 1200 × 630 社交预览图；案例详情未提供独立主图时不复用站点卡片。
+- `dist/404.html`：带完整 Not Found 正文与 `noindex` 的 GitHub Pages fallback。
+
+`pnpm --filter @portfolio/web test:built` 会检查所有公开路由的静态正文、canonical、社交元数据、结构化数据、sitemap、robots 与分享图尺寸。正式 GitHub Pages 构建已经包含这项检查。
+
 ## 项目内容模型
 
 项目类型定义位于 `apps/portfolio/src/data/types.ts`。每个 `PortfolioProject` 至少需要明确：

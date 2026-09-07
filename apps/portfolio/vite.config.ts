@@ -2,7 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { assertProductionDemoUrl } from './src/app/demoUrlGuard'
 
-export default defineConfig(({ command, mode }) => {
+export default defineConfig(({ command, mode, isSsrBuild }) => {
   if (command === 'build') {
     const fileEnv = loadEnv(mode, process.cwd(), '')
     const demoUrl = process.env.VITE_LAYERED_ROUTE_LAB_URL || fileEnv.VITE_LAYERED_ROUTE_LAB_URL
@@ -13,6 +13,7 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     plugins: [react()],
+    publicDir: isSsrBuild ? false : 'public',
     server: {
       fs: {
         allow: ['../..'],

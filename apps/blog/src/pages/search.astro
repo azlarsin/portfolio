@@ -29,6 +29,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   const resultsContainer = document.querySelector('#search-results');
 
   let pagefind;
+  let searchRequest = 0;
 
   function setStatus(message) {
     if (status) status.textContent = message;
@@ -55,9 +56,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     (highlighted ?? container).append(document.createTextNode(excerpt.slice(cursor)));
   }
 
-  async function renderResults(results) {
+  function renderResults(entries) {
     if (!resultsContainer) return;
-    const entries = await Promise.all(results.map((result) => result.data()));
     resultsContainer.replaceChildren();
     for (const data of entries) {
       const article = document.createElement('article');
@@ -94,13 +94,25 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   }
 
   async function runSearch(query) {
-    if (!pagefind || !query.trim()) return;
+    if (!pagefind) return;
+    if (!query.trim()) {
+      searchRequest += 1;
+      resultsContainer?.replaceChildren();
+      setStatus('输入关键词开始搜索。');
+      return;
+    }
+
+    const request = ++searchRequest;
     setStatus('正在搜索…');
     try {
       const search = await pagefind.search(query);
-      await renderResults(search.results);
+      if (request !== searchRequest) return;
+      const entries = await Promise.all(search.results.map((result) => result.data()));
+      if (request !== searchRequest) return;
+      renderResults(entries);
       setStatus(search.results.length ? `找到 ${search.results.length} 条结果。` : '没有找到匹配的公开文章。');
     } catch (error) {
+      if (request !== searchRequest) return;
       console.error('Pagefind search failed:', error);
       resultsContainer?.replaceChildren();
       setStatus('搜索暂时不可用，请稍后重试。');

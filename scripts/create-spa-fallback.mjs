@@ -1,4 +1,4 @@
-import { copyFile, mkdir, stat } from "node:fs/promises";
+import { stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -14,8 +14,8 @@ try {
   throw new Error("Portfolio build not found. Build the portfolio before creating its fallback.");
 }
 
-await mkdir(pokeRenderDirectory, { recursive: true });
-await Promise.all([
-  copyFile(index, fallback),
-  copyFile(index, pokeRenderIndex),
-]);
+try {
+  await stat(fallback);
+} catch {
+  throw new Error("Portfolio SEO fallback not found. The portfolio build must generate 404.html.");
+}

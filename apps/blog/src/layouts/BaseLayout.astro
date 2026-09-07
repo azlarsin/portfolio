@@ -27,6 +27,8 @@ const pageTitle = title ? `${title} · ${SITE.name}` : SITE.name;
 const canonical = new URL(canonicalPath ?? Astro.url.pathname, SITE.url).toString();
 const socialImage = new URL(image, SITE.url).toString();
 const serializedJsonLd = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c') : undefined;
+const gaMeasurementId = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+const hasGoogleAnalytics = /^G-[A-Z0-9]{7,}$/.test(gaMeasurementId ?? '');
 ---
 
 <!doctype html>
@@ -42,6 +44,17 @@ const serializedJsonLd = jsonLd ? JSON.stringify(jsonLd).replace(/</g, '\\u003c'
         // System color preference remains the accessible fallback.
       }
     </script>
+    {hasGoogleAnalytics && (
+      <>
+        <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${gaMeasurementId}`}></script>
+        <script is:inline define:vars={{ gaMeasurementId }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag() { window.dataLayer.push(arguments); }
+          gtag('js', new Date());
+          gtag('config', gaMeasurementId);
+        </script>
+      </>
+    )}
     <meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111318" media="(prefers-color-scheme: dark)" />
     <meta name="description" content={description} />
