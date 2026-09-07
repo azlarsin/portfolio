@@ -1,42 +1,43 @@
 :root {
   color-scheme: light;
-  --bg: #f5f6f8;
+  --bg: #fcfcfa;
   --surface: #ffffff;
-  --surface-subtle: #fafbfc;
-  --text: #17191d;
-  --text-secondary: #5f6672;
-  --text-tertiary: #8b929d;
-  --line: #e2e5e9;
-  --line-strong: #cfd4db;
-  --accent: #2457e6;
-  --accent-soft: #eaf0ff;
-  --success: #239760;
+  --surface-subtle: #f3f5f2;
+  --text: #202622;
+  --text-secondary: #56625a;
+  --text-tertiary: #68746c;
+  --line: #e0e6df;
+  --line-strong: #c8d1c9;
+  --accent: #247451;
+  --accent-soft: #eaf3ec;
+  --success: #28744f;
   --danger: #b83b3b;
-  --shadow-float: 0 24px 60px rgb(24 31 45 / 12%);
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --shadow-float: 0 24px 60px rgb(20 35 25 / 12%);
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --sidebar-width: 264px;
-  --content-width: 1160px;
+  --content-width: 1248px;
   --copy-width: 720px;
-  --radius: 14px;
-  --radius-small: 9px;
+  --radius: 8px;
+  --radius-small: 6px;
   --motion-fast: 180ms;
   --motion-medium: 220ms;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #111318;
-  --surface: #171a20;
-  --surface-subtle: #1c2027;
-  --text: #f2f4f7;
-  --text-secondary: #a7aeb9;
-  --text-tertiary: #747d89;
-  --line: #2b3038;
-  --line-strong: #3a414c;
-  --accent: #7da2ff;
-  --accent-soft: #1d2a4d;
-  --success: #56bd8b;
+  --bg: #151716;
+  --surface: #1c201d;
+  --surface-subtle: #242a26;
+  --text: #edf1ec;
+  --text-secondary: #b1bdb4;
+  --text-tertiary: #98a69c;
+  --line: #323c35;
+  --line-strong: #49564d;
+  --accent: #8bd8ab;
+  --accent-soft: #243c2f;
+  --success: #8bd8ab;
   --danger: #ff8d8d;
   --shadow-float: 0 28px 70px rgb(0 0 0 / 32%);
 }
@@ -44,17 +45,17 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --bg: #111318;
-    --surface: #171a20;
-    --surface-subtle: #1c2027;
-    --text: #f2f4f7;
-    --text-secondary: #a7aeb9;
-    --text-tertiary: #747d89;
-    --line: #2b3038;
-    --line-strong: #3a414c;
-    --accent: #7da2ff;
-    --accent-soft: #1d2a4d;
-    --success: #56bd8b;
+    --bg: #151716;
+    --surface: #1c201d;
+    --surface-subtle: #242a26;
+    --text: #edf1ec;
+    --text-secondary: #b1bdb4;
+    --text-tertiary: #98a69c;
+    --line: #323c35;
+    --line-strong: #49564d;
+    --accent: #8bd8ab;
+    --accent-soft: #243c2f;
+    --success: #8bd8ab;
     --danger: #ff8d8d;
   }
 }

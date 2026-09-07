@@ -5,7 +5,11 @@ export function LanguageToggle() {
   const languages: Language[] = ['zh', 'en']
 
   return (
-    <div className="language-toggle" aria-label={copy.language.label}>
+    <div
+      className="language-toggle"
+      role="group"
+      aria-label={copy.language.label}
+    >
       {languages.map((option) => (
         <button
           key={option}

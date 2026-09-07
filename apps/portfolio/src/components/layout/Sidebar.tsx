@@ -40,7 +40,9 @@ export function PortfolioNavigationContent({
   const { copy, language } = useLanguage()
   const localizedProfile = getLocalizedProfile(language)
   const currentPath = activePath || route.pathname
-  const [projectDemosOpen, setProjectDemosOpen] = useState(true)
+  const [projectDemosOpen, setProjectDemosOpen] = useState(
+    route.pathname === '/demo',
+  )
   const currentExperienceId =
     route.pathname === '/demo'
       ? new URLSearchParams(route.search).get('experience')
@@ -77,7 +79,9 @@ export function PortfolioNavigationContent({
               key={item.to}
               to={item.to}
               onClick={onNavigate}
-              aria-current={isCurrent(currentPath, item.to) ? 'page' : undefined}
+              aria-current={
+                isCurrent(currentPath, item.to) ? 'page' : undefined
+              }
               className="nav-case"
             >
               <small>{item.index}</small>
@@ -89,7 +93,9 @@ export function PortfolioNavigationContent({
         <AppLink
           to="/experience"
           onClick={onNavigate}
-          aria-current={isCurrent(currentPath, '/experience') ? 'page' : undefined}
+          aria-current={
+            isCurrent(currentPath, '/experience') ? 'page' : undefined
+          }
           className="nav-primary"
         >
           {copy.navigation.experience}
@@ -167,44 +173,24 @@ export function PortfolioNavigationContent({
   )
 }
 
-export function Sidebar({
-  route,
-  open,
-  isMobile,
-  firstLinkRef,
-  onNavigate,
-}: {
-  route: ResolvedRoute
-  open: boolean
-  isMobile: boolean
-  firstLinkRef: RefObject<HTMLAnchorElement | null>
-  onNavigate: () => void
-}) {
-  return (
-    <aside
-      id="site-navigation"
-      className={`site-sidebar ${open ? 'is-open' : ''}`}
-      aria-hidden={isMobile && !open ? true : undefined}
-      inert={isMobile && !open ? true : undefined}
-    >
-      <PortfolioNavigationContent
-        route={route}
-        firstLinkRef={firstLinkRef}
-        onNavigate={onNavigate}
-      />
-    </aside>
-  )
-}
-
 interface GuidePosition {
   x: number
   y: number
 }
 
-function clampGuidePosition(position: GuidePosition, element: HTMLElement): GuidePosition {
+function clampGuidePosition(
+  position: GuidePosition,
+  element: HTMLElement,
+): GuidePosition {
   const margin = 16
-  const maxX = Math.max(margin, window.innerWidth - element.offsetWidth - margin)
-  const maxY = Math.max(margin, window.innerHeight - element.offsetHeight - margin)
+  const maxX = Math.max(
+    margin,
+    window.innerWidth - element.offsetWidth - margin,
+  )
+  const maxY = Math.max(
+    margin,
+    window.innerHeight - element.offsetHeight - margin,
+  )
   return {
     x: Math.min(Math.max(margin, position.x), maxX),
     y: Math.min(Math.max(margin, position.y), maxY),
@@ -299,7 +285,9 @@ export function useDesktopGuidePosition(active: boolean, experienceId: string) {
     const element = guideRef.current
     if (!element) return
     const observer =
-      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(clampToViewport) : null
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(clampToViewport)
+        : null
     observer?.observe(element)
     window.addEventListener('resize', clampToViewport)
     return () => {
@@ -363,7 +351,12 @@ export function useDesktopGuidePosition(active: boolean, experienceId: string) {
 
   const releasePointer = (event: PointerEvent<HTMLElement>) => {
     const drag = dragRef.current
-    if (!drag || drag.handle !== event.currentTarget || drag.pointerId !== event.pointerId) return
+    if (
+      !drag ||
+      drag.handle !== event.currentTarget ||
+      drag.pointerId !== event.pointerId
+    )
+      return
     releaseGuidePointer(dragRef)
   }
 

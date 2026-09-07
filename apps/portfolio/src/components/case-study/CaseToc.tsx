@@ -3,31 +3,44 @@ import type { CaseChapter } from '../../data'
 import { AppLink } from '../common/AppLink'
 import { useLanguage } from '../../i18n/LanguageContext'
 
-export function CaseToc({ pathname, chapters }: { pathname: string; chapters: CaseChapter[] }) {
+export function CaseToc({
+  pathname,
+  chapters,
+}: {
+  pathname: string
+  chapters: CaseChapter[]
+}) {
   const { copy } = useLanguage()
-  const [activeId, setActiveId] = useState(chapters[0]?.id || '')
+  const [activeId, setActiveId] = useState('')
 
   useEffect(() => {
     const sections = chapters
       .map((chapter) => document.getElementById(chapter.id))
       .filter((section): section is HTMLElement => Boolean(section))
-    if (!sections.length || !('IntersectionObserver' in window)) return
-
-    const visible = new Map<string, number>()
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) visible.set(entry.target.id, entry.intersectionRatio)
-          else visible.delete(entry.target.id)
-        }
-        const next = [...visible.entries()].sort((left, right) => right[1] - left[1])[0]?.[0]
-        if (next) setActiveId(next)
-      },
-      { rootMargin: '-15% 0px -65% 0px', threshold: [0, 0.1, 0.5, 1] },
-    )
-    sections.forEach((section) => observer.observe(section))
-    return () => observer.disconnect()
-  }, [chapters])
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const boundary = window.matchMedia('(max-width: 900px)').matches
+        ? 96
+        : 114
+      // Track the last heading passed, independent of the chapter's height.
+      const current = sections
+        .filter((section) => section.getBoundingClientRect().top <= boundary)
+        .at(-1)
+      setActiveId(current?.id || '')
+    }
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+    }
+  }, [chapters, pathname])
 
   const links = chapters.map((chapter) => (
     <li key={chapter.id}>
@@ -43,7 +56,7 @@ export function CaseToc({ pathname, chapters }: { pathname: string; chapters: Ca
   return (
     <>
       <aside className="case-toc" aria-label={copy.caseStudy.onThisPage}>
-        <span>ON THIS PAGE</span>
+        <span>{copy.caseStudy.onThisPage}</span>
         <ol>{links}</ol>
       </aside>
       <details className="case-toc-mobile">

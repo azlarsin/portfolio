@@ -1,4 +1,5 @@
 import { layeredAgentProject } from '../../data'
+import { ArrowDown, ArrowUpRight, FileText } from 'lucide-react'
 import { demoPlayerPath } from '../../data/demoExperiences'
 import { getLocalizedProfile, getLocalizedProject } from '../../data/localized'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -13,10 +14,12 @@ export function HomeHero() {
     <section className="home-hero" aria-labelledby="home-title">
       <p className="eyebrow">{copy.home.eyebrow}</p>
       <h1 id="home-title">
-        {copy.home.titleLines[0]}
-        <br />
-        {copy.home.titleLines[1]}
+        {profile.name}
+        <span className="home-alias"> / azlar</span>
       </h1>
+      <p className="home-role">
+        {copy.home.titleLines.join(language === 'zh' ? '' : ' ')}
+      </p>
       <p className="home-hero-copy">
         {copy.home.intro.replace('{name}', profile.name)}
       </p>
@@ -25,27 +28,21 @@ export function HomeHero() {
           className="button button-primary"
           to={demoPlayerPath(agentProject.demo?.experienceId || 'layered-route-agent')}
         >
-          {copy.home.openAgentDemo} <span aria-hidden="true">↗</span>
+          {copy.home.openAgentDemo}{' '}
+          <ArrowUpRight size={17} aria-hidden="true" />
         </AppLink>
-        <AppLink className="button button-secondary" to="/work/meican-platform">
-          {copy.home.viewSelectedCase}
+        <AppLink className="button button-secondary" to="/#selected-work">
+          {copy.home.viewSelectedCase}{' '}
+          <ArrowDown size={17} aria-hidden="true" />
         </AppLink>
-        <AppLink className="button button-secondary" to="/resume#pdf-preview">
-          {copy.home.downloadResume}
+        <AppLink className="text-link hero-resume" to="/resume#pdf-preview">
+          <FileText size={16} aria-hidden="true" /> {copy.home.downloadResume}
         </AppLink>
       </div>
-      <p className="availability-line">
+      <p className="availability-line" title={profile.availability}>
         <span aria-hidden="true" />
-        {profile.availability}
+        {copy.navigation.availability}
       </p>
-      <dl className="fact-band">
-        {copy.home.facts.map(([value, label]) => (
-          <div key={value}>
-            <dt>{value}</dt>
-            <dd>{label}</dd>
-          </div>
-        ))}
-      </dl>
     </section>
   )
 }

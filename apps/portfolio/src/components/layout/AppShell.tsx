@@ -1,68 +1,110 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { X } from 'lucide-react'
 import type { ResolvedRoute } from '../../app/router'
 import { useMediaQuery } from '../common/useMediaQuery'
 import { useLanguage } from '../../i18n/LanguageContext'
-import { Sidebar } from './Sidebar'
+import { PortfolioNavigationContent } from './Sidebar'
 import { SiteFooter } from './SiteFooter'
 import { Topbar } from './Topbar'
 
-export function AppShell({ route, children }: { route: ResolvedRoute; children: ReactNode }) {
+export function AppShell({
+  route,
+  children,
+}: {
+  route: ResolvedRoute
+  children: ReactNode
+}) {
   const { copy } = useLanguage()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const isMobile = useMediaQuery('(max-width: 900px)')
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const firstLinkRef = useRef<HTMLAnchorElement>(null)
   const menuButtonRef = useRef<HTMLButtonElement>(null)
-  const wasOpenRef = useRef(false)
+
+  useEffect(() => setDrawerOpen(false), [route.href, isMobile])
 
   useEffect(() => {
-    setDrawerOpen(false)
-  }, [route.href])
-
-  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
     if (!drawerOpen) {
-      if (wasOpenRef.current) menuButtonRef.current?.focus()
-      wasOpenRef.current = false
+      dialog.close()
       return
     }
 
-    wasOpenRef.current = true
+    dialog.showModal()
+    firstLinkRef.current?.focus()
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    const frame = window.requestAnimationFrame(() => firstLinkRef.current?.focus())
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDrawerOpen(false)
-    }
-    window.addEventListener('keydown', closeOnEscape)
     return () => {
-      window.cancelAnimationFrame(frame)
-      window.removeEventListener('keydown', closeOnEscape)
+      dialog.close()
       document.body.style.overflow = previousOverflow
     }
   }, [drawerOpen])
 
   return (
     <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        {copy.shell.skipToContent}
+      </a>
       <Topbar
         route={route}
         menuButtonRef={menuButtonRef}
         expanded={drawerOpen}
         onOpen={() => setDrawerOpen(true)}
       />
-      <button
-        type="button"
-        className={`drawer-backdrop ${drawerOpen ? 'is-visible' : ''}`}
-        aria-label={copy.shell.closeNavigation}
-        tabIndex={drawerOpen ? 0 : -1}
-        onClick={() => setDrawerOpen(false)}
-      />
-      <Sidebar
-        route={route}
-        open={drawerOpen}
-        isMobile={isMobile}
-        firstLinkRef={firstLinkRef}
-        onNavigate={() => setDrawerOpen(false)}
-      />
-      <div className="site-main" inert={drawerOpen ? true : undefined}>
+      <dialog
+        ref={dialogRef}
+        id="site-navigation"
+        className="site-navigation-dialog"
+        aria-label={copy.navigation.label}
+        onCancel={() => setDrawerOpen(false)}
+        onClose={() => setDrawerOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab') return
+          const controls = [
+            ...event.currentTarget.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled])',
+            ),
+          ].filter((element) => element.getClientRects().length > 0)
+          const first = controls[0]
+          const last = controls.at(-1)
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault()
+            last?.focus()
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault()
+            first?.focus()
+          }
+        }}
+        onClick={(event) => {
+          if (event.target !== event.currentTarget) return
+          const rect = event.currentTarget.getBoundingClientRect()
+          if (
+            event.clientX < rect.left ||
+            event.clientX > rect.right ||
+            event.clientY < rect.top ||
+            event.clientY > rect.bottom
+          ) {
+            setDrawerOpen(false)
+          }
+        }}
+      >
+        <button
+          className="icon-button drawer-close"
+          type="button"
+          aria-label={copy.shell.closeNavigation}
+          title={copy.shell.closeNavigation}
+          onClick={() => setDrawerOpen(false)}
+        >
+          <X size={20} aria-hidden="true" />
+        </button>
+        <PortfolioNavigationContent
+          route={route}
+          firstLinkRef={firstLinkRef}
+          onNavigate={() => setDrawerOpen(false)}
+        />
+      </dialog>
+      <div className="site-main" id="main-content" tabIndex={-1}>
         {children}
         <SiteFooter />
       </div>

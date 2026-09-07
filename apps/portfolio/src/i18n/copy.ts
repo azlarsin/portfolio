@@ -15,6 +15,7 @@ export const siteCopy = {
       closeNavigation: '关闭导航',
       openNavigation: '打开导航',
       home: '返回首页',
+      skipToContent: '跳到正文',
     },
     navigation: {
       label: '主导航',
@@ -44,10 +45,10 @@ export const siteCopy = {
       specialties: '前端 · 全栈 · 产品',
     },
     home: {
-      eyebrow: 'FRONTEND TECH LEAD · FULL STACK DELIVERY · COMPLEX SYSTEMS',
+      eyebrow: 'FRONTEND TECH LEAD / FULL STACK ENGINEER',
       titleLines: ['复杂系统的前端架构', '与全栈交付'],
       intro:
-        '我是{name}，拥有 10+ 年前端与全栈经验，长期带领前端团队（4-8 人）。职业前期担任研发负责人和前后端主程，覆盖客户端、服务端、数据库与部署；近年聚焦大型运营后台、富文本编辑器、业务 SDK 与跨端应用的架构和交付。',
+        '10+ 年前端与全栈经验，带领 4-8 人团队。专注企业后台、编辑器与业务 SDK，持续探索 AI Agent 与复杂交互。',
       openAgentDemo: '打开 Agent Demo',
       viewSelectedCase: '查看精选案例',
       downloadResume: '下载简历',
@@ -66,10 +67,14 @@ export const siteCopy = {
         ['跨栈学习与完整交付', '2015 年因业务需要在兼职旅游项目中补齐 React 前端，2017 年进入前端工具创业团队；百度阶段及同期团队项目继续实践 React Native、PHP / Python 后端与空间统计。'],
       ],
       selectedEyebrow: 'SELECTED WORK',
-      selectedTitle: '存量系统演进与公开研究案例',
+      selectedTitle: '精选案例',
       selectedDescription:
         '企业后台、百度地图数据作业与百家号编辑器来自真实生产项目；Agent 案例基于公开代码与合成数据。跨端钱包、个人产品和早期作品收录于个人项目集。',
       viewCase: '查看完整案例',
+      labTitle: '个人产品与交互实验',
+      allProjects: '全部个人项目',
+      previewLabel: '公开 Demo 实际界面',
+      diagramLabel: '架构示意',
     },
     archive: {
       eyebrow: 'PERSONAL PROJECTS',
@@ -271,6 +276,7 @@ export const siteCopy = {
       closeNavigation: 'Close navigation',
       openNavigation: 'Open navigation',
       home: 'Back to home',
+      skipToContent: 'Skip to content',
     },
     navigation: {
       label: 'Main navigation',
@@ -300,12 +306,12 @@ export const siteCopy = {
       specialties: 'Frontend · Full Stack · Product',
     },
     home: {
-      eyebrow: 'FRONTEND TECH LEAD · FULL STACK DELIVERY · COMPLEX SYSTEMS',
+      eyebrow: 'FRONTEND TECH LEAD / FULL STACK ENGINEER',
       titleLines: ['Frontend architecture', 'and full-stack delivery'],
       intro:
-        "I'm {name}, a frontend and full-stack engineer with 10+ years of experience and a track record of leading frontend teams of 4–8 people. Earlier in my career, I owned end-to-end delivery across clients, services, databases, and deployment. More recently, I have focused on architecture and delivery for enterprise consoles, rich-text editors, business SDKs, and cross-platform applications.",
+        '10+ years in frontend and full-stack engineering, leading teams of 4–8. Enterprise platforms, editors, and SDKs. Now exploring AI agents.',
       openAgentDemo: 'Open Agent Demo',
-      viewSelectedCase: 'View selected case',
+      viewSelectedCase: 'Selected work',
       downloadResume: 'Download résumé',
       facts: [
         ['10+ years', 'Frontend and full-stack experience'],
@@ -322,10 +328,14 @@ export const siteCopy = {
         ['Cross-stack learning and delivery', 'In 2015, product needs led me to pick up React frontend work in a part-time travel project; in 2017 I joined a frontend-tool startup, then expanded into React Native, PHP / Python services, and spatial statistics during my Baidu period and concurrent team projects.'],
       ],
       selectedEyebrow: 'SELECTED WORK',
-      selectedTitle: 'Production evolution and public research',
+      selectedTitle: 'Selected work',
       selectedDescription:
         'The enterprise-console, Baidu Maps data-operations, and Baijiahao editor cases come from production work; the Agent case uses public code and synthetic data. Cross-platform wallets, personal products, and earlier work are included under Personal Projects.',
       viewCase: 'Read the full case',
+      labTitle: 'Products & experiments',
+      allProjects: 'All personal projects',
+      previewLabel: 'Public demo screenshot',
+      diagramLabel: 'Architecture study',
     },
     archive: {
       eyebrow: 'PERSONAL PROJECTS',

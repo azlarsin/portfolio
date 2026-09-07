@@ -2,6 +2,7 @@ import { featuredProjects } from '../data'
 import { CapabilityList } from '../components/home/CapabilityList'
 import { FeaturedCase } from '../components/home/FeaturedCase'
 import { HomeHero } from '../components/home/HomeHero'
+import { ProjectPlayground } from '../components/home/ProjectPlayground'
 import { getLocalizedProjects } from '../data/localized'
 import { useLanguage } from '../i18n/LanguageContext'
 
@@ -12,14 +13,17 @@ export function HomePage() {
   return (
     <main className="page page-home">
       <HomeHero />
-      <CapabilityList />
-      <section className="home-section selected-work" aria-labelledby="selected-work-title">
+      <section
+        id="selected-work"
+        className="home-section selected-work"
+        aria-labelledby="selected-work-title"
+      >
         <div className="section-heading section-heading--split">
           <div>
             <p className="eyebrow">{copy.home.selectedEyebrow}</p>
             <h2 id="selected-work-title">{copy.home.selectedTitle}</h2>
           </div>
-          <p>{copy.home.selectedDescription}</p>
+          <span className="section-count">01 — 04</span>
         </div>
         <div className="featured-work-list">
           {projects.map((project, index) => (
@@ -27,12 +31,12 @@ export function HomePage() {
               key={project.slug}
               project={project}
               index={index + 1}
-              primary={index === 0}
-              spotlight={project.slug === 'baidu-map-workbench'}
             />
           ))}
         </div>
       </section>
+      <ProjectPlayground />
+      <CapabilityList />
     </main>
   )
 }
