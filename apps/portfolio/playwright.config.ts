@@ -7,7 +7,12 @@ export default defineConfig({
   testMatch: '**/*.pw.ts',
   fullyParallel: true,
   workers: 2,
-  use: { baseURL, locale: 'zh-CN', trace: 'retain-on-failure' },
+  use: {
+    baseURL,
+    locale: 'zh-CN',
+    channel: process.env.PLAYWRIGHT_CHROMIUM_CHANNEL || undefined,
+    trace: 'retain-on-failure',
+  },
   webServer: process.env.PORTFOLIO_UI_URL
     ? undefined
     : {
