@@ -140,6 +140,10 @@ export function createCompanionScene(
     onUnavailable()
   }
   const observer = new MutationObserver(sync)
+  // Capture consumers copy this frame in the same task, before WebGL presents it.
+  const capture = () => {
+    if (!disposed && !unavailable) renderer.render(scene, camera)
+  }
   observer.observe(host, { attributes: true, attributeFilter: ['data-mode', 'data-onscreen', 'data-moving', 'data-greeting'] })
   window.addEventListener('pointermove', follow, { passive: true })
   window.addEventListener('blur', resetLook)
@@ -147,6 +151,7 @@ export function createCompanionScene(
   document.addEventListener('visibilitychange', sync)
   motion.addEventListener('change', sync)
   canvas.addEventListener('webglcontextlost', loseContext)
+  canvas.addEventListener('companion:capture', capture)
   sync()
 
   return {
@@ -162,6 +167,7 @@ export function createCompanionScene(
       document.removeEventListener('visibilitychange', sync)
       motion.removeEventListener('change', sync)
       canvas.removeEventListener('webglcontextlost', loseContext)
+      canvas.removeEventListener('companion:capture', capture)
       model.dispose()
       shadowGeometry.dispose()
       shadowMaterial.dispose()

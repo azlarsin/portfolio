@@ -127,7 +127,7 @@
 }
 
 .route-companion[data-ready='true'][data-onscreen='true'] { visibility: visible; }
-.route-companion[data-moving='true'] { will-change: transform; }
+.route-companion[data-moving='true'] { will-change: transform; pointer-events: none; }
 .route-companion:focus-visible { outline: 3px dashed var(--accent); outline-offset: 10px; }
 .route-companion[data-mode='dock']:focus-visible { outline-width: 12px; outline-offset: 14px; }
 
@@ -141,6 +141,8 @@
 }
 
 .route-companion[data-mode='dock'] .companion-aura { opacity: 1; }
+.route-companion[data-placement='floating'] .companion-aura { opacity: 0.92; }
+.route-companion[data-placement='floating'] { filter: drop-shadow(0 10px 14px rgb(20 35 25 / 12%)); }
 
 .companion-portrait {
   position: relative;
