@@ -1,53 +1,49 @@
-# 首页人物转场实验
+# 人物动作与碎片转场
 
-实验分支：`feature/svg-route-companion`。同一分支包含照片形象、SVG 插画和 3D 人物三个可比较的版本。新访客默认显示照片形象，已有版本选择继续保留。
+分支：`feature/svg-route-companion`。支持照片形象与 3D 人物。旧 SVG 插画模式已删除；已有 `svg` 偏好和 `?companion=svg` 链接会自动显示照片。
 
-## 预览
+## 使用
 
-启动 `pnpm dev:portfolio` 后：
+- `/?companion=photo`：照片动作库，共 10 张。
+- `/?companion=3d`：实时 3D 人物，保留吃蛋筒、做鬼脸、蛋筒小喇叭三种姿态。
+- 点击人物切换下一个动作；「选择动作」可打开图片选择器，手机也可使用。
+- 新追加小小笑脸、托腮想想、惊喜一下、奶油胡子、一起合影、比个耶、骑行出发七张照片。图片直接使用用户提供的素材，组件轮廓与取景排除截图界面和背景。
+- 进入内页后人物停靠页头，内页滚动不触发碎片、放大或动作切换；点击页头人物返回首页。
 
-- `/?companion=photo`：以所提供照片为参考的细节人物素材，配合轻微移动、倾转及跨页转场。
-- `/?companion=svg`：原创 SVG 分层插画。
-- `/?companion=3d`：Three.js 实时 3D 卡通人物。
-- 也可以用首页人物下方的「照片形象 / SVG 插画 / 3D 人物」切换；手机上的切换入口位于顶栏。
+显示风格保存在 `portfolio-companion-style`。URL 只指定本次页面加载的风格；按钮不会修改 URL、页面滚动位置或浏览器历史。无存储权限时仍可切换。
 
-选择保存在 `portfolio-companion-style`，跨页与刷新保留。URL 参数仅用于指定页面加载时的预览版本，优先于已保存选择；切换按钮不修改 URL 或滚动位置，因此带参数的页面刷新后会重新显示参数指定的版本。禁用浏览器存储时仍可在当前页面会话切换。
+## 滚动与播放规则
 
-首页点击人物会循环切换「吃蛋筒 → 做鬼脸 → 蛋筒小喇叭」，并显示招呼；桌面移动鼠标，照片人物轻微移动，SVG 眼睛会跟随，3D 人物会转头。首页下滚时，人物按滚动进度拆成六片并移动到右下方，再重组成持续可见的小人物；向上滚动可以反向复原。首页经过不同内容区块会切换动作。内页人物停在顶栏后保持完整与静止，页面滚动不触发碎片、放大或动作切换。进入职业经历、项目、简历或案例页面，人物先散开、翻转，在移动过程中保持可辨认的尺寸，最后缩小拼回站点标识旁；点击后返回首页。锚点跳转使用滚动动画，不重复播放切页飞行。浏览器前进、后退和快速导航均沿用同一个人物容器。独立 Demo 和 Poke 手机预览使用各自界面，不挂载人物。
+滚动只决定下一个场景，**不再直接控制碎片动画帧**。滚动停止约 160ms 后确认目标；首页离开/返回使用不同阈值，区块边界另有 64px 的方向缓冲，防止边缘小幅来回滚动重复触发。
 
-## 三个版本
+所有切换串行播放：当前动画完整结束，其间最多保留最后一个目标。快速跨过多个区域不逐一回放中间场景；回到原区域会取消已经过时的排队目标。手动选择和连续点击同样合并为最后的选择。真正切页、横向视口变化和离开浏览器页面时才取消旧过渡，确保人物始终能完整恢复。
 
-照片版在 `CompanionPhoto.tsx` 中展示由内置图像生成工具按原照片制作的细节人物素材，保留脸部像素，通过 SVG 轮廓裁切和整体轻微移动接入现有跨页动画。它是照片动效，不能自由旋转查看背面，也不是纯矢量插画。完整提示词及素材路径见 [生成记录](./companion-photo-prompt.md)。
+## 随机轨迹与大片切分
 
-SVG 版使用 `CompanionPortrait.tsx` 中可独立变换的头部、眼睛、披风和手臂路径；没有把照片嵌入 SVG。3D 版使用 `createCompanionModel.ts` 中的原创程序化网格、材质和灯光，包含眼睛、发束、球衣、披风和甜筒；是风格化卡通建模，未进行照片级面部重建。
+每次动画开始时生成一次随机方案，包括散开、旋绕、扇开、波浪四类路径、方向、旋转角度、拼接顺序和切分边界。相邻动画不重复同一类路径；播放期间方案固定，不逐帧随机。
 
-人物以第 4 张的张嘴吃蛋筒姿态为主，第 5 张补充短发、脸型和毛巾细节：较长的脸部轮廓、露额头的细密短发、深棕色杏仁眼、圆鼻头，以及嘴边咬过的空蛋筒。明黄球衣使用深蓝领口，白色毛巾宽松地绕过肩膀，结偏向人物右侧（画面左侧）。吃蛋筒使用生成素材 `public/portraits/explorer-photo-v1.png`，做鬼脸使用用户提供的 Photo 3（`explorer-play.jpg`），蛋筒小喇叭使用 Photo 5（`explorer-peek.jpg`）。后两张保留原始图片，由组件中的 SVG 轮廓遮罩控制显示。
+始终使用六块较大的互补碎片。切线只在有限范围内移动，横向约 136–184px、纵向约 100–135px 和 220–244px（画布为 320×340），避免细小碎屑。翻转时仍保留至少约一半的横向宽度。每片经过自身翻转中点才换成下一动作的对应画面，结束后显示完整照片/模型，避免拼接缝。
 
-## 实现与边界
+## 文件
 
-- `RouteCompanion.tsx`：跨页持续挂载的按钮，管理首页、浮动与顶栏三个位置。首页滚动可反向驱动碎片进度；切页飞行约 1.18 秒，保持中段人物尺寸，导航立即完成。
-- `CompanionFragments.tsx`：六块互补锯齿轮廓，以错峰位移、旋转、横向压缩和阴影实现纸片散开／重组。每块纸片在自己的翻转中点换成下一动作的对应画面，重组后真正保留新姿势，而不是原图的重复散开。静止时显示完整当前动作，避免拼接缝；支持点击、首页滚动、切页和风格切换。照片和 SVG 按动作缓存快照，WebGL 同步采集两种动作但仍只使用一个渲染器。抓帧失败时直接切换到目标动作。内页仅允许切页过渡，不响应滚动及区块事件。
-- `companionPoses.ts`：三种动作的顺序、名称与区块映射。
-- `CompanionPreference.tsx`：显示风格与当前动作状态。
-- `CompanionPhoto.tsx`：照片轮廓、裁切与底部渐隐。
-- `CompanionVisual.tsx`：三种显示方式与资源加载；3D 按需加载；首帧、加载失败、WebGL 不可用或上下文丢失时保留 SVG。
-- `companionScene.ts`：独立加载的渲染模块，按交互请求绘制，静止、离屏或后台页面不运行持续循环。卸载和切换至 SVG 会释放渲染器、几何和材质。
-- `styles/companion.css` 与 `styles/companion-fragments.css`：首页／浮动／顶栏定位、分层及碎片动画、响应式样式。
+- `RouteCompanion.tsx`：串行播放、单个待处理目标、稳定区块判定、首页/浮动/页头位置。
+- `CompanionFragments.tsx`：两种动作快照、随机大片合成、播放结束通知、故障恢复。快照缓存最多保留四项，图片只在需要时加载。
+- `companionTrajectory.ts`：一次生成并固定的随机轨迹、互补切线和拼回顺序。
+- `companionPhotos.ts`、`CompanionPhoto.tsx`：10 张照片的取景与轮廓；显示与快照使用同样的参数。
+- `CompanionPreference.tsx`：显示偏好和动作选择器。照片库按需打开，3D 模式只展示自身支持的姿态。
+- `companionScene.ts`、`createCompanionModel.ts`：单个 WebGL 渲染器与三种模型姿态；WebGL 不可用时显示照片。
 
-系统设置「减少动态效果」时，关闭人物跟随、手势、碎片和飞行，位置与动作直接切换；打印时隐藏人物与版本控件。人物保留键盘操作和可访问名称。
+素材位于 `apps/portfolio/public/portraits/`。最初吃蛋筒图片的生成提示词见 [生成记录](./companion-photo-prompt.md)。后续照片均为用户提供的图片，没有重新生成脸部。
 
-参考 [Justin3go 的 PaperJourney](https://github.com/Justin3go/justin3go.com/blob/release/docs/.vitepress/theme/components/PaperJourney.vue) 的持续人物和分层动作思路。参考实现实际为 Canvas + PNG 精灵图，按首页章节滚动切换；本实验的 SVG、3D 网格和跨页面转场均为独立实现，没有复制其人物资源或动画源码。
+系统设置减少动态效果时，动作和位置直接切换，不播放碎片、跟随或飞行动画；打印时隐藏人物。独立 Demo 和手机预览不挂载人物。参考 [Justin3go 的 PaperJourney](https://github.com/Justin3go/justin3go.com/blob/release/docs/.vitepress/theme/components/PaperJourney.vue) 的持续人物与分层转场思路，人物资源和当前调度、随机轨迹代码均独立实现。
 
 ## 验证
 
 ```sh
 pnpm --filter @portfolio/web check
 pnpm --filter @portfolio/web test
-VITE_LAYERED_ROUTE_LAB_URL=https://me.azlar.cc/demos/layered-route-lab pnpm --filter @portfolio/web build
-pnpm --filter @portfolio/web test:built
-pnpm --filter @portfolio/web test:ui
+VITE_GA_MEASUREMENT_ID=G-HXZEF459C9 pnpm build:github-pages
+PLAYWRIGHT_CHROMIUM_CHANNEL=chrome pnpm --filter @portfolio/web test:ui --workers=1
 ```
 
-UI 测试覆盖人物落点、同一个 DOM 的跨页往返、浏览器历史、快速导航、锚点、减少动态效果、手机尺寸、版本选择与 WebGL 回退；碎片测试还检查三种形象均有真实画面、只有一个 WebGL 上下文、滚动驻留与反向复原、动画中断及减少动态效果；动作测试逐像素对比重组中的新旧画面，并覆盖三种内页滚动保持静止的回归。Playwright 需要已安装浏览器；本机已有 Chrome 时，可运行 `PLAYWRIGHT_CHROMIUM_CHANNEL=chrome pnpm --filter @portfolio/web test:ui --workers=1`。
-
-3D 渲染模块独立分包，当前约 141 KB gzip，只有选择 3D 时加载；照片和 SVG 版本不会创建 WebGL 上下文。
+界面测试覆盖动作库、旧偏好迁移、快滚只取最后目标、播放期间排队、边界抖动、连续点击、路径/大片大小随机而帧间稳定、切页、内页页头静止、手机导航、减少动态效果以及真实画面逐片切换。

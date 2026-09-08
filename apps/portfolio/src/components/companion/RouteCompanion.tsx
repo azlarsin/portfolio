@@ -5,236 +5,286 @@ import { useMediaQuery } from '../common/useMediaQuery'
 import { CompanionVisual } from './CompanionVisual'
 import { CompanionStyleSwitch, useCompanionStyle } from './CompanionPreference'
 import { CompanionFragments, dispatchFragments } from './CompanionFragments'
-import { COMPANION_POSE_EVENT, isCompanionPose, nextCompanionPose, poseForSection, poseLabel, type CompanionPose } from './companionPoses'
+import { COMPANION_POSE_EVENT, COMPANION_SELECT_EVENT, COMPANION_TRANSITION_END, isCompanionPose, nextCompanionPose, poseForSection, poseForStyle, poseLabel, type CompanionPose } from './companionPoses'
+import { makeTrajectory, type TrajectoryName } from './companionTrajectory'
 
-const portraitWidth = 320
-const portraitRatio = 340 / portraitWidth
-const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value))
-const smooth = (value: number) => value * value * (3 - 2 * value)
-type PortraitRect = { left: number; top: number; width: number; height: number }
+type Rect = { left: number; top: number; width: number; height: number }
+type Placement = 'hero' | 'floating' | 'dock'
+type Request = { pose: CompanionPose; placement: Placement; zone: number; reason: 'route' | 'section' | 'greeting' | 'style' | 'selection' }
+const ratio = 340 / 320
+const clamp = (n: number, low: number, high: number) => Math.min(high, Math.max(low, n))
+const positionAt = (r: Rect) => `translate3d(${r.left}px, ${r.top}px, 0) scale(${r.width / 320})`
+const mix = (a: Rect, b: Rect, p: number): Rect => ({ left: a.left + (b.left - a.left) * p, top: a.top + (b.top - a.top) * p, width: a.width + (b.width - a.width) * p, height: a.height + (b.height - a.height) * p })
 
-function floatingRect(): PortraitRect {
-  const mobile = innerWidth <= 800
-  const width = mobile ? 72 : clamp((innerWidth - 1152) / 2 - 12, 132, 184)
-  return { left: innerWidth - width - (mobile ? 22 : 34), top: innerHeight - width * portraitRatio - (mobile ? 28 : 38), width, height: width * portraitRatio }
-}
-
-function lerpRect(from: PortraitRect, to: PortraitRect, progress: number): PortraitRect {
-  const width = from.width + (to.width - from.width) * progress
-  return { left: from.left + (to.left - from.left) * progress, top: from.top + (to.top - from.top) * progress, width, height: width * portraitRatio }
-}
-
-function positionAt(rect: PortraitRect) {
-  return `translate3d(${rect.left}px, ${rect.top}px, 0) scale(${rect.width / portraitWidth})`
-}
-
-/** One character stays mounted while the pages beneath it change. Slots reserve its space. */
+/** One serial transition, plus one replaceable destination. Scroll never scrubs frames. */
 export function RouteCompanion({ route }: { route: ResolvedRoute }) {
   const { language } = useLanguage()
   const { style, pose, setPose } = useCompanionStyle()
-  const homePoseRef = useRef<CompanionPose>('snack')
-  const poseRef = useRef(pose)
-  poseRef.current = pose
-  const previousStyle = useRef(style)
   const atHome = route.pathname === '/'
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
   const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)')
   const portraitRef = useRef<HTMLButtonElement>(null)
-  const flightRef = useRef<Animation | null>(null)
+  const poseRef = useRef(pose)
+  poseRef.current = pose
+  const homePoseRef = useRef<CompanionPose>('snack')
   const placedRef = useRef(false)
+  const sequenceRef = useRef(0)
+  const lastRouteRef = useRef(route.pathname)
+  const lastStyleRef = useRef(style)
+  const lastPatternRef = useRef<TrajectoryName | undefined>(undefined)
+  const requestActionRef = useRef<(pose?: CompanionPose) => void>(() => {})
   const [greeting, setGreeting] = useState(false)
   const greetingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const element = portraitRef.current
-    if (!element) return
+    const host = portraitRef.current
+    if (!host) return
     const commit = (event: Event) => {
       const next = (event as CustomEvent<unknown>).detail
-      if (!isCompanionPose(next)) return
-      poseRef.current = next
-      setPose(next)
+      if (isCompanionPose(next)) { poseRef.current = next; setPose(next) }
     }
-    element.addEventListener(COMPANION_POSE_EVENT, commit)
-    return () => element.removeEventListener(COMPANION_POSE_EVENT, commit)
+    const select = (event: Event) => {
+      const next = (event as CustomEvent<unknown>).detail
+      if (isCompanionPose(next)) requestActionRef.current(next)
+    }
+    host.addEventListener(COMPANION_POSE_EVENT, commit)
+    window.addEventListener(COMPANION_SELECT_EVENT, select)
+    return () => { host.removeEventListener(COMPANION_POSE_EVENT, commit); window.removeEventListener(COMPANION_SELECT_EVENT, select) }
   }, [setPose])
 
   useLayoutEffect(() => {
     const element = portraitRef.current
     const slot = document.querySelector<HTMLElement>(`[data-companion-slot="${atHome ? 'home' : 'dock'}"]`)
     if (!element || !slot) return
-    let frame = 0
-    let pendingRoute = true
+    const host: HTMLButtonElement = element
+    const routeChanged = lastRouteRef.current !== route.pathname
+    const styleChanged = lastStyleRef.current !== style
+    lastRouteRef.current = route.pathname
+    lastStyleRef.current = style
+    homePoseRef.current = poseForStyle(homePoseRef.current, style)
     let disposed = false
-    let previousProgress = 0
-    let previousSection = -1
+    let pendingLayout = true
+    let frame = 0
+    let settleTimer: ReturnType<typeof setTimeout> | null = null
+    let watchdog: ReturnType<typeof setTimeout> | null = null
+    let zone = 0
+    let previousWidth = innerWidth
+    let queued: Request | null = null
+    let active: { id: number; request: Request; flightDone: boolean; fragmentDone: boolean; animation: Animation | null } | null = null
 
-    const freezeFlight = () => {
-      if (!flightRef.current) return
-      const current = element.getBoundingClientRect()
-      flightRef.current.cancel()
-      flightRef.current = null
-      element.style.transform = positionAt(current)
-      element.dataset.moving = 'false'
+    const headerBottom = () => document.querySelector('.site-topbar')?.getBoundingClientRect().bottom ?? 76
+    const rectFor = (placement: Placement): Rect => {
+      const slotRect = slot.getBoundingClientRect()
+      if (placement === 'dock') return slotRect
+      if (placement === 'hero') return { left: slotRect.left, top: Math.max(headerBottom() + 4, slotRect.top), width: slotRect.width, height: slotRect.height }
+      const mobile = innerWidth <= 800
+      const width = mobile ? 72 : clamp((innerWidth - 1152) / 2 - 12, 132, 184)
+      return { left: innerWidth - width - (mobile ? 24 : 40), top: innerHeight - width * ratio - 32, width, height: width * ratio }
     }
-
-    const measure = () => {
-      const rect = slot.getBoundingClientRect()
-      const headerBottom = document.querySelector('.site-topbar')?.getBoundingClientRect().bottom ?? 76
-      if (!atHome) return { rect, progress: 0, placement: 'dock' }
-      const start = Math.max(0, scrollY + rect.top - headerBottom - 40)
-      let progress = clamp((scrollY - start) / (innerWidth <= 800 ? 240 : 340))
-      if (reducedMotion) progress = progress > 0 ? 1 : 0
-      if (progress === 0) return { rect, progress, placement: 'hero' }
-      const departure = { left: rect.left, top: headerBottom + 40, width: rect.width, height: rect.height }
-      const target = lerpRect(departure, floatingRect(), smooth(progress))
-      target.top -= Math.sin(progress * Math.PI) * 36
-      return { rect: target, progress, placement: 'floating' }
+    const applyPosition = (placement: Placement, targetZone: number) => {
+      host.style.transform = positionAt(rectFor(placement))
+      host.dataset.placement = placement
+      host.dataset.scrollProgress = placement === 'floating' ? '1.0000' : '0.0000'
+      host.dataset.scene = String(targetZone)
+      if (host.dataset.ready !== 'true') host.dataset.ready = 'true'
+      if (host.dataset.onscreen !== 'true') host.dataset.onscreen = 'true'
     }
-
-    const sectionIndex = () => {
-      const sections = [...new Set(document.querySelectorAll<HTMLElement>('main > section, main .home-section, main .case-chapter, main .career-timeline article'))]
-      const active = sections.reduce((index, section, next) => section.getBoundingClientRect().top < innerHeight * 0.58 ? next : index, -1)
-      return sections.length > 1 ? active : Math.floor(scrollY / Math.max(420, innerHeight * 0.75))
+    const commit = (next: CompanionPose) => { poseRef.current = next; host.dataset.pose = next; setPose(next) }
+    const detectZone = () => {
+      if (!atHome) return 0
+      // Distinct leave/return thresholds prevent jitter at the hero boundary.
+      if ((zone === 0 && scrollY < 140) || (zone > 0 && scrollY < 64)) return 0
+      const sections = [...document.querySelectorAll<HTMLElement>('main.page-home > .home-section')]
+      const footer = document.querySelector<HTMLElement>('.site-footer')
+      if (footer) sections.push(footer)
+      const cursor = scrollY + headerBottom() + innerHeight * 0.3
+      let next = Math.max(1, Math.min(zone, sections.length))
+      while (next < sections.length && cursor > scrollY + sections[next].getBoundingClientRect().top + 64) next++
+      while (next > 1 && cursor < scrollY + sections[next - 1].getBoundingClientRect().top - 64) next--
+      return next
     }
+    const sceneRequest = (): Request => ({ pose: poseForSection(zone, homePoseRef.current, style), placement: zone === 0 ? 'hero' : 'floating', zone, reason: 'section' })
+    const sameTarget = (a: Request, b: Request) => a.pose === b.pose && a.placement === b.placement && a.zone === b.zone
 
-    const place = (target: ReturnType<typeof measure>) => {
-      element.style.transform = positionAt(target.rect)
-      element.dataset.onscreen = 'true'
-      element.dataset.ready = 'true'
-      element.dataset.placement = target.placement
-      element.dataset.scrollProgress = target.progress.toFixed(4)
+    function drain() {
+      if (disposed || pendingLayout || active || !queued) return
+      if (queued.reason === 'section' && settleTimer) return
+      const request = queued
+      queued = null
+      host.dataset.queuedPose = ''
+      start(request)
     }
-
-    const fly = (target: ReturnType<typeof measure>) => {
-      const destinationPose: CompanionPose = atHome
-        ? (target.progress >= 0.5 ? poseForSection(sectionIndex(), homePoseRef.current) : homePoseRef.current)
-        : route.pathname.startsWith('/archive') ? 'peek' : route.pathname === '/experience' ? 'play' : 'snack'
-      const sourcePose = poseRef.current
-      const previous = placedRef.current ? element.getBoundingClientRect() : target.rect
-      freezeFlight()
-      place(target)
-      if (!placedRef.current || reducedMotion || typeof element.animate !== 'function') {
-        dispatchFragments(element, { type: 'stop' })
-        poseRef.current = destinationPose
-        setPose(destinationPose)
+    function finish() {
+      if (!active || !active.flightDone || !active.fragmentDone) return
+      const request = active.request
+      active = null
+      if (watchdog) clearTimeout(watchdog)
+      watchdog = null
+      applyPosition(request.placement, request.zone)
+      host.dataset.moving = 'false'
+      host.dataset.transitionState = 'idle'
+      drain()
+    }
+    function start(request: Request) {
+      if (disposed) return
+      if (request.reason === 'section' && request.pose === poseRef.current && request.placement === host.dataset.placement) {
+        applyPosition(request.placement, request.zone)
         return
       }
-      const smallScreen = innerWidth <= 800
-      const duration = 1180
-      const midWidth = Math.max(previous.width, target.rect.width, smallScreen ? 104 : 192)
-      const centerX = (previous.left + previous.width / 2) * 0.4 + (target.rect.left + target.rect.width / 2) * 0.6
-      const middle: PortraitRect = {
-        left: clamp(centerX - midWidth / 2, 26, innerWidth - midWidth - 26),
-        top: Math.max(86, (previous.top + target.rect.top) / 2 + 44),
-        width: midWidth,
-        height: midWidth * portraitRatio,
+      if (reducedMotion || !placedRef.current) {
+        commit(request.pose)
+        applyPosition(request.placement, request.zone)
+        host.dataset.moving = 'false'
+        host.dataset.transitionState = 'idle'
+        drain()
+        return
       }
-      middle.top = Math.min(middle.top, innerHeight - middle.height - 20)
-      element.dataset.moving = 'true'
-      const flight = element.animate([
-        { transform: positionAt(previous), offset: 0 },
-        { transform: positionAt(lerpRect(previous, middle, 0.55)), offset: 0.25 },
-        { transform: positionAt(middle), offset: 0.55 },
-        { transform: positionAt(target.rect), offset: 1 },
-      ], { duration, easing: 'cubic-bezier(.4, 0, .16, 1)' })
-      flightRef.current = flight
-      dispatchFragments(element, { type: 'play', reason: 'route', duration, strength: 1.25, fromPose: sourcePose, toPose: destinationPose })
-      flight.onfinish = () => {
-        if (disposed || flightRef.current !== flight) return
-        flightRef.current = null
-        element.dataset.moving = 'false'
-        const latest = measure()
-        place(latest)
-        previousProgress = latest.progress
-        previousSection = sectionIndex()
-        if (latest.progress > 0 && latest.progress < 1) dispatchFragments(element, { type: 'scrub', progress: latest.progress, fromPose: homePoseRef.current, toPose: nextCompanionPose(homePoseRef.current) })
+      const id = ++sequenceRef.current
+      const fromPose = poseRef.current
+      const from = host.getBoundingClientRect()
+      const to = rectFor(request.placement)
+      const duration = request.reason === 'route' ? 1050 : 900
+      const plan = makeTrajectory(lastPatternRef.current)
+      lastPatternRef.current = plan.pattern
+      active = { id, request, flightDone: true, fragmentDone: false, animation: null }
+      host.dataset.transitionId = String(id)
+      host.dataset.transitionState = 'running'
+      host.dataset.targetPose = request.pose
+      host.dataset.placement = request.placement
+      host.dataset.scene = String(request.zone)
+      if (watchdog) clearTimeout(watchdog)
+      watchdog = setTimeout(() => {
+        if (active?.id !== id) return
+        const current = active
+        active = null
+        current.animation?.cancel()
+        dispatchFragments(host, { type: 'stop' })
+        commit(request.pose)
+        applyPosition(request.placement, request.zone)
+        host.dataset.moving = 'false'
+        host.dataset.transitionState = 'idle'
+        drain()
+      }, 5000)
+      const distance = Math.abs(from.left - to.left) + Math.abs(from.top - to.top) + Math.abs(from.width - to.width)
+      if (distance > 2 && typeof host.animate === 'function') {
+        const width = Math.max(from.width, to.width, innerWidth <= 800 ? 96 : 172)
+        const middle = mix(from, to, 0.55)
+        middle.width = width
+        middle.height = width * ratio
+        middle.left = clamp(middle.left + plan.bend, 24, Math.max(24, innerWidth - width - 24))
+        middle.top = clamp(middle.top + Math.abs(plan.bend) * 0.6 + 22, headerBottom() + 12, Math.max(headerBottom() + 12, innerHeight - middle.height - 20))
+        host.style.transform = positionAt(to)
+        host.dataset.moving = 'true'
+        active.flightDone = false
+        const animation = host.animate([{ transform: positionAt(from), offset: 0 }, { transform: positionAt(middle), offset: 0.52 }, { transform: positionAt(to), offset: 1 }], { duration, easing: 'cubic-bezier(.3, 0, .2, 1)' })
+        active.animation = animation
+        animation.onfinish = () => { if (active?.id === id) { active.flightDone = true; host.dataset.moving = 'false'; finish() } }
       }
+      dispatchFragments(host, { type: 'play', reason: request.reason, duration, strength: request.reason === 'section' ? 0.85 : 1.05, fromPose, toPose: request.pose, transitionId: id, trajectory: plan })
     }
-
-    const updateScroll = () => {
+    const submit = (request: Request) => {
+      if (disposed || (!atHome && request.reason !== 'route')) return
+      request.pose = poseForStyle(request.pose, style)
+      if (active || pendingLayout) {
+        queued = active && sameTarget(active.request, request) ? null : request
+        host.dataset.queuedPose = queued?.pose ?? ''
+      } else start(request)
+    }
+    const onEnd = (event: Event) => {
+      const detail = (event as CustomEvent<{ transitionId?: number; canceled: boolean }>).detail
+      if (!active || active.id !== detail?.transitionId) return
+      if (detail.canceled) commit(active.request.pose)
+      active.fragmentDone = true
+      finish()
+    }
+    const settleScroll = () => {
+      settleTimer = null
+      if (!atHome || pendingLayout || disposed || document.hidden) return
+      const next = detectZone()
+      if (next !== zone) { zone = next; submit(sceneRequest()) }
+      drain()
+    }
+    const followPosition = () => {
       frame = 0
-      if (pendingRoute || flightRef.current || disposed || document.hidden) return
-      const target = measure()
-      if (!target.rect.width) return
-      place(target)
-      // Inner pages only keep the static dock aligned. Their content scrolling
-      // must never start a fracture, pose change, or expanding header flight.
-      if (!atHome) return
-      const currentSection = sectionIndex()
-      const changedProgress = Math.abs(target.progress - previousProgress) > 0.0001
-      if (changedProgress) {
-        const jumpedAcross = Math.abs(target.progress - previousProgress) > 0.85
-        dispatchFragments(element, jumpedAcross && !reducedMotion
-          ? { type: 'play', reason: 'section', duration: 1100, strength: 1, fromPose: poseRef.current, toPose: target.progress === 0 ? homePoseRef.current : poseForSection(currentSection, homePoseRef.current) }
-          : { type: 'scrub', progress: target.progress, strength: 1.15, fromPose: homePoseRef.current, toPose: nextCompanionPose(homePoseRef.current) })
-      } else if (target.progress === 1 && currentSection !== previousSection && previousSection >= 0) {
-        const next = poseForSection(currentSection, homePoseRef.current)
-        if (next !== poseRef.current) dispatchFragments(element, { type: 'play', reason: 'section', duration: 1180, strength: 1.1, fromPose: poseRef.current, toPose: next })
-      }
-      previousProgress = target.progress
-      previousSection = currentSection
+      if (disposed || pendingLayout || active || document.hidden) return
+      applyPosition(atHome ? zone === 0 ? 'hero' : 'floating' : 'dock', zone)
     }
-
-    const schedulePosition = () => {
-      if (pendingRoute || frame || flightRef.current) return
-      frame = requestAnimationFrame(updateScroll)
+    const onScroll = () => {
+      if (pendingLayout || disposed) return
+      if (!frame) frame = requestAnimationFrame(followPosition)
+      if (!atHome) return
+      if (settleTimer) clearTimeout(settleTimer)
+      settleTimer = setTimeout(settleScroll, 160)
+    }
+    const cancel = (preserveTarget: boolean) => {
+      const target = queued?.pose ?? active?.request.pose ?? poseRef.current
+      const before = host.getBoundingClientRect()
+      const animation = active?.animation
+      active = null
+      queued = null
+      animation?.cancel()
+      if (watchdog) clearTimeout(watchdog)
+      watchdog = null
+      if (settleTimer) clearTimeout(settleTimer)
+      settleTimer = null
+      dispatchFragments(host, { type: 'stop' })
+      if (preserveTarget) commit(poseForStyle(target, style))
+      if (placedRef.current) host.style.transform = positionAt(before)
+      host.dataset.moving = 'false'
+      host.dataset.transitionState = 'idle'
+      host.dataset.queuedPose = ''
     }
     const resize = () => {
-      freezeFlight()
-      dispatchFragments(element, { type: 'stop' })
-      schedulePosition()
+      if (innerWidth !== previousWidth) { previousWidth = innerWidth; cancel(true); zone = detectZone() }
+      if (!frame) frame = requestAnimationFrame(followPosition)
     }
     const visibility = () => {
-      if (document.hidden) {
-        freezeFlight()
-        dispatchFragments(element, { type: 'stop' })
-      } else schedulePosition()
+      if (document.hidden) cancel(true)
+      else { zone = detectZone(); followPosition() }
     }
-
-    // Match the router's two-frame scroll restoration before measuring a new page.
-    frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(() => {
-        frame = requestAnimationFrame(() => {
-          frame = 0
-          pendingRoute = false
-          const target = measure()
-          fly(target)
-          placedRef.current = true
-          previousProgress = target.progress
-          previousSection = sectionIndex()
-        })
-      })
-    })
-    window.addEventListener('scroll', schedulePosition, { passive: true })
+    requestActionRef.current = selected => {
+      if (!atHome) return
+      if (settleTimer) clearTimeout(settleTimer)
+      settleTimer = null
+      zone = detectZone()
+      const next = selected ? poseForStyle(selected, style) : nextCompanionPose(queued?.pose ?? active?.request.pose ?? poseRef.current, style)
+      if (zone === 0) homePoseRef.current = next
+      submit({ pose: next, zone, placement: zone === 0 ? 'hero' : 'floating', reason: selected ? 'selection' : 'greeting' })
+    }
+    host.addEventListener(COMPANION_TRANSITION_END, onEnd)
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', resize)
     document.addEventListener('visibilitychange', visibility)
-    const observer = new ResizeObserver(schedulePosition)
+    const observer = new ResizeObserver(() => { if (!pendingLayout && !frame) frame = requestAnimationFrame(followPosition) })
     observer.observe(slot)
     if (slot.parentElement) observer.observe(slot.parentElement)
     const hero = slot.closest('.home-hero')
     if (hero) observer.observe(hero)
     const header = document.querySelector('.site-topbar')
     if (header) observer.observe(header)
-
+    frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => { frame = requestAnimationFrame(() => {
+      frame = 0
+      pendingLayout = false
+      zone = detectZone()
+      const placement: Placement = atHome ? zone === 0 ? 'hero' : 'floating' : 'dock'
+      const destination = atHome ? poseForSection(zone, homePoseRef.current, style) : poseForStyle(route.pathname.startsWith('/archive') ? 'peek' : route.pathname === '/experience' ? 'thinking' : 'snack', style)
+      if (placedRef.current && (routeChanged || styleChanged)) submit({ pose: styleChanged ? poseRef.current : destination, placement, zone, reason: routeChanged ? 'route' : 'style' })
+      else { commit(destination); applyPosition(placement, zone); host.dataset.transitionState = 'idle' }
+      placedRef.current = true
+      drain()
+    }) }) })
     return () => {
       disposed = true
       cancelAnimationFrame(frame)
+      cancel(false)
       observer.disconnect()
-      window.removeEventListener('scroll', schedulePosition)
+      host.removeEventListener(COMPANION_TRANSITION_END, onEnd)
+      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', resize)
       document.removeEventListener('visibilitychange', visibility)
-      freezeFlight()
-      dispatchFragments(element, { type: 'stop' })
+      requestActionRef.current = () => {}
     }
-  }, [atHome, route.pathname, reducedMotion, setPose])
-
-  useEffect(() => {
-    if (previousStyle.current === style) return
-    previousStyle.current = style
-    const frame = requestAnimationFrame(() => dispatchFragments(portraitRef.current, { type: 'play', reason: 'style', duration: 1050, fromPose: poseRef.current, toPose: poseRef.current }))
-    return () => cancelAnimationFrame(frame)
-  }, [style])
-
+  }, [atHome, route.pathname, style, reducedMotion, setPose])
   useEffect(() => {
     const element = portraitRef.current
     if (!element) return
@@ -280,47 +330,22 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
 
   useEffect(() => {
     setGreeting(false)
-    return () => {
-      if (greetingTimer.current) clearTimeout(greetingTimer.current)
-    }
+    return () => { if (greetingTimer.current) clearTimeout(greetingTimer.current) }
   }, [route.pathname])
-
   const sayHello = () => {
-    if (!atHome) {
-      navigate('/')
-      return
-    }
+    if (!atHome) { navigate('/'); return }
     setGreeting(true)
-    const next = nextCompanionPose(poseRef.current)
-    if (portraitRef.current?.dataset.placement === 'hero') homePoseRef.current = next
-    dispatchFragments(portraitRef.current, { type: 'play', reason: 'greeting', duration: 1320, strength: 1.35, fromPose: poseRef.current, toPose: next })
+    requestActionRef.current()
     if (greetingTimer.current) clearTimeout(greetingTimer.current)
     greetingTimer.current = setTimeout(() => setGreeting(false), 1600)
   }
-
-  const label = language === 'zh'
-    ? (atHome ? '和小小探索者打个招呼' : '回到首页')
-    : (atHome ? 'Say hello to the little explorer' : 'Back to home')
-
+  const label = language === 'zh' ? atHome ? '和小小探索者打个招呼' : '回到首页' : atHome ? 'Say hello to the little explorer' : 'Back to home'
   return (
-    <button
-      ref={portraitRef}
-      type="button"
-      className="route-companion"
-      data-testid="route-companion"
-      data-mode={atHome ? 'home' : 'dock'}
-      data-greeting={greeting}
-      data-pose={pose}
-      aria-label={label}
-      title={atHome ? `${poseLabel(pose, language)} → ${poseLabel(nextCompanionPose(pose), language)}` : label}
-      onClick={sayHello}
-    >
+    <button ref={portraitRef} type="button" className="route-companion" data-testid="route-companion" data-mode={atHome ? 'home' : 'dock'} data-greeting={greeting} data-pose={pose} aria-label={label} title={atHome ? `${poseLabel(pose, language)} → ${poseLabel(nextCompanionPose(pose, style), language)}` : label} onClick={sayHello}>
       <span className="companion-aura" aria-hidden="true" />
       <CompanionVisual />
       <CompanionFragments hostRef={portraitRef} />
-      <span className="companion-hello" aria-hidden="true">
-        {language === 'zh' ? '嗨，一起探索！' : 'Hey, let’s explore!'}
-      </span>
+      <span className="companion-hello" aria-hidden="true">{language === 'zh' ? '嗨，一起探索！' : 'Hey, let’s explore!'}</span>
     </button>
   )
 }

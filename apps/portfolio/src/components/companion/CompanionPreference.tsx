@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLanguage } from '../../i18n/LanguageContext'
-import type { CompanionPose } from './companionPoses'
+import { availablePoses, COMPANION_SELECT_EVENT, poseForStyle, poseLabel, type CompanionPose, type CompanionStyle } from './companionPoses'
+import { CompanionPhoto } from './CompanionPhoto'
 
-type CompanionStyle = 'photo' | 'svg' | '3d'
 const storageKey = 'portfolio-companion-style'
 const CompanionContext = createContext<{
   style: CompanionStyle
@@ -14,52 +14,67 @@ const CompanionContext = createContext<{
 function initialStyle(): CompanionStyle {
   if (typeof window === 'undefined') return 'photo'
   const query = new URLSearchParams(window.location.search).get('companion')
-  if (query === 'photo' || query === 'svg' || query === '3d') return query
-  try {
-    const saved = localStorage.getItem(storageKey)
-    return saved === 'photo' || saved === 'svg' || saved === '3d' ? saved : 'photo'
-  } catch {
-    return 'photo'
-  }
+  if (query === 'photo' || query === '3d') return query
+  if (query === 'svg') return 'photo'
+  try { return localStorage.getItem(storageKey) === '3d' ? '3d' : 'photo' }
+  catch { return 'photo' }
 }
-
 export function CompanionProvider({ children }: { children: ReactNode }) {
   const [style, updateStyle] = useState<CompanionStyle>(initialStyle)
   const [pose, setPose] = useState<CompanionPose>('snack')
-  useEffect(() => {
-    try {
-      localStorage.setItem(storageKey, style)
-    } catch {
-      // A URL-selected version also persists when browser storage is available.
-    }
-  }, [style])
+  useEffect(() => { try { localStorage.setItem(storageKey, style) } catch { /* Storage may be disabled. */ } }, [style])
   const setStyle = (next: CompanionStyle) => {
+    setPose(current => poseForStyle(current, next))
     updateStyle(next)
   }
   return <CompanionContext.Provider value={{ style, setStyle, pose, setPose }}>{children}</CompanionContext.Provider>
 }
-
-export function useCompanionStyle() {
-  return useContext(CompanionContext)
-}
+export function useCompanionStyle() { return useContext(CompanionContext) }
 
 export function CompanionStyleSwitch({ compact = false }: { compact?: boolean }) {
   const { language } = useLanguage()
-  const { style, setStyle } = useCompanionStyle()
+  const { style, setStyle, pose } = useCompanionStyle()
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const dialogRef = useRef<HTMLDialogElement>(null)
+  const poses = availablePoses(style)
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (pickerOpen && !dialog.open) dialog.showModal()
+    if (!pickerOpen && dialog.open) dialog.close()
+  }, [pickerOpen])
   const photoLabel = language === 'zh' ? '照片形象' : 'Photo portrait'
-  const svgLabel = language === 'zh' ? 'SVG 插画' : 'SVG illustration'
   const threeLabel = language === 'zh' ? '3D 人物' : '3D character'
+  const pickerLabel = language === 'zh' ? '选择动作' : 'Choose an action'
   return (
-    <div className={`companion-style-switch${compact ? ' companion-style-switch--mobile' : ''}`} role="group" aria-label={language === 'zh' ? '人物风格' : 'Character style'}>
-      <button type="button" aria-label={photoLabel} aria-pressed={style === 'photo'} onClick={() => setStyle('photo')}>
-        {compact ? (language === 'zh' ? '照片' : 'Photo') : photoLabel}
-      </button>
-      <button type="button" aria-label={svgLabel} aria-pressed={style === 'svg'} onClick={() => setStyle('svg')}>
-        {compact ? 'SVG' : svgLabel}
-      </button>
-      <button type="button" aria-label={threeLabel} aria-pressed={style === '3d'} onClick={() => setStyle('3d')}>
-        {compact ? '3D' : threeLabel}
-      </button>
-    </div>
+    <>
+      <div className={`companion-style-switch${compact ? ' companion-style-switch--mobile' : ''}`} role="group" aria-label={language === 'zh' ? '人物风格' : 'Character style'}>
+        <button type="button" aria-label={photoLabel} aria-pressed={style === 'photo'} onClick={() => setStyle('photo')}>
+          {compact ? (language === 'zh' ? '照片' : 'Photo') : photoLabel}
+        </button>
+        <button type="button" aria-label={threeLabel} aria-pressed={style === '3d'} onClick={() => setStyle('3d')}>
+          {compact ? '3D' : threeLabel}
+        </button>
+        <button type="button" aria-label={pickerLabel} onClick={() => setPickerOpen(true)}>
+          {compact ? (language === 'zh' ? '动作' : 'Pose') : `${pickerLabel} ↗`}
+        </button>
+      </div>
+      <dialog ref={dialogRef} className="companion-picker" aria-label={pickerLabel} onCancel={() => setPickerOpen(false)} onClose={() => setPickerOpen(false)} onClick={event => {
+        if (event.target !== event.currentTarget) return
+        const box = event.currentTarget.getBoundingClientRect()
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) setPickerOpen(false)
+      }}>
+        <header className="companion-picker-heading">
+          <div><strong>{pickerLabel}</strong><p>{language === 'zh' ? `${poses.length} ${style === 'photo' ? '张照片' : '个动作'}，选一张试试` : `${poses.length} actions to choose from`}</p></div>
+          <button type="button" className="icon-button" aria-label={language === 'zh' ? '关闭动作选择' : 'Close action picker'} onClick={() => setPickerOpen(false)}>×</button>
+        </header>
+        {pickerOpen && <div className="companion-picker-grid">
+          {poses.map(option => <button key={option} type="button" className="companion-picker-option" aria-pressed={pose === option} onClick={() => {
+            setPickerOpen(false)
+            window.dispatchEvent(new CustomEvent(COMPANION_SELECT_EVENT, { detail: option }))
+          }}><span className="companion-picker-preview"><CompanionPhoto pose={option} /></span><span>{poseLabel(option, language)}</span></button>)}
+        </div>}
+      </dialog>
+    </>
   )
 }

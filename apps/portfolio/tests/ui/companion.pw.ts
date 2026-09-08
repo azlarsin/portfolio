@@ -61,8 +61,8 @@ test('the default photo loads without WebGL and its selection survives navigatio
   })).toBe(true)
   await expect(page.locator('.companion-canvas')).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'SVG 插画', exact: true }).click()
-  await expect(visual).toHaveAttribute('data-renderer', 'svg')
+  await page.getByRole('button', { name: '照片形象', exact: true }).click()
+  await expect(visual).toHaveAttribute('data-renderer', 'photo')
   await page.getByRole('button', { name: '照片形象', exact: true }).click()
   await expect(visual).toHaveAttribute('data-renderer', 'photo')
   expect(await page.evaluate(() => localStorage.getItem('portfolio-companion-style'))).toBe('photo')
@@ -138,18 +138,17 @@ test('history and interrupted journeys preserve the character and its final dest
   await expect(companion).toHaveCount(1)
 })
 
-test('hash navigation does not start a character journey', async ({ page }) => {
+test('hash navigation uses the home scene without a route transition', async ({ page }) => {
   await recordCompanionAnimations(page)
   await page.goto('/')
   await expectAtSlot(page, 'home')
-  const before = await animationCount(page)
   await page.locator('.hero-actions a[href="/#selected-work"]').click()
   await expect(page).toHaveURL(/\/#selected-work$/)
   await expect(page.getByTestId('route-companion')).toHaveAttribute('data-mode', 'home')
   await page.goBack()
   await expect(page).toHaveURL(/\/$/)
   await expectAtSlot(page, 'home')
-  expect(await animationCount(page)).toBe(before)
+  await expect(page.getByTestId('route-companion')).not.toHaveAttribute('data-fragment-reason', 'route')
 })
 
 test('reduced motion disables character transitions and keeps navigation usable', async ({ page }) => {
@@ -177,7 +176,7 @@ test('reduced motion disables character transitions and keeps navigation usable'
   )).toBe(0)
 })
 
-test('unavailable WebGL falls back to a vector character with working navigation', async ({ page }) => {
+test('unavailable WebGL falls back to the photo with working navigation', async ({ page }) => {
   const errors: string[] = []
   let webGLAttempts = 0
   page.on('pageerror', (error) => errors.push(error.message))
@@ -197,11 +196,11 @@ test('unavailable WebGL falls back to a vector character with working navigation
   await expectAtSlot(page, 'home')
   await expect.poll(() => webGLAttempts).toBeGreaterThan(0)
   await expect(page.locator('.companion-visual')).toHaveAttribute('data-style', '3d')
-  await expect(page.locator('[data-renderer="svg"]')).toBeVisible()
-  const portrait = page.locator('.companion-pose-view:not([hidden]) .companion-portrait')
+  await expect(page.locator('[data-renderer="photo"]')).toBeVisible()
+  const portrait = page.locator('.companion-pose-view:not([hidden]) .companion-photo')
   await expect(portrait).toBeVisible()
   expect(await portrait.locator('path').count()).toBeGreaterThan(0)
-  await expect(portrait.locator('image, foreignObject, canvas')).toHaveCount(0)
+  await expect(portrait.locator('image')).toHaveCount(1)
   await companion.evaluate((element) => element.setAttribute('data-test-sentinel', 'fallback'))
   await page.locator('.site-topbar a[href="/experience"]').click()
   await expectAtSlot(page, 'dock')
@@ -212,25 +211,25 @@ test('unavailable WebGL falls back to a vector character with working navigation
   expect(errors).toEqual([])
 })
 
-test('SVG and 3D choices persist across navigation and reload, with URL overrides', async ({ page }) => {
+test('Photo and 3D choices persist across navigation and reload, with URL overrides', async ({ page }) => {
   await page.goto('/')
   const visual = page.locator('.companion-visual')
   const canvas = page.locator('.companion-canvas')
   await expect(visual).toHaveAttribute('data-style', 'photo')
-  await page.getByRole('button', { name: 'SVG 插画', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'SVG 插画', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(visual).toHaveAttribute('data-style', 'svg')
-  await expect(visual).toHaveAttribute('data-renderer', 'svg')
+  await page.getByRole('button', { name: '照片形象', exact: true }).click()
+  await expect(page.getByRole('button', { name: '照片形象', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(visual).toHaveAttribute('data-style', 'photo')
+  await expect(visual).toHaveAttribute('data-renderer', 'photo')
   await expect(canvas).toHaveCount(0)
-  expect(await page.evaluate(() => localStorage.getItem('portfolio-companion-style'))).toBe('svg')
+  expect(await page.evaluate(() => localStorage.getItem('portfolio-companion-style'))).toBe('photo')
   await page.locator('.site-topbar a[href="/archive"]').click()
   await expectAtSlot(page, 'dock')
-  await expect(visual).toHaveAttribute('data-style', 'svg')
+  await expect(visual).toHaveAttribute('data-style', 'photo')
   await expect(canvas).toHaveCount(0)
   await page.getByTestId('route-companion').click()
   await expectAtSlot(page, 'home')
   await page.reload()
-  await expect(visual).toHaveAttribute('data-style', 'svg')
+  await expect(visual).toHaveAttribute('data-style', 'photo')
   await expect(canvas).toHaveCount(0)
 
   await page.getByRole('button', { name: '3D 人物', exact: true }).click()
@@ -241,8 +240,8 @@ test('SVG and 3D choices persist across navigation and reload, with URL override
   await page.reload()
   await expect(visual).toHaveAttribute('data-style', '3d')
   await expect(visual).toHaveAttribute('data-renderer', 'webgl', { timeout: 15000 })
-  await page.goto('/?companion=svg')
-  await expect(visual).toHaveAttribute('data-style', 'svg')
+  await page.goto('/?companion=photo')
+  await expect(visual).toHaveAttribute('data-style', 'photo')
   await expect(canvas).toHaveCount(0)
   await page.goto('/?companion=3d')
   await expect(visual).toHaveAttribute('data-style', '3d')
@@ -280,7 +279,7 @@ test('the WebGL character turns with the pointer and stays still under reduced m
 })
 
 test('language changes keep the character aligned with the resized home layout', async ({ page }) => {
-  await page.goto('/?companion=svg')
+  await page.goto('/?companion=photo')
   await expectAtSlot(page, 'home')
   const companion = page.getByTestId('route-companion')
   await companion.evaluate((element) => element.setAttribute('data-test-sentinel', 'language'))
@@ -302,7 +301,7 @@ test('mobile style changes preserve scroll, focus, and the initial preview URL',
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(500)
   const scrollY = await page.evaluate(() => window.scrollY)
   const url = page.url()
-  for (const [name, style] of [['SVG 插画', 'svg'], ['3D 人物', '3d'], ['照片形象', 'photo']] as const) {
+  for (const [name, style] of [['照片形象', 'photo'], ['3D 人物', '3d']] as const) {
     const choice = page.getByRole('button', { name, exact: true })
     // Locator.click scrolls this already visible sticky control into view itself.
     // Click its screen position so this assertion measures the page's behavior.
@@ -325,7 +324,7 @@ test('the character remains usable on narrow phones without horizontal overflow'
     await page.goto('/')
     await expectAtSlot(page, 'home')
     const companion = page.getByTestId('route-companion')
-    for (const name of ['照片形象', 'SVG 插画', '3D 人物']) {
+    for (const name of ['照片形象', '3D 人物', '选择动作']) {
       const choice = page.getByRole('button', { name, exact: true })
       await expect(choice).toBeVisible()
       const bounds = await choice.boundingBox()
@@ -333,8 +332,8 @@ test('the character remains usable on narrow phones without horizontal overflow'
       expect((bounds?.x || 0) + (bounds?.width || 0)).toBeLessThanOrEqual(width)
     }
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
-    await page.getByRole('button', { name: 'SVG 插画', exact: true }).click()
-    await expect(page.locator('.companion-visual')).toHaveAttribute('data-style', 'svg')
+    await page.getByRole('button', { name: '照片形象', exact: true }).click()
+    await expect(page.locator('.companion-visual')).toHaveAttribute('data-style', 'photo')
     await expect(page.locator('.companion-canvas')).toHaveCount(0)
     await page.getByRole('button', { name: '3D 人物', exact: true }).click()
     await expect(page.locator('.companion-visual')).toHaveAttribute('data-renderer', 'webgl', { timeout: 15000 })

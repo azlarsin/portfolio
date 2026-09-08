@@ -1,15 +1,15 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import { companionPoses, COMPANION_POSE_EVENT, isCompanionPose, type CompanionPose } from './companionPoses'
+import { COMPANION_POSE_EVENT, COMPANION_TRANSITION_END, isCompanionPose, nextCompanionPose, type CompanionPose } from './companionPoses'
+import { companionPhotos } from './companionPhotos'
+import { makeTrajectory, pieceTransform, type TrajectoryPlan } from './companionTrajectory'
 
 export type CompanionFragmentDetail =
-  | { type: 'play'; reason: 'route' | 'greeting' | 'section' | 'style'; duration?: number; strength?: number; fromPose?: CompanionPose; toPose?: CompanionPose }
-  | { type: 'scrub'; progress: number; strength?: number; fromPose?: CompanionPose; toPose?: CompanionPose }
+  | { type: 'play'; reason: 'route' | 'greeting' | 'section' | 'style' | 'selection'; duration?: number; strength?: number; fromPose?: CompanionPose; toPose?: CompanionPose; transitionId?: number; trajectory?: TrajectoryPlan }
   | { type: 'stop' }
 
 const FRAGMENT_EVENT = 'companion:fragments'
 const WIDTH = 320
 const HEIGHT = 340
-const offsets = [[-70, -40, -27], [-44, 56, 18], [64, -16, -11], [74, 44, 27], [44, -56, -18], [-64, 16, 11]]
 // Every interior edge is shared, so the six pieces reconstruct the same silhouette.
 const polygons = [
   [[0, 0], [160, 0], [148, 43], [166, 77], [154, 112], [108, 104], [55, 120], [0, 108]],
@@ -68,7 +68,7 @@ function ensurePainted(canvas: HTMLCanvasElement, context: CanvasRenderingContex
 
 // SVG images have their own document: copy the live paint and pose along with
 // defs, masks and embedded image bytes rather than depending on page styles.
-async function captureSvg(source: SVGSVGElement) {
+async function captureSvg(source: SVGSVGElement, pose: CompanionPose) {
   const clone = source.cloneNode(true) as SVGSVGElement
   const liveElements = [source, ...source.querySelectorAll<SVGElement>('*')]
   const copiedElements = [clone, ...clone.querySelectorAll<SVGElement>('*')]
@@ -86,6 +86,16 @@ async function captureSvg(source: SVGSVGElement) {
       if (value) copiedElements[index].style.setProperty(property, value)
     }
   })
+  const photo = companionPhotos[pose]
+  clone.setAttribute('viewBox', photo.viewBox.join(' '))
+  clone.querySelector('[data-photo-outline]')?.setAttribute('d', photo.outline)
+  const photoImage = clone.querySelector('image')!
+  photoImage.setAttribute('href', photo.src)
+  photoImage.setAttribute('width', String(photo.width))
+  photoImage.setAttribute('height', String(photo.height))
+  for (const frame of clone.querySelectorAll('[data-photo-mask], [data-photo-frame]')) {
+    for (const [index, attr] of ['x', 'y', 'width', 'height'].entries()) frame.setAttribute(attr, String(photo.viewBox[index]))
+  }
   clone.setAttribute('width', String(WIDTH))
   clone.setAttribute('height', String(HEIGHT))
   clone.style.width = `${WIDTH}px`
@@ -134,14 +144,13 @@ async function captureVisual(visual: HTMLElement, pose: CompanionPose): Promise<
     ensurePainted(snapshot, context)
     return Promise.resolve(snapshot)
   }
-  const source = visual.querySelector<SVGSVGElement>(`[data-pose="${pose}"] svg`)
-  return source ? captureSvg(source) : Promise.reject(new Error('Portrait unavailable'))
+  const source = visual.querySelector<SVGSVGElement>('.companion-photo')
+  return source ? captureSvg(source, pose) : Promise.reject(new Error('Portrait unavailable'))
 }
 
-/** A temporary six-piece overlay; the live portrait remains intact at rest. */
+/** A single complete transition. The controller coalesces competing requests. */
 export function CompanionFragments({ hostRef }: { hostRef: RefObject<HTMLButtonElement | null> }) {
   const layerRef = useRef<HTMLSpanElement>(null)
-
   useEffect(() => {
     const host = hostRef.current
     const layer = layerRef.current
@@ -154,174 +163,122 @@ export function CompanionFragments({ hostRef }: { hostRef: RefObject<HTMLButtonE
     let frame = 0
     let generation = 0
     let disposed = false
-    let active = false
-    let sourceKey = ''
-    let observedVisualKey = ''
-    let intentKey = ''
-    let fromPose: CompanionPose = 'snack'
-    let toPose: CompanionPose = 'snack'
-    let sourceImage: HTMLCanvasElement | null = null
-    let destinationImage: HTMLCanvasElement | null = null
-    const paintedSides: (boolean | null)[] = Array(6).fill(null)
-    let intent: Exclude<CompanionFragmentDetail, { type: 'stop' }> | null = null
+    let observedKey = ''
+    let intent: Extract<CompanionFragmentDetail, { type: 'play' }> | null = null
 
+    const notifyEnd = (request: typeof intent, canceled: boolean) => {
+      if (request) host.dispatchEvent(new CustomEvent(COMPANION_TRANSITION_END, { detail: { transitionId: request.transitionId, canceled } }))
+    }
     const permitted = () => !disposed && host.isConnected && !document.hidden && !reduced.matches
-    const restore = () => {
-      active = false
-      host.dataset.fragments = 'false'
-    }
-    const stop = () => {
-      generation += 1
-      cancelAnimationFrame(frame)
-      frame = 0
-      intent = null
-      intentKey = ''
-      sourceKey = ''
-      host.dataset.fragmentProgress = '0'
-      restore()
-    }
     const commitPose = (pose: CompanionPose) => {
       if (host.dataset.pose === pose) return
       host.dataset.pose = pose
       host.dispatchEvent(new CustomEvent(COMPANION_POSE_EVENT, { detail: pose }))
     }
-    const paint = (progress: number, strength = 1) => {
-      const p = clamp(progress)
-      host.dataset.fragmentProgress = p.toFixed(3)
-      pieces.forEach((piece, index) => {
-        const phase = clamp((p - index * 0.055) / 0.725)
-        const eased = phase * phase * (3 - 2 * phase)
-        const incoming = eased >= 0.5
-        if (paintedSides[index] !== incoming && sourceImage && destinationImage) {
-          const canvas = canvases[index]
-          const context = canvas.getContext('2d')!
-          context.clearRect(0, 0, canvas.width, canvas.height)
-          context.drawImage(incoming ? destinationImage : sourceImage, 0, 0)
-          canvas.dataset.pose = incoming ? toPose : fromPose
-          paintedSides[index] = incoming
-        }
-        const scatter = Math.sin(Math.PI * eased)
-        const [x, y, rotation] = offsets[index]
-        const scaleX = 0.35 + 0.65 * Math.abs(Math.cos(Math.PI * eased))
-        const amount = Number.isFinite(strength) ? Math.min(2, Math.max(0, strength)) : 1
-        piece.style.transform = `translate3d(${x * scatter * amount}px, ${y * scatter * amount}px, 0) rotateZ(${rotation * scatter * amount}deg) scale(${1 + scatter * 0.06}) scaleX(${scaleX})`
-        piece.style.filter = `drop-shadow(0 ${scatter * 9}px ${scatter * 7}px rgb(33 43 38 / ${scatter * 0.22}))`
-      })
-      // The destination is committed beneath the opaque fragment layer, so its
-      // live image is already ready when the last incoming piece settles.
-      commitPose(p >= 0.5 ? toPose : fromPose)
-      if (p <= 0 || p >= 1) {
-        restore()
-        return
-      }
-      active = true
-      host.dataset.fragments = 'true'
+    const stop = () => {
+      const previous = intent
+      intent = null
+      generation++
+      cancelAnimationFrame(frame)
+      frame = 0
+      host.dataset.fragments = 'false'
+      host.dataset.fragmentPhase = 'idle'
+      notifyEnd(previous, true)
     }
-    const snapshot = (visual: HTMLElement, pose: CompanionPose, refresh = false) => {
+    const snapshot = (visual: HTMLElement, pose: CompanionPose) => {
       const key = `${visualKey(visual)}:${pose}`
-      const cached = !refresh && cache.get(key)
-      if (cached) return Promise.resolve(cached)
-      const inflight = !refresh && pending.get(key)
-      if (inflight) return inflight
-      const request = captureVisual(visual, pose).then((canvas) => {
-        if (!disposed) cache.set(key, canvas)
+      if (visual.dataset.renderer !== 'webgl') {
+        const cached = cache.get(key)
+        if (cached) { cache.delete(key); cache.set(key, cached); return Promise.resolve(cached) }
+        if (pending.has(key)) return pending.get(key)!
+      }
+      const request = captureVisual(visual, pose).then(canvas => {
+        if (!disposed) {
+          cache.set(key, canvas)
+          while (cache.size > 4) cache.delete(cache.keys().next().value!)
+        }
         return canvas
-      }).finally(() => {
-        if (pending.get(key) === request) pending.delete(key)
-      })
+      }).finally(() => { if (pending.get(key) === request) pending.delete(key) })
       pending.set(key, request)
       return request
-    }
-    const prepare = () => {
-      const visual = host.querySelector<HTMLElement>('.companion-visual')
-      if (!visual || !permitted() || !intent) return
-      const token = generation
-      const key = visualKey(visual)
-      intentKey = key
-      fromPose = intent.fromPose ?? (isCompanionPose(host.dataset.pose) ? host.dataset.pose : 'snack')
-      toPose = intent.toPose ?? fromPose
-      host.dataset.fragmentFrom = fromPose
-      host.dataset.fragmentTo = toPose
-      const refresh = visual.dataset.renderer === 'webgl'
-      void Promise.all([snapshot(visual, fromPose, refresh), snapshot(visual, toPose, refresh)]).then(([outgoing, incoming]) => {
-        if (token !== generation || !intent || !permitted() || visualKey(visual) !== key) return
-        sourceImage = outgoing
-        destinationImage = incoming
-        paintedSides.fill(null)
-        canvases.forEach((canvas) => {
-          canvas.width = outgoing.width
-          canvas.height = outgoing.height
-          if (!canvas.getContext('2d')) throw new Error('Canvas unavailable')
-        })
-        sourceKey = key
-        if (intent.type === 'scrub') {
-          paint(intent.progress, intent.strength)
-          return
-        }
-        const playing = intent
-        const started = performance.now()
-        const duration = Math.max(240, Math.min(2400, playing.duration || 1100))
-        const animate = (time: number) => {
-          frame = 0
-          if (token !== generation || !permitted()) {
-            if (token === generation) stop()
-            return
-          }
-          const progress = clamp((time - started) / duration)
-          paint(progress, playing.strength ?? (playing.reason === 'route' ? 1.25 : 1))
-          if (progress < 1) frame = requestAnimationFrame(animate)
-          else intent = null
-        }
-        frame = requestAnimationFrame(animate)
-      }).catch(() => {
-        if (token === generation) {
-          commitPose(intent?.type === 'scrub' && intent.progress < 0.5 ? fromPose : toPose)
-          stop()
-        }
-      })
     }
     const handle = (event: Event) => {
       const detail = (event as CustomEvent<CompanionFragmentDetail>).detail
       if (!detail || detail.type === 'stop') { stop(); return }
-      // A docked portrait never reacts to page scrolling or section changes.
-      if (host.dataset.mode !== 'home' && (detail.type === 'scrub' || detail.reason !== 'route')) { stop(); return }
-      if (!permitted()) {
-        const current = isCompanionPose(host.dataset.pose) ? host.dataset.pose : 'snack'
-        commitPose(detail.type === 'scrub' && detail.progress < 0.5 ? detail.fromPose ?? current : detail.toPose ?? current)
-        stop()
-        return
-      }
-      if (detail.type === 'scrub' && intent?.type === 'scrub' && detail.fromPose === intent.fromPose && detail.toPose === intent.toPose) {
-        intent = detail
-        const visual = host.querySelector<HTMLElement>('.companion-visual')
-        if (visual && sourceKey === visualKey(visual)) paint(detail.progress, detail.strength)
-        return
-      }
       stop()
+      if (host.dataset.mode !== 'home' && detail.reason !== 'route') { notifyEnd(detail, true); return }
+      const current = isCompanionPose(host.dataset.pose) ? host.dataset.pose : 'snack'
+      const from = detail.fromPose ?? current
+      const to = detail.toPose ?? current
+      if (!permitted()) { commitPose(to); notifyEnd(detail, false); return }
+      const visual = host.querySelector<HTMLElement>('.companion-visual')
+      if (!visual) { commitPose(to); notifyEnd(detail, true); return }
+      const key = visualKey(visual)
+      const token = generation
+      const plan = detail.trajectory ?? makeTrajectory()
+      canvases.forEach((canvas, index) => {
+        canvas.style.clipPath = `polygon(${plan.polygons[index].map(([x, y]) => `${x / WIDTH * 100}% ${y / HEIGHT * 100}%`).join(',')})`
+      })
       intent = detail
-      host.dataset.fragmentReason = detail.type === 'scrub' ? 'scroll' : detail.reason
-      if (detail.type === 'scrub' && (detail.progress <= 0 || detail.progress >= 1)) {
-        host.dataset.fragmentProgress = clamp(detail.progress).toFixed(3)
-      }
-      prepare()
+      host.dataset.fragmentReason = detail.reason
+      host.dataset.fragmentFrom = from
+      host.dataset.fragmentTo = to
+      host.dataset.fragmentTrajectory = plan.pattern
+      host.dataset.fragmentSeed = String(plan.seed)
+      host.dataset.fragmentPhase = 'loading'
+      void Promise.all([snapshot(visual, from), snapshot(visual, to)]).then(([outgoing, incoming]) => {
+        if (disposed || token !== generation || !intent || visualKey(visual) !== key) return
+        const sides: (boolean | null)[] = Array(6).fill(null)
+        canvases.forEach(canvas => { canvas.width = outgoing.width; canvas.height = outgoing.height })
+        const started = performance.now()
+        const duration = Math.max(400, Math.min(1600, detail.duration ?? 900))
+        host.dataset.fragmentPhase = 'playing'
+        const animate = (time: number) => {
+          frame = 0
+          if (token !== generation) return
+          if (!permitted()) { commitPose(to); stop(); return }
+          const progress = clamp((time - started) / duration)
+          host.dataset.fragmentProgress = progress.toFixed(3)
+          pieces.forEach((piece, index) => {
+            const point = pieceTransform(plan, index, progress, detail.strength ?? 1)
+            if (sides[index] !== point.incoming) {
+              const canvas = canvases[index]
+              const context = canvas.getContext('2d')!
+              context.clearRect(0, 0, canvas.width, canvas.height)
+              context.drawImage(point.incoming ? incoming : outgoing, 0, 0)
+              canvas.dataset.pose = point.incoming ? to : from
+              sides[index] = point.incoming
+            }
+            piece.style.transform = point.transform
+            piece.style.filter = `drop-shadow(0 ${point.spread * 8}px ${point.spread * 6}px rgb(33 43 38 / ${point.spread * 0.2}))`
+          })
+          commitPose(progress >= 0.5 ? to : from)
+          host.dataset.fragments = String(progress > 0 && progress < 1)
+          if (progress < 1) frame = requestAnimationFrame(animate)
+          else {
+            intent = null
+            host.dataset.fragmentPhase = 'idle'
+            notifyEnd(detail, false)
+          }
+        }
+        frame = requestAnimationFrame(animate)
+      }).catch(() => {
+        if (token === generation && !disposed) { commitPose(to); stop() }
+      })
     }
     const prewarm = () => {
       const visual = host.querySelector<HTMLElement>('.companion-visual')
       if (!visual) return
       const key = visualKey(visual)
-      if (observedVisualKey !== key) {
-        if (intentKey !== key && (intent || active)) stop()
-        observedVisualKey = key
-        sourceKey = ''
-      }
-      if (visual.dataset.renderer !== 'webgl' && permitted()) {
-        for (const pose of companionPoses) void snapshot(visual, pose).catch(() => {})
+      if (observedKey && key !== observedKey) stop()
+      observedKey = key
+      if (permitted() && visual.dataset.renderer !== 'webgl') {
+        const current = isCompanionPose(host.dataset.pose) ? host.dataset.pose : 'snack'
+        void snapshot(visual, current).catch(() => {})
+        void snapshot(visual, nextCompanionPose(current, visual.dataset.style === '3d' ? '3d' : 'photo')).catch(() => {})
       }
     }
-    const suspend = () => {
-      if (!permitted()) stop()
-      else prewarm()
-    }
+    const suspend = () => { if (!permitted()) stop(); else prewarm() }
     const observer = new MutationObserver(prewarm)
     observer.observe(host, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-style', 'data-renderer'] })
     host.addEventListener(FRAGMENT_EVENT, handle)
@@ -339,16 +296,11 @@ export function CompanionFragments({ hostRef }: { hostRef: RefObject<HTMLButtonE
       pending.clear()
     }
   }, [hostRef])
-
   return (
     <span ref={layerRef} className="companion-fragments" aria-hidden="true">
       {polygons.map((polygon, index) => (
         <span key={index} className="companion-fragment" style={{ transformOrigin: origins[index] }}>
-          <canvas
-            width={WIDTH}
-            height={HEIGHT}
-            style={{ clipPath: `polygon(${polygon.map(([x, y]) => `${x / WIDTH * 100}% ${y / HEIGHT * 100}%`).join(',')})` }}
-          />
+          <canvas width={WIDTH} height={HEIGHT} style={{ clipPath: `polygon(${polygon.map(([x, y]) => `${x / WIDTH * 100}% ${y / HEIGHT * 100}%`).join(',')})` }} />
         </span>
       ))}
     </span>

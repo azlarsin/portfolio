@@ -40,7 +40,7 @@ async function expectHero(page: Page) {
 }
 
 /** Sample the transient canvases in one browser task, before the flight can finish. */
-async function expectPaintedFragments(page: Page, reason: 'greeting' | 'route' | 'scroll') {
+async function expectPaintedFragments(page: Page, reason: 'greeting' | 'route' | 'section') {
   const result = await page.waitForFunction(({ selector, expectedReason }) => {
     const host = document.querySelector<HTMLElement>(selector)
     if (host?.dataset.fragments !== 'true' || host.dataset.fragmentReason !== expectedReason) return false
@@ -77,7 +77,7 @@ async function expectPaintedFragments(page: Page, reason: 'greeting' | 'route' |
   expect(snapshot.progress).toBeLessThanOrEqual(1)
 }
 
-for (const [style, renderer] of [['photo', 'photo'], ['svg', 'svg'], ['3d', 'webgl']] as const) {
+for (const [style, renderer] of [['photo', 'photo'], ['3d', 'webgl']] as const) {
   test(`${style} reassembles six painted fragments when greeted and returns to its live visual`, async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
@@ -119,8 +119,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 320, height: 844 
     const companion = page.getByTestId('route-companion')
     await companion.evaluate((element) => element.setAttribute('data-test-sentinel', 'scroll-persistent'))
     await page.evaluate(() => window.scrollTo({ top: 180, behavior: 'instant' }))
-    await expect.poll(async () => Number(await companion.getAttribute('data-scroll-progress'))).toBeGreaterThan(0)
-    await expectPaintedFragments(page, 'scroll')
+    await expectPaintedFragments(page, 'section')
     await page.evaluate(() => window.scrollTo({ top: 700, behavior: 'instant' }))
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(600)
     await expect(companion).toHaveAttribute('data-placement', 'floating')
@@ -145,7 +144,7 @@ for (const viewport of [{ width: 1280, height: 900 }, { width: 320, height: 844 
 test('route fragments do not block navigation and interrupted flights leave one usable character', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/?companion=svg')
+  await page.goto('/?companion=photo')
   await expectHero(page)
   const companion = page.getByTestId('route-companion')
   await companion.evaluate((element) => element.setAttribute('data-test-sentinel', 'route-persistent'))
@@ -176,7 +175,7 @@ test('route fragments do not block navigation and interrupted flights leave one 
 })
 
 test('resizing during a fragment flight settles inside a narrow viewport', async ({ page }) => {
-  await page.goto('/?companion=svg')
+  await page.goto('/?companion=photo')
   await expectHero(page)
   const companion = page.getByTestId('route-companion')
   await companion.click()

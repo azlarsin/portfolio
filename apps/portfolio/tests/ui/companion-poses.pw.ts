@@ -5,10 +5,11 @@ async function settled(page: Page, pose?: string) {
   if (pose) await expect(host).toHaveAttribute('data-pose', pose)
   await expect(host).not.toHaveAttribute('data-fragments', 'true')
   await expect(host).not.toHaveAttribute('data-moving', 'true')
+  await expect(host).toHaveAttribute('data-transition-state', 'idle')
   await expect(host).toBeVisible()
 }
 
-for (const style of ['photo', 'svg', '3d']) {
+for (const style of ['photo', '3d']) {
   test(`${style} replaces outgoing pixels with a different pose piece by piece`, async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', error => errors.push(error.message))
@@ -16,7 +17,7 @@ for (const style of ['photo', 'svg', '3d']) {
     await expect(page.locator('.companion-visual')).toHaveAttribute('data-renderer', style === '3d' ? 'webgl' : style)
     await settled(page, 'snack')
     const host = page.getByTestId('route-companion')
-    for (const [from, to] of [['snack', 'play'], ['play', 'peek'], ['peek', 'snack']]) {
+    for (const [from, to] of [['snack', 'play'], ['play', 'peek'], ['peek', style === 'photo' ? 'little' : 'snack']]) {
       await host.click()
       const mixed = await page.waitForFunction(({ from, to }) => {
         const root = document.querySelector<HTMLElement>('[data-testid="route-companion"]')
