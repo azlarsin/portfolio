@@ -153,6 +153,8 @@
 }
 
 .companion-visual { display: block; position: relative; width: 100%; height: 100%; }
+.companion-pose-view { display: block; width: 100%; height: 100%; }
+.companion-pose-view[hidden] { display: none; }
 .companion-canvas { position: absolute; inset: 0; width: 100%; height: 100%; visibility: hidden; }
 .companion-visual[data-renderer='webgl'] .companion-canvas { visibility: inherit; }
 .companion-visual[data-renderer='webgl'] .companion-portrait { visibility: hidden; }

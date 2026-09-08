@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createCompanionModel } from './createCompanionModel'
+import { isCompanionPose } from './companionPoses'
 
 /** Demand-rendered: no permanent animation loop while the visitor reads a page. */
 export function createCompanionScene(
@@ -74,6 +75,7 @@ export function createCompanionScene(
   function draw(time: number) {
     frame = 0
     if (disposed || unavailable || !visible()) return
+    model.setPose(isCompanionPose(host.dataset.pose) ? host.dataset.pose : 'snack')
     const reduce = motion.matches
     const atHome = host.dataset.mode === 'home'
     const targetX = reduce || !atHome ? 0 : lookX
@@ -141,10 +143,16 @@ export function createCompanionScene(
   }
   const observer = new MutationObserver(sync)
   // Capture consumers copy this frame in the same task, before WebGL presents it.
-  const capture = () => {
-    if (!disposed && !unavailable) renderer.render(scene, camera)
+  const capture = (event: Event) => {
+    if (disposed || unavailable) return
+    const requested = (event as CustomEvent<{ pose?: unknown }>).detail?.pose
+    const current = isCompanionPose(host.dataset.pose) ? host.dataset.pose : 'snack'
+    model.setPose(isCompanionPose(requested) ? requested : current)
+    renderer.render(scene, camera)
+    model.setPose(current)
+    requestDraw()
   }
-  observer.observe(host, { attributes: true, attributeFilter: ['data-mode', 'data-onscreen', 'data-moving', 'data-greeting'] })
+  observer.observe(host, { attributes: true, attributeFilter: ['data-mode', 'data-onscreen', 'data-moving', 'data-greeting', 'data-pose'] })
   window.addEventListener('pointermove', follow, { passive: true })
   window.addEventListener('blur', resetLook)
   document.documentElement.addEventListener('pointerleave', resetLook)

@@ -5,6 +5,7 @@ import { useMediaQuery } from '../common/useMediaQuery'
 import { CompanionVisual } from './CompanionVisual'
 import { CompanionStyleSwitch, useCompanionStyle } from './CompanionPreference'
 import { CompanionFragments, dispatchFragments } from './CompanionFragments'
+import { COMPANION_POSE_EVENT, isCompanionPose, nextCompanionPose, poseForSection, poseLabel, type CompanionPose } from './companionPoses'
 
 const portraitWidth = 320
 const portraitRatio = 340 / portraitWidth
@@ -30,7 +31,10 @@ function positionAt(rect: PortraitRect) {
 /** One character stays mounted while the pages beneath it change. Slots reserve its space. */
 export function RouteCompanion({ route }: { route: ResolvedRoute }) {
   const { language } = useLanguage()
-  const { style } = useCompanionStyle()
+  const { style, pose, setPose } = useCompanionStyle()
+  const homePoseRef = useRef<CompanionPose>('snack')
+  const poseRef = useRef(pose)
+  poseRef.current = pose
   const previousStyle = useRef(style)
   const atHome = route.pathname === '/'
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)')
@@ -41,6 +45,19 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
   const [greeting, setGreeting] = useState(false)
   const greetingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  useEffect(() => {
+    const element = portraitRef.current
+    if (!element) return
+    const commit = (event: Event) => {
+      const next = (event as CustomEvent<unknown>).detail
+      if (!isCompanionPose(next)) return
+      poseRef.current = next
+      setPose(next)
+    }
+    element.addEventListener(COMPANION_POSE_EVENT, commit)
+    return () => element.removeEventListener(COMPANION_POSE_EVENT, commit)
+  }, [setPose])
+
   useLayoutEffect(() => {
     const element = portraitRef.current
     const slot = document.querySelector<HTMLElement>(`[data-companion-slot="${atHome ? 'home' : 'dock'}"]`)
@@ -50,7 +67,6 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
     let disposed = false
     let previousProgress = 0
     let previousSection = -1
-    let lastSectionBurst = 0
 
     const freezeFlight = () => {
       if (!flightRef.current) return
@@ -89,23 +105,27 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
       element.dataset.scrollProgress = target.progress.toFixed(4)
     }
 
-    const fly = (target: ReturnType<typeof measure>, reason: 'route' | 'section') => {
+    const fly = (target: ReturnType<typeof measure>) => {
+      const destinationPose: CompanionPose = atHome
+        ? (target.progress >= 0.5 ? poseForSection(sectionIndex(), homePoseRef.current) : homePoseRef.current)
+        : route.pathname.startsWith('/archive') ? 'peek' : route.pathname === '/experience' ? 'play' : 'snack'
+      const sourcePose = poseRef.current
       const previous = placedRef.current ? element.getBoundingClientRect() : target.rect
       freezeFlight()
       place(target)
       if (!placedRef.current || reducedMotion || typeof element.animate !== 'function') {
         dispatchFragments(element, { type: 'stop' })
+        poseRef.current = destinationPose
+        setPose(destinationPose)
         return
       }
       const smallScreen = innerWidth <= 800
-      const duration = reason === 'route' ? 1180 : 940
-      const midWidth = reason === 'section'
-        ? Math.max(target.rect.width, smallScreen ? 88 : 120)
-        : Math.max(previous.width, target.rect.width, smallScreen ? 104 : 192)
+      const duration = 1180
+      const midWidth = Math.max(previous.width, target.rect.width, smallScreen ? 104 : 192)
       const centerX = (previous.left + previous.width / 2) * 0.4 + (target.rect.left + target.rect.width / 2) * 0.6
       const middle: PortraitRect = {
         left: clamp(centerX - midWidth / 2, 26, innerWidth - midWidth - 26),
-        top: Math.max(86, (previous.top + target.rect.top) / 2 + (reason === 'route' ? 44 : 20)),
+        top: Math.max(86, (previous.top + target.rect.top) / 2 + 44),
         width: midWidth,
         height: midWidth * portraitRatio,
       }
@@ -118,7 +138,7 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
         { transform: positionAt(target.rect), offset: 1 },
       ], { duration, easing: 'cubic-bezier(.4, 0, .16, 1)' })
       flightRef.current = flight
-      dispatchFragments(element, { type: 'play', reason, duration, strength: reason === 'route' ? 1.25 : 0.8 })
+      dispatchFragments(element, { type: 'play', reason: 'route', duration, strength: 1.25, fromPose: sourcePose, toPose: destinationPose })
       flight.onfinish = () => {
         if (disposed || flightRef.current !== flight) return
         flightRef.current = null
@@ -127,7 +147,7 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
         place(latest)
         previousProgress = latest.progress
         previousSection = sectionIndex()
-        if (latest.progress > 0 && latest.progress < 1) dispatchFragments(element, { type: 'scrub', progress: latest.progress })
+        if (latest.progress > 0 && latest.progress < 1) dispatchFragments(element, { type: 'scrub', progress: latest.progress, fromPose: homePoseRef.current, toPose: nextCompanionPose(homePoseRef.current) })
       }
     }
 
@@ -137,16 +157,19 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
       const target = measure()
       if (!target.rect.width) return
       place(target)
+      // Inner pages only keep the static dock aligned. Their content scrolling
+      // must never start a fracture, pose change, or expanding header flight.
+      if (!atHome) return
       const currentSection = sectionIndex()
       const changedProgress = Math.abs(target.progress - previousProgress) > 0.0001
       if (changedProgress) {
         const jumpedAcross = Math.abs(target.progress - previousProgress) > 0.85
         dispatchFragments(element, jumpedAcross && !reducedMotion
-          ? { type: 'play', reason: 'section', duration: 920, strength: 1 }
-          : { type: 'scrub', progress: target.progress, strength: 1.15 })
-      } else if ((!atHome || target.progress === 1) && currentSection !== previousSection && previousSection >= 0 && performance.now() - lastSectionBurst > 950) {
-        lastSectionBurst = performance.now()
-        fly(target, 'section')
+          ? { type: 'play', reason: 'section', duration: 1100, strength: 1, fromPose: poseRef.current, toPose: target.progress === 0 ? homePoseRef.current : poseForSection(currentSection, homePoseRef.current) }
+          : { type: 'scrub', progress: target.progress, strength: 1.15, fromPose: homePoseRef.current, toPose: nextCompanionPose(homePoseRef.current) })
+      } else if (target.progress === 1 && currentSection !== previousSection && previousSection >= 0) {
+        const next = poseForSection(currentSection, homePoseRef.current)
+        if (next !== poseRef.current) dispatchFragments(element, { type: 'play', reason: 'section', duration: 1180, strength: 1.1, fromPose: poseRef.current, toPose: next })
       }
       previousProgress = target.progress
       previousSection = currentSection
@@ -175,7 +198,7 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
           frame = 0
           pendingRoute = false
           const target = measure()
-          fly(target, 'route')
+          fly(target)
           placedRef.current = true
           previousProgress = target.progress
           previousSection = sectionIndex()
@@ -203,12 +226,12 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
       freezeFlight()
       dispatchFragments(element, { type: 'stop' })
     }
-  }, [atHome, route.pathname, reducedMotion])
+  }, [atHome, route.pathname, reducedMotion, setPose])
 
   useEffect(() => {
     if (previousStyle.current === style) return
     previousStyle.current = style
-    const frame = requestAnimationFrame(() => dispatchFragments(portraitRef.current, { type: 'play', reason: 'style', duration: 1050 }))
+    const frame = requestAnimationFrame(() => dispatchFragments(portraitRef.current, { type: 'play', reason: 'style', duration: 1050, fromPose: poseRef.current, toPose: poseRef.current }))
     return () => cancelAnimationFrame(frame)
   }, [style])
 
@@ -268,7 +291,9 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
       return
     }
     setGreeting(true)
-    dispatchFragments(portraitRef.current, { type: 'play', reason: 'greeting', duration: 1320, strength: 1.35 })
+    const next = nextCompanionPose(poseRef.current)
+    if (portraitRef.current?.dataset.placement === 'hero') homePoseRef.current = next
+    dispatchFragments(portraitRef.current, { type: 'play', reason: 'greeting', duration: 1320, strength: 1.35, fromPose: poseRef.current, toPose: next })
     if (greetingTimer.current) clearTimeout(greetingTimer.current)
     greetingTimer.current = setTimeout(() => setGreeting(false), 1600)
   }
@@ -285,8 +310,9 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
       data-testid="route-companion"
       data-mode={atHome ? 'home' : 'dock'}
       data-greeting={greeting}
+      data-pose={pose}
       aria-label={label}
-      title={label}
+      title={atHome ? `${poseLabel(pose, language)} → ${poseLabel(nextCompanionPose(pose), language)}` : label}
       onClick={sayHello}
     >
       <span className="companion-aura" aria-hidden="true" />
@@ -301,6 +327,7 @@ export function RouteCompanion({ route }: { route: ResolvedRoute }) {
 
 export function CompanionHomeSlot() {
   const { language } = useLanguage()
+  const { pose } = useCompanionStyle()
   return (
     <div className="companion-home">
       <div className="companion-home-slot" data-companion-slot="home" aria-hidden="true">
@@ -310,7 +337,7 @@ export function CompanionHomeSlot() {
         <span className="companion-spark companion-spark--two">+</span>
       </div>
       <span className="companion-caption" aria-hidden="true">
-        <span /> {language === 'zh' ? '滚动试试，也可以点我。' : 'Scroll to explore. Tap to play.'}
+        <span /> {language === 'zh' ? `点我换动作 · ${poseLabel(pose, language)}` : `Tap to change · ${poseLabel(pose, language)}`}
       </span>
       <CompanionStyleSwitch />
     </div>

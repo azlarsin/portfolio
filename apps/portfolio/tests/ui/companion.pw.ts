@@ -51,7 +51,7 @@ test('the default photo loads without WebGL and its selection survives navigatio
   await expect(visual).toHaveAttribute('data-renderer', 'photo')
   await expect(page.getByRole('button', { name: '照片形象', exact: true })).toHaveAttribute('aria-pressed', 'true')
   expect((await imageResponse).ok()).toBe(true)
-  const portrait = page.locator('.companion-photo image')
+  const portrait = page.locator('.companion-pose-view:not([hidden]) .companion-photo image')
   await expect(portrait).toHaveAttribute('href', /\/portraits\/[^/]+\.(png|webp)$/)
   expect(await portrait.evaluate(async (element) => {
     const image = new Image()
@@ -162,7 +162,7 @@ test('reduced motion disables character transitions and keeps navigation usable'
   await companion.click()
   await expect(companion).toHaveAttribute('data-greeting', 'true')
   await expect(page.locator('.companion-hello')).toHaveCSS('opacity', '1')
-  await expect(page.locator('.companion-photo-motion')).toHaveCSS('transform', 'none')
+  await expect(page.locator('.companion-pose-view:not([hidden]) .companion-photo-motion')).toHaveCSS('transform', 'none')
   expect(await companion.evaluate((element) =>
     element.getAnimations({ subtree: true }).filter((animation) => animation.playState === 'running').length,
   )).toBe(0)
@@ -198,7 +198,7 @@ test('unavailable WebGL falls back to a vector character with working navigation
   await expect.poll(() => webGLAttempts).toBeGreaterThan(0)
   await expect(page.locator('.companion-visual')).toHaveAttribute('data-style', '3d')
   await expect(page.locator('[data-renderer="svg"]')).toBeVisible()
-  const portrait = page.locator('.companion-portrait')
+  const portrait = page.locator('.companion-pose-view:not([hidden]) .companion-portrait')
   await expect(portrait).toBeVisible()
   expect(await portrait.locator('path').count()).toBeGreaterThan(0)
   await expect(portrait.locator('image, foreignObject, canvas')).toHaveCount(0)

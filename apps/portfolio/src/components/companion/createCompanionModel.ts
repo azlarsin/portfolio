@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { CompanionPose } from './companionPoses'
 
 /** A small original clay portrait, modelled in code so every moving part stays editable. */
 export function createCompanionModel(): {
@@ -7,6 +8,7 @@ export function createCompanionModel(): {
   eyes: THREE.Group[]
   hand: THREE.Group
   cape: THREE.Group
+  setPose: (pose: CompanionPose) => void
   dispose: () => void
 } {
   const root = new THREE.Group()
@@ -365,10 +367,11 @@ export function createCompanionModel(): {
     return result
   }
 
+  const mouthParts: THREE.Object3D[] = []
   const mouthCurve = (u: number) => Math.sqrt(Math.max(0, 1 - u * u))
-  facialPatch(mouthMaterial, 0.205, (u) => 0.235 + 0.143 * mouthCurve(u), (u) => 0.235 - 0.166 * mouthCurve(u), 0.009)
+  mouthParts.push(facialPatch(mouthMaterial, 0.205, (u) => 0.235 + 0.143 * mouthCurve(u), (u) => 0.235 - 0.166 * mouthCurve(u), 0.009))
   const upperTeeth = (u: number) => 0.235 + 0.143 * mouthCurve(u * 0.7) - 0.004
-  facialPatch(white, 0.144, upperTeeth, (u) => upperTeeth(u) - 0.027, 0.014)
+  mouthParts.push(facialPatch(white, 0.144, upperTeeth, (u) => upperTeeth(u) - 0.027, 0.014))
   for (const upper of [true, false]) {
     const lip = Array.from({ length: 25 }, (_, i) => {
       const u = i / 12 - 1
@@ -376,7 +379,7 @@ export function createCompanionModel(): {
       const y = 0.235 + (upper ? 0.145 : -0.168) * mouthCurve(u)
       return new THREE.Vector3(x, y, faceZ(x, y, 0.012))
     })
-    tube(head, lip, upper ? 0.009 : 0.016, lipMaterial, 32)
+    mouthParts.push(tube(head, lip, upper ? 0.009 : 0.016, lipMaterial, 32))
   }
 
   // The crop follows the photo's exposed forehead and close-cut temples.
@@ -503,12 +506,40 @@ export function createCompanionModel(): {
   }
   roundedLimb(hand, new THREE.Vector3(-0.20, 0.64, 0.40), new THREE.Vector3(-0.22, 0.79, 0.47), 0.038, skin)
 
+  const tongue = new THREE.Group()
+  head.add(tongue)
+  const tongueSurface = material('#d97166', 0.65)
+  const tongueTip = ellipsoid(tongue, tongueSurface, [-0.025, 0.115, 0.595], [0.11, 0.14, 0.035])
+  tongueTip.rotation.z = -0.22
+  tube(tongue, [new THREE.Vector3(-0.005, 0.20, 0.63), new THREE.Vector3(-0.04, 0.12, 0.64), new THREE.Vector3(-0.08, 0.05, 0.62)], 0.007, lipMaterial, 16)
+
+  const mouthCone = coneGroup.clone(true)
+  mouthCone.position.set(0, 0.235, 0.68)
+  mouthCone.rotation.set(Math.PI / 2, 0, 0)
+  mouthCone.scale.setScalar(1.12)
+  head.add(mouthCone)
+  const relaxedArms = new THREE.Group()
+  root.add(relaxedArms)
+  for (const side of [-1, 1]) {
+    roundedLimb(relaxedArms, new THREE.Vector3(side * 0.56, -0.64, -0.04), new THREE.Vector3(side * 0.64, -1.35, -0.11), 0.09, skin)
+  }
+  const setPose = (pose: CompanionPose) => {
+    for (const part of mouthParts) part.visible = pose !== 'peek'
+    hand.visible = pose === 'snack'
+    cape.visible = pose !== 'play'
+    tongue.visible = pose === 'play'
+    mouthCone.visible = pose === 'peek'
+    relaxedArms.visible = pose === 'play'
+  }
+  setPose('snack')
+
   return {
     root,
     head,
     eyes,
     hand,
     cape,
+    setPose,
     dispose() {
       for (const geometry of geometries) geometry.dispose()
       for (const surface of materials) surface.dispose()

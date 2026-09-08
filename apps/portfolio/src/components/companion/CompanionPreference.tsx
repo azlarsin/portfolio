@@ -1,12 +1,15 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { useLanguage } from '../../i18n/LanguageContext'
+import type { CompanionPose } from './companionPoses'
 
 type CompanionStyle = 'photo' | 'svg' | '3d'
 const storageKey = 'portfolio-companion-style'
 const CompanionContext = createContext<{
   style: CompanionStyle
   setStyle: (style: CompanionStyle) => void
-}>({ style: 'photo', setStyle: () => undefined })
+  pose: CompanionPose
+  setPose: (pose: CompanionPose) => void
+}>({ style: 'photo', setStyle: () => undefined, pose: 'snack', setPose: () => undefined })
 
 function initialStyle(): CompanionStyle {
   if (typeof window === 'undefined') return 'photo'
@@ -22,6 +25,7 @@ function initialStyle(): CompanionStyle {
 
 export function CompanionProvider({ children }: { children: ReactNode }) {
   const [style, updateStyle] = useState<CompanionStyle>(initialStyle)
+  const [pose, setPose] = useState<CompanionPose>('snack')
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, style)
@@ -32,7 +36,7 @@ export function CompanionProvider({ children }: { children: ReactNode }) {
   const setStyle = (next: CompanionStyle) => {
     updateStyle(next)
   }
-  return <CompanionContext.Provider value={{ style, setStyle }}>{children}</CompanionContext.Provider>
+  return <CompanionContext.Provider value={{ style, setStyle, pose, setPose }}>{children}</CompanionContext.Provider>
 }
 
 export function useCompanionStyle() {

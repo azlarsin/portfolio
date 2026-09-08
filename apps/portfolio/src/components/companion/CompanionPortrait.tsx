@@ -1,7 +1,8 @@
 import { useId } from 'react'
+import type { CompanionPose } from './companionPoses'
 
 /** A layered vector portrait, with proportions and the wafer pose drawn from the references. */
-export function CompanionPortrait() {
+export function CompanionPortrait({ pose = 'snack' }: { pose?: CompanionPose }) {
   const id = useId().replace(/:/g, '')
   const skin = `${id}-skin`
   const cheek = `${id}-cheek`
@@ -79,7 +80,7 @@ export function CompanionPortrait() {
             <path d="M1-4L5-1L3 3H-1L-3-1Z" fill="#345842" />
           </g>
 
-          <g className="companion-cape">
+          {pose !== 'play' && <g className="companion-cape">
             <path d="M132 247C120 237 95 242 80 252C66 265 58 292 48 313L33 342L94 350C104 321 116 295 137 267Z" fill={`url(#${cape})`} stroke="#CFBBA0" strokeWidth="1.05" />
             <path d="M187 243C211 241 237 251 251 272C262 293 266 321 273 344L240 350C223 315 203 282 141 267Z" fill={`url(#${cape})`} stroke="#CDB89B" strokeWidth="1.05" />
             <path d="M88 254C103 249 119 253 129 261C99 272 82 296 64 324M129 266C114 287 103 311 96 335" stroke="#DFCBB0" strokeWidth="1.7" />
@@ -93,7 +94,7 @@ export function CompanionPortrait() {
             <path d="M102 266C111 259 125 265 132 267M119 297C127 291 130 281 132 275M144 263C151 260 159 263 163 266" stroke="#DED0B9" strokeWidth="1.6" />
             <path d="M131 261C136 256 143 259 146 265L143 275C136 280 128 273 129 267Z" fill="#EDE1CB" stroke="#C4AF90" strokeWidth="1" />
             <path d="M135 264L136 271" stroke="#FFFCF3" strokeWidth="2.2" />
-          </g>
+          </g>}
         </g>
 
         <g className="companion-head">
@@ -165,7 +166,19 @@ export function CompanionPortrait() {
           <path d="M154 236C159 238 165 237 169 235" stroke="#E6A66F" strokeWidth="1.2" />
         </g>
 
-        <g className="companion-hand">
+        {pose === 'play' && <g className="companion-tongue">
+          <path d="M147 209C153 205 170 207 172 214C167 224 155 233 147 232C140 231 141 217 147 209Z" fill="#E88978" stroke="#A84C40" strokeWidth="1.3" />
+          <path d="M158 212C155 219 151 225 147 228" fill="none" stroke="#BD6051" strokeWidth="1.1" />
+        </g>}
+        {pose === 'peek' && <g className="companion-mouth-cone">
+          <ellipse cx="159" cy="211" rx="23" ry="25" fill={`url(#${skin})`} />
+          <ellipse cx="159" cy="216" rx="20" ry="22" fill="#CE7754" />
+          <path d="M140 209L143 201L143 195L149 193L153 190L160 193L166 192L170 196L177 200L178 207L175 213L176 220L169 225L166 231L158 230L152 232L147 226L141 223L143 216Z" fill="#EFB44B" stroke="#B77D2C" strokeWidth="1.1" />
+          <ellipse cx="159" cy="210" rx="13" ry="16" fill="#8C4E21" />
+          <ellipse cx="161" cy="209" rx="8.5" ry="12" fill="#422417" />
+          <path d="M144 210L146 201L152 197L159 199L165 196L171 202L172 208L169 214L171 220L165 225L159 223L152 226L148 219L143 216Z" fill="none" stroke="#FFDF89" strokeWidth="3" />
+        </g>}
+        {pose === 'snack' && <g className="companion-hand">
           {/* An empty, bitten waffle cone is lifted to the mouth, not a new scoop. */}
           <path d="M211 333C224 334 238 322 234 307C230 286 210 269 183 250L163 265C189 285 194 317 211 333Z" fill={`url(#${skin})`} stroke="#B77B4B" strokeWidth="1.1" />
           <path d="M210 291C220 305 223 316 219 325" stroke="#FFD093" strokeWidth="4" opacity="0.6" />
@@ -178,7 +191,7 @@ export function CompanionPortrait() {
           <path d="M145 257C149 260 154 261 158 264M150 271L161 277M153 284L165 289" stroke="#CB8854" strokeWidth="1.15" />
           <path d="M177 285C173 277 169 273 163 271C157 269 155 266 158 262C163 256 173 262 181 270" fill={`url(#${skin})`} stroke="#BD7D49" strokeWidth="1.1" />
           <path d="M143 252C149 251 156 255 159 257" stroke="#FFD298" strokeWidth="2" opacity="0.7" />
-        </g>
+        </g>}
       </g>
     </svg>
   )
