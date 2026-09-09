@@ -7,7 +7,7 @@ import { LanguageProvider } from './i18n/LanguageContext'
 import './styles/index.css'
 
 migrateLegacyHashOnFirstLoad()
-initializeGoogleAnalytics()
+if (!/^\/baby\/?$/.test(window.location.pathname)) initializeGoogleAnalytics()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

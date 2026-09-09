@@ -5,12 +5,13 @@ import { isCompanionPose } from './companionPoses'
 /** Demand-rendered: no permanent animation loop while the visitor reads a page. */
 export function createCompanionScene(
   canvas: HTMLCanvasElement,
-  host: HTMLButtonElement,
+  host: HTMLElement,
   onUnavailable: () => void,
+  size = { width: 320, height: 340, pixelRatio: Math.min(window.devicePixelRatio || 1, 2) },
 ) {
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'low-power' })
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
-  renderer.setSize(320, 340, false)
+  renderer.setPixelRatio(size.pixelRatio)
+  renderer.setSize(size.width, size.height, false)
   renderer.setClearColor(0x000000, 0)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
@@ -19,7 +20,8 @@ export function createCompanionScene(
   renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
   const scene = new THREE.Scene()
-  const camera = new THREE.OrthographicCamera(-1.65, 1.65, 1.8, -1.70625, 0.1, 30)
+  const halfHeight = 1.65 * size.height / size.width
+  const camera = new THREE.OrthographicCamera(-1.65, 1.65, .046875 + halfHeight, .046875 - halfHeight, 0.1, 30)
   camera.position.set(0, 0.12, 7)
   camera.lookAt(0, 0.04, 0)
   const hemisphere = new THREE.HemisphereLight(0xfff9ef, 0x879e8b, 1.7)
@@ -43,6 +45,7 @@ export function createCompanionScene(
   scene.add(rim)
 
   const model = createCompanionModel()
+  model.root.rotation.y = -0.16
   scene.add(model.root)
   const shadowGeometry = new THREE.CircleGeometry(1.25, 48)
   const shadowMaterial = new THREE.ShadowMaterial({ opacity: 0.14 })

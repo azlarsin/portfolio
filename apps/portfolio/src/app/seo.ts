@@ -5,7 +5,7 @@ import type { ResolvedRoute, RouteId } from './router'
 export const PORTFOLIO_ORIGIN = 'https://me.azlar.cc'
 export const PORTFOLIO_SOCIAL_IMAGE_PATH = '/og.png'
 
-const nonIndexableRouteIds = new Set<RouteId>(['demo', 'poke-render', 'not-found'])
+const nonIndexableRouteIds = new Set<RouteId>(['baby', 'demo', 'poke-render', 'not-found'])
 const caseStudyRouteIds = new Set<RouteId>([
   'meican-platform',
   'baidu-map-workbench',
@@ -105,10 +105,10 @@ export function getPortfolioSeo(
   return {
     ...meta,
     canonicalUrl: url,
-    imageUrl: isCaseStudy
+    imageUrl: isCaseStudy || route.id === 'baby'
       ? null
       : new URL(PORTFOLIO_SOCIAL_IMAGE_PATH, PORTFOLIO_ORIGIN).toString(),
-    imageAlt: isCaseStudy
+    imageAlt: isCaseStudy || route.id === 'baby'
       ? null
       : language === 'zh'
         ? '陈成｜前端技术负责人 · 全栈与复杂系统工程'
@@ -117,7 +117,7 @@ export function getPortfolioSeo(
     locale: language === 'zh' ? 'zh_CN' : 'en_US',
     openGraphType: isCaseStudy ? 'article' : 'website',
     twitterCard: isCaseStudy ? 'summary' : 'summary_large_image',
-    robots: indexable
+    robots: route.id === 'baby' ? 'noindex,nofollow,noimageindex' : indexable
       ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
       : 'noindex,follow',
     jsonLd: createJsonLd(route, language, meta.title, meta.description, url),

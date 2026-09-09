@@ -1,5 +1,7 @@
 # 人物动作与碎片转场
 
+> 2026-09-08：公开作品集人物模块已由 `PUBLIC_COMPANION_ENABLED = false` 暂停，以下为保留实现的说明，URL 风格参数不能重新启用。宝宝照片现用于独立的 `/baby` 家庭相册，使用和 Admin 上传说明见 [家庭相册文档](./baby-album.md)。
+
 分支：`feature/svg-route-companion`。支持照片形象与 3D 人物。旧 SVG 插画模式已删除；已有 `svg` 偏好和 `?companion=svg` 链接会自动显示照片。
 
 ## 使用

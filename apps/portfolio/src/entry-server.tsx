@@ -19,7 +19,7 @@ export function renderPortfolioRoute(path: string): RenderedPortfolioRoute {
   const content = <RoutePage route={route} />
   const body = renderToStaticMarkup(
     <LanguageProvider>
-      {route.id === 'demo' || route.id === 'poke-render' ? (
+      {route.id === 'baby' || route.id === 'demo' || route.id === 'poke-render' ? (
         content
       ) : (
         <AppShell route={route}>{content}</AppShell>

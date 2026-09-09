@@ -110,6 +110,7 @@ describe('portfolio acceptance contracts', () => {
 
   it('1. exposes the complete canonical route set with stable SEO metadata', () => {
     const expectedTitles = new Map([
+      ['/baby', '小小宇宙｜家庭相册'],
       ['/', '陈成｜前端技术负责人 · 全栈与复杂系统工程'],
       ['/work/meican-platform', '企业后台架构改造｜陈成作品集'],
       ['/work/baidu-map-workbench', '百度地图数据作业｜陈成作品集'],

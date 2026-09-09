@@ -2,6 +2,7 @@ import type { ResolvedRoute, RouteId, RouteMeta } from '../app/router'
 import type { Language } from './LanguageContext'
 
 const englishRouteMeta: Record<RouteId, RouteMeta> = {
+  baby: { title: 'Little Universe | Family Album', description: 'A universe of little moments.' },
   home: {
     title: 'Chen Cheng | Frontend Tech Lead · Full-Stack & Complex Systems',
     description:

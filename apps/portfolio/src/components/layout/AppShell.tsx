@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import type { ResolvedRoute } from '../../app/router'
 import { useMediaQuery } from '../common/useMediaQuery'
@@ -8,6 +8,7 @@ import { SiteFooter } from './SiteFooter'
 import { Topbar } from './Topbar'
 import { RouteCompanion } from '../companion/RouteCompanion'
 import { CompanionProvider } from '../companion/CompanionPreference'
+import { PUBLIC_COMPANION_ENABLED } from '../companion/companionConfig'
 
 export function AppShell({
   route,
@@ -43,9 +44,11 @@ export function AppShell({
     }
   }, [drawerOpen])
 
+  const Provider = PUBLIC_COMPANION_ENABLED ? CompanionProvider : Fragment
+
   return (
-    <CompanionProvider>
-      <div className="app-shell">
+    <Provider>
+      <div className={`app-shell${PUBLIC_COMPANION_ENABLED ? ' public-companion-enabled' : ''}`}>
         <a className="skip-link" href="#main-content">
           {copy.shell.skipToContent}
         </a>
@@ -55,7 +58,7 @@ export function AppShell({
           expanded={drawerOpen}
           onOpen={() => setDrawerOpen(true)}
         />
-        <RouteCompanion route={route} />
+        {PUBLIC_COMPANION_ENABLED && <RouteCompanion route={route} />}
         <dialog
           ref={dialogRef}
           id="site-navigation"
@@ -113,6 +116,6 @@ export function AppShell({
           <SiteFooter />
         </div>
       </div>
-    </CompanionProvider>
+    </Provider>
   )
 }

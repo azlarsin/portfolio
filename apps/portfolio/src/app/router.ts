@@ -12,6 +12,7 @@ interface RouteDefinitionShape {
 }
 
 export const ROUTES = {
+  BABY: { id: 'baby', path: '/baby', meta: { title: '小小宇宙｜家庭相册', description: '留住每一个闪闪发光的瞬间。' } },
   HOME: {
     id: 'home',
     path: '/',

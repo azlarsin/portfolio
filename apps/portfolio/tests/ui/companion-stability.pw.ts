@@ -1,4 +1,7 @@
+import { PUBLIC_COMPANION_ENABLED } from '../../src/components/companion/companionConfig'
 import { expect, test, type Page } from '@playwright/test'
+
+test.skip(!PUBLIC_COMPANION_ENABLED, 'Public companion is paused until digital-human assets are ready.')
 
 async function idle(page: Page, pose?: string) {
   const host = page.getByTestId('route-companion')

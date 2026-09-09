@@ -6,6 +6,7 @@ import { LanguageToggle } from '../common/LanguageToggle'
 import { ThemeToggle } from '../common/ThemeToggle'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { CompanionStyleSwitch } from '../companion/CompanionPreference'
+import { PUBLIC_COMPANION_ENABLED } from '../companion/companionConfig'
 
 export function Topbar({
   route,
@@ -44,12 +45,12 @@ export function Topbar({
 
   return (
     <header className="site-topbar">
-      <div className="topbar-inner" data-companion-home={route.pathname === '/'}>
+      <div className="topbar-inner" data-companion-home={PUBLIC_COMPANION_ENABLED ? route.pathname === '/' : undefined}>
         <AppLink to="/" className="site-wordmark" aria-label={copy.shell.home}>
           azlar<span aria-hidden="true">.</span>
         </AppLink>
-        <span className="companion-dock-slot" data-companion-slot="dock" aria-hidden="true" />
-        {route.pathname === '/' ? <CompanionStyleSwitch compact /> : null}
+        {PUBLIC_COMPANION_ENABLED && <span className="companion-dock-slot" data-companion-slot="dock" aria-hidden="true" />}
+        {PUBLIC_COMPANION_ENABLED && route.pathname === '/' ? <CompanionStyleSwitch compact /> : null}
         <nav className="topbar-navigation" aria-label={copy.navigation.label}>
           {links.map(({ to, label, active }) => (
             <AppLink

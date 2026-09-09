@@ -107,6 +107,19 @@ describe('portfolio SEO build', () => {
     assert.match(robots, /Sitemap: https:\/\/me\.azlar\.cc\/sitemap\.xml/u)
   })
 
+  it('keeps the family album behind its gate and absent from public HTML and sitemap', () => {
+    const baby = read(routeFile('/baby'))
+    assert.match(baby, /noindex,nofollow,noimageindex/u)
+    assert.match(baby, /家庭暗号/u)
+    assert.doesNotMatch(baby, /\/portraits\/|<image\b/u)
+    assert.doesNotMatch(read(join(distRoot, 'sitemap.xml')), /\/baby/u)
+    for (const path of indexedRoutes.keys()) {
+      const html = read(routeFile(path))
+      assert.doesNotMatch(html, /route-companion|companion-home|companion-dock-slot|companion-style-switch|\/portraits\//u, path)
+      assert.doesNotMatch(html, /href="[^"]*\/baby/u, path)
+    }
+  })
+
   it('ships a correctly sized social-preview image', () => {
     const image = readFileSync(join(distRoot, 'og.png'))
 

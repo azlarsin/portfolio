@@ -5,6 +5,7 @@ import { getLocalizedProfile, getLocalizedProject } from '../../data/localized'
 import { useLanguage } from '../../i18n/LanguageContext'
 import { AppLink } from '../common/AppLink'
 import { CompanionHomeSlot } from '../companion/RouteCompanion'
+import { PUBLIC_COMPANION_ENABLED } from '../companion/companionConfig'
 
 export function HomeHero() {
   const { language, copy } = useLanguage()
@@ -46,7 +47,7 @@ export function HomeHero() {
           {copy.navigation.availability}
         </p>
       </div>
-      <CompanionHomeSlot />
+      {PUBLIC_COMPANION_ENABLED && <CompanionHomeSlot />}
     </section>
   )
 }

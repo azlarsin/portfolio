@@ -16,6 +16,7 @@ import { HomePage } from '../pages/HomePage'
 import { NotFoundPage } from '../pages/NotFoundPage'
 import { ResumePage } from '../pages/ResumePage'
 import { DemoPlayerPage } from '../pages/DemoPlayerPage'
+import { BabyPage } from '../pages/BabyPage'
 import { PokeRenderPage } from '../pages/PokeRenderPage'
 import {
   getSavedScrollPosition,
@@ -36,6 +37,8 @@ export function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute>
     getLocalizedProject(project, language)
 
   switch (route.id) {
+    case ROUTES.BABY.id:
+      return <BabyPage />
     case ROUTES.POKE_RENDER.id:
       return <PokeRenderPage route={route} />
     case ROUTES.DEMO.id:
@@ -119,6 +122,7 @@ export function App() {
 
   useEffect(() => {
     if (route.needsCanonicalReplace) return
+    if (route.pathname === ROUTES.BABY.path) return
 
     trackGoogleAnalyticsPageView({
       pageLocation: `${window.location.origin}${route.pathname}${route.search}`,
@@ -127,6 +131,7 @@ export function App() {
   }, [route.needsCanonicalReplace, route.pathname, route.search])
 
   useLayoutEffect(() => {
+    if (route.pathname === ROUTES.BABY.path) return
     let nestedFrame = 0
     const frame = window.requestAnimationFrame(() => {
       nestedFrame = window.requestAnimationFrame(() => {
@@ -155,7 +160,7 @@ export function App() {
     }
   }, [route.href])
 
-  if (route.id === ROUTES.DEMO.id || route.id === ROUTES.POKE_RENDER.id) {
+  if (route.id === ROUTES.BABY.id || route.id === ROUTES.DEMO.id || route.id === ROUTES.POKE_RENDER.id) {
     return <RoutePage route={route} />
   }
 
