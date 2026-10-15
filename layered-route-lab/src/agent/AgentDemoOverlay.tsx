@@ -535,7 +535,7 @@ export default function AgentDemoOverlay({
         <span className="agent-logo" aria-hidden="true">A</span>
         <span>
           <strong>Agent Demo</strong>
-          <small>选择任务，看看页面怎样变化</small>
+          <small>任务规划与页面执行</small>
         </span>
         <kbd>⌘ K</kbd>
       </button>
@@ -621,8 +621,8 @@ export default function AgentDemoOverlay({
               {tab === "run" ? (
                 <div className="agent-run-view">
                   <section className="agent-role-guide" aria-labelledby="agent-role-title">
-                    <h2 id="agent-role-title">试着打开一笔订单</h2>
-                    <p>选择一个任务，确认后看看页面怎样逐层展开。完成后可以返回上一级，或复制页面链接重新打开。</p>
+                    <h2 id="agent-role-title">订单导航与状态恢复</h2>
+                    <p>选择任务并确认执行计划，观察页面层级变化。执行后可通过返回、刷新或分享链接验证状态恢复。</p>
                     {onOpenGuide ? <button type="button" onClick={() => { setOpen(false); onOpenGuide(); }}>了解页面操作</button> : null}
                   </section>
 
@@ -657,8 +657,8 @@ export default function AgentDemoOverlay({
 
                   {!plan || plan.mode === "clarify" ? (
                     <div className="agent-suggestions">
-                      <span>从这里开始</span>
-                      <p>选一个任务，约一分钟。</p>
+                      <span>预设任务</span>
+                      <p>支持订单查询、编辑与数据汇总。</p>
                       {agentSuggestions.slice(0, 3).map((suggestion) => (
                         <button
                           key={suggestion.command}
@@ -675,7 +675,7 @@ export default function AgentDemoOverlay({
                         onClick={() => runCommand("打开订单 2")}
                         disabled={running}
                       >
-                        <small>试试缺少参数的任务</small>
+                        <small>缺失参数处理</small>
                         打开订单 2
                       </button>
                     </div>
@@ -686,7 +686,7 @@ export default function AgentDemoOverlay({
                   ) : (
                     <div className="agent-empty-state">
                       <span>01</span>
-                      <p>先选一个任务，再查看将要打开的页面。</p>
+                      <p>选择预设任务或输入指令后，可查看执行计划。</p>
                     </div>
                   )}
 

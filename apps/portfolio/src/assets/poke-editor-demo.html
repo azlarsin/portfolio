@@ -299,8 +299,8 @@
 <body>
   <section class="mobile-pc-notice" role="note" aria-label="桌面端体验提示">
     <small>POKE PROTOTYPE EDITOR</small>
-    <h1>先试试做好的原型</h1>
-    <p>点一下按钮，看看标题移动和页面切换。编辑画布请使用电脑。</p>
+    <h1>移动端原型预览</h1>
+    <p>可在移动端验证元素状态变化与页面跳转。画布编辑需使用桌面浏览器。</p>
     <button id="mobilePreview" class="mobile-preview-button">运行示例 →</button>
   </section>
   <input id="documentFile" type="file" accept=".json,application/json" hidden />
@@ -323,7 +323,7 @@
       </div>
       <div class="top-group end">
         <div class="replay-progress" id="replayProgress"><i></i><span id="replayStatus">修改按钮颜色，然后点“扫码预览”</span></div>
-        <button class="top-action primary" id="replay"><b>▶</b>看看怎么做</button>
+        <button class="top-action primary" id="replay"><b>▶</b>操作演示</button>
       </div>
     </header>
     <div class="workspace">
@@ -369,7 +369,7 @@
         <div class="interaction-form"><div class="interaction-starter" id="interactionStarter"><button class="primary" id="beginElementInteraction">＋ 添加交互</button><button id="beginPageInteraction">＋ 页面跳转</button><span>先选择 Target，再编辑它的目标 State。</span></div><div class="interaction-fields" id="interactionFields" hidden><label>目标<select id="eventTarget"></select></label><label class="interaction-field" id="targetStateField">目标 State<select id="eventTargetState"></select></label><label class="interaction-field" id="effectField" hidden>页面转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>延迟<input id="eventDelay" type="number" min="0" max="5" step="0.05" value="0" /></label><label>时长<input id="eventDuration" type="number" min="0.05" max="3" step="0.05" value="0.3" /></label><button class="save" id="saveInteraction">保存页面动作</button></div><div class="interaction-actions" id="interactionActions"></div><p class="interaction-note">元素动作通过遮罩选择 Target；可直接选择已有 State，或在移动 / resize / rotate 后保存为新 State。</p></div>
       </section>
       <div class="preview-modal" id="previewModal">
-        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">在手机上试试</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>扫码打开，或直接点右侧预览</strong><p>点击蓝色按钮：标题先移动，再切换到详情页。编辑后重新打开预览，就能看到改动。</p><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">正在准备…</span></div><input id="previewUrl" aria-label="预览链接" readonly hidden style="width:100%;margin-top:12px;padding:8px;border:1px solid #cbd5e1;border-radius:6px" /></section><section class="preview-device-pane"><span id="previewRuntimeLabel">LIVE RUNTIME · WAITING</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
+        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">移动端预览</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>扫码打开或使用右侧交互预览</strong><p>点击蓝色按钮可触发标题移动与页面切换。修改原型后，重新打开预览即可查看更新。</p><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">正在准备…</span></div><input id="previewUrl" aria-label="预览链接" readonly hidden style="width:100%;margin-top:12px;padding:8px;border:1px solid #cbd5e1;border-radius:6px" /></section><section class="preview-device-pane"><span id="previewRuntimeLabel">LIVE RUNTIME · WAITING</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
       </div>
     </div>
     <footer class="footer"><span><strong id="footerMode">SELECT</strong> · DOCUMENT / SYNTHETIC-MOBILE-PROTOTYPE</span><span id="footerState">7 ELEMENTS · 2 PAGES · 0 EVENTS</span></footer>
@@ -383,7 +383,7 @@
         {id:'hero',name:'Hero Gradient',type:'rect',x:0,y:0,w:280,h:230,fill:'#e9efff',radius:0,opacity:100},
         {id:'mark',name:'Product Mark',type:'circle',x:24,y:42,w:34,h:34,fill:'#2e67dd',radius:50,opacity:100},
         {id:'title',name:'Headline',type:'text',x:24,y:92,w:225,h:64,fill:'#222a36',radius:0,opacity:100,text:'你好，Poke。'},
-        {id:'copy',name:'Description',type:'text',x:24,y:160,w:222,h:42,fill:'#718096',radius:0,opacity:100,text:'点一下按钮，看看标题和页面怎样变化。'},
+        {id:'copy',name:'Description',type:'text',x:24,y:160,w:222,h:42,fill:'#718096',radius:0,opacity:100,text:'点击按钮可触发标题状态变化与页面跳转。'},
         {id:'cta',name:'Primary Button',type:'rect',x:24,y:252,w:232,h:48,fill:'#2e67dd',radius:16,opacity:100,text:'打开详情 →'},
         {id:'tab-bar',name:'Tab Bar',type:'tab-bar',x:0,y:466,w:280,h:56,fill:'#ffffff',radius:0,opacity:100,normalColor:'#8b95a5',selectedColor:'#2e67dd',tabs:[{id:'tab-home',icon:'⌂',text:'Home',pageId:'home'},{id:'tab-details',icon:'◇',text:'Details',pageId:'details'},{id:'tab-profile',icon:'○',text:'Profile',pageId:null}]}
       ];
@@ -2983,7 +2983,7 @@
           liveFrame.onload = () => {
             setTimeout(() => {
               if (requestId !== previewRequest || liveFrame.dataset.payloadId !== payloadId) return;
-              document.querySelector('#previewRuntimeLabel').textContent = '点击按钮试试';
+              document.querySelector('#previewRuntimeLabel').textContent = '交互预览已就绪';
             }, 180);
           };
           qrFrame.onerror = () => { loading.textContent = '二维码生成失败，请复制链接预览'; };
@@ -3016,7 +3016,7 @@
           if (message.type === 'poke:qr-error') document.querySelector('#previewLoading').textContent = '二维码生成失败，请使用复制链接';
         }
         if (event.source === liveFrame.contentWindow && message.type === 'poke:runtime-ready' && message.payloadId === liveFrame.dataset.payloadId) {
-          document.querySelector('#previewRuntimeLabel').textContent = '点击按钮试试';
+          document.querySelector('#previewRuntimeLabel').textContent = '交互预览已就绪';
         }
       });
 
@@ -3205,7 +3205,7 @@
         openConfirm('恢复示例？', '当前画布会被替换，可以撤销。本机保存的草稿保留，点击保存后才会更新。', () => {
           checkpointHistory('恢复示例');
           restoreDocumentState(exampleDocument);
-          flash('已恢复示例；点击“扫码预览”试试按钮');
+          flash('已恢复示例，可通过“扫码预览”验证交互');
         }, '恢复示例');
       });
       document.querySelector('#documentFile').addEventListener('change', async event => {

@@ -64,15 +64,15 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 1,
-        summary: "打开一笔订单，再试试返回和刷新。",
+        summary: "验证订单导航、分层返回与深链恢复。",
         boundary: "示例数据与本地规则匹配；可恢复的页面路径来自 Lab 的路由清单。",
-        steps: ["选择“进入编辑页”，确认产品和订单后运行。", "点“查看页面”，用 Back 返回上一级。", "复制页面链接，或直接刷新，看看路由层级是否恢复。"],
+        steps: ["选择“进入编辑页”，确认产品和订单后运行。", "点“查看页面”，用 Back 返回上一级。", "复制页面链接或刷新页面，验证路由层级恢复。"],
       },
       en: {
         duration: 1,
-        summary: "Open an order, then try going back and refreshing.",
+        summary: "Validate order navigation, back navigation, and deep-link restoration.",
         boundary: "Sample data and local rules. Restorable pages are defined by the Lab route manifest.",
-        steps: ["Choose the edit task, check the product and order, and run it.", "Close the assistant to inspect the page and go back one level.", "Copy the page link or refresh to restore its route layers."],
+        steps: ["Choose the edit task, check the product and order, and run it.", "Close the assistant, inspect the page, and navigate to its parent.", "Copy the page link or refresh to restore its route layers."],
       },
     },
   },
@@ -92,7 +92,7 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 1,
-        summary: "沿着路由图，看看一个订单页面有哪些上级和分支。",
+        summary: "查看订单页面的路由层级、父子关系与分支。",
         boundary: "节点直接来自当前 Lab 的 Behavior Manifest。",
         steps: ["选择一个节点，查看它的路径和参数。", "打开对应页面，观察左侧层级变化。"],
       },
@@ -120,13 +120,13 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 1,
-        summary: "改一个按钮，再看看它在手机上怎样运行。",
+        summary: "编辑原型元素，配置交互并验证移动端预览。",
         boundary: "这是基于历史 Poke 源码与运行结果重建的示例。保存的草稿留在本机浏览器，导出的文件可以重新打开。",
         steps: ["选中蓝色按钮，在右侧修改颜色或文字。", "打开“扫码预览”，点按钮观察标题移动和页面切换。", "保存到本机后刷新，或导出项目，再用“打开文件”恢复。"],
       },
       en: {
         duration: 1,
-        summary: "Change a button, then try it on your phone.",
+        summary: "Edit prototype elements and validate interactions in the mobile preview.",
         boundary: "A reconstruction of the original Poke editor. Saved drafts stay in this browser; exported files can be reopened.",
         steps: ["Select the blue button and change its color or text.", "Open QR preview and tap the button to move the title and change pages.", "Save and refresh, or export the project and reopen its file."],
       },
@@ -148,7 +148,7 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 2,
-        summary: "筛选网络和节点，看看地图、分布与明细怎样一起变化。",
+        summary: "通过网络筛选与节点选择，查看地图、分布与明细的联动。",
         boundary: "使用离线示例数据重建，数字不代表实际业务指标。",
         steps: ["切换到节点地图，筛选一个网络。", "打开节点详情，对照地图高亮与指标。", "点击刷新数据，或播放演示查看其他场景。"],
       },
@@ -176,7 +176,7 @@ export const demoExperiences = {
     guide: {
       zh: {
         duration: 1,
-        summary: "连续重组数据，看看扇区怎样接着当前位置运动。",
+        summary: "观察数据重组时的扇区过渡，以及连续操作下的动画衔接。",
         boundary: "个人 SVG 动效实验。",
         steps: ["点击“重组数据”，也可以在动画中再次点击。", "降低播放速度，观察扇区连接；双击一块可移除。", "点击重置，从初始状态重新试。"],
       },
@@ -184,7 +184,7 @@ export const demoExperiences = {
         duration: 1,
         summary: "Reorder the slices repeatedly and watch them continue from their current positions.",
         boundary: "A personal SVG motion experiment.",
-        steps: ["Reorder the data, including while it is moving.", "Slow the motion down; double-click a slice to remove it.", "Reset to try again from the original state."],
+        steps: ["Reorder the data, including while it is moving.", "Slow the motion down; double-click a slice to remove it.", "Reset to restore the initial state."],
       },
     },
   },
@@ -212,7 +212,7 @@ export const demoExperiences = {
         duration: 1,
         summary: "Drag the control points and compare the pace of the same motion.",
         boundary: "An easing component extracted from an earlier prototype editor.",
-        steps: ["Choose a preset and watch its motion.", "Drag or use arrow keys to adjust a control point, or enter its values.", "Copy the CSS or reset to compare again."],
+        steps: ["Select a preset to inspect its motion.", "Drag or use arrow keys to adjust a control point, or enter its values.", "Copy the CSS or reset to compare again."],
       },
     },
   },
@@ -234,7 +234,7 @@ export const demoExperiences = {
         duration: 2,
         summary: "给一组不同轮廓留出间距，观察自动排布的结果。",
         boundary: "使用生成的轮廓重建。算法依据采样点近似计算间距，不保证全局最优。",
-        steps: ["调整形状数量、中心形状和间距。", "点击编排，对比排布前后的位置。", "需要看计算过程时，再开启动画或调试图层。"],
+        steps: ["调整形状数量、中心形状和间距。", "点击编排，对比排布前后的位置。", "开启动画或调试图层，查看计算过程与采样结果。"],
       },
       en: {
         duration: 2,

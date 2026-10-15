@@ -104,7 +104,7 @@ test("the onboarding guide connects route layers to the constrained Agent loop",
   assert.match(guideCss, /\.experience-guide \{[\s\S]*?overflow-y: auto/);
   assert.match(guideCss, /@media \(max-width: 720px\) \{[\s\S]*?\.experience-guide \{[\s\S]*?top: 66px[\s\S]*?right: 8px[\s\S]*?bottom: 8px[\s\S]*?left: 8px/);
 
-  assert.match(overlay, /试着打开一笔订单/);
+  assert.match(overlay, /订单导航与状态恢复/);
   assert.match(overlay, /alternatives/);
   assert.match(overlay, /本地规则匹配，不调用在线模型/);
   assert.match(overlay, /openRequest/);

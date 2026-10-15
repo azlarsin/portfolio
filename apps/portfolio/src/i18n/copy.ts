@@ -28,7 +28,7 @@ export const siteCopy = {
       demos: '交互 Demo',
       demoShortcuts: '展开或收起个人项目 Demo 快捷入口',
       resume: '简历',
-      availability: '开放工作机会与项目交流',
+      availability: '求职方向：前端研发、全栈开发、AI Agent',
       selectedCases: [
         '企业后台架构改造',
         '百度地图数据作业',
@@ -46,16 +46,16 @@ export const siteCopy = {
     },
     home: {
       eyebrow: 'FRONTEND TECH LEAD / FULL STACK ENGINEER',
-      titleLines: ['前端技术负责人', ' · 全栈开发'],
+      titleLines: ['复杂系统的前端架构', '与全栈交付'],
       intro:
-        '做了十多年前端和全栈开发，带过 4–8 人的团队。做过企业后台、地图作业工具和富文本编辑器。这里有我的项目经历，也有可以直接上手的作品。',
-      openAgentDemo: '试试页面操作助手',
-      openPokeDemo: '试试 Poke 编辑器',
+        '曾任美餐前端负责人、百度高级研发工程师。工作涵盖企业后台架构、业务 SDK、地图数据作业与富文本编辑器，承担技术方案、核心开发与团队管理。',
+      openAgentDemo: 'Agent 演示',
       viewSelectedCase: '查看精选案例',
-      downloadResume: '下载简历',
+      downloadResume: '查看简历',
+      profileLabel: '职业概况',
       facts: [
         ['10+ 年', '前端与全栈经验'],
-        ['4-8 人', '长期带领前端团队'],
+        ['4–8 人', '前端团队管理'],
         ['2012—2026', '职业经历'],
         ['前后端 · 数据库 · 部署', '早期完整交付经历'],
       ],
@@ -72,7 +72,8 @@ export const siteCopy = {
       selectedDescription:
         '企业后台、百度地图数据作业与百家号编辑器来自真实生产项目；Agent 案例基于公开代码与合成数据。跨端钱包、个人产品和早期作品收录于个人项目集。',
       viewCase: '查看完整案例',
-      labTitle: '先动手试试',
+      labEyebrow: 'PROJECTS & EXPERIMENTS',
+      labTitle: '个人产品与技术实验',
       allProjects: '全部个人项目',
       previewLabel: '公开 Demo 实际界面',
       diagramLabel: '架构示意',
@@ -80,10 +81,10 @@ export const siteCopy = {
     archive: {
       eyebrow: 'PERSONAL PROJECTS',
       title: '个人项目集',
-      lead: '这些是我做过的个人产品、兼职项目和交互实验。可以先打开 Demo 玩一会儿，再看背后的实现。',
+      lead: '收录个人产品、兼职团队项目与早期技术实验，说明项目背景、本人职责和实现范围。',
       demoTitle: '个人项目交互 Demo',
       demoDescription:
-        '从一个小操作开始：改动原型、拖动曲线，或重新排布一组图形。演示使用示例数据。',
+        '原型编辑、数据可视化与交互组件的公开演示，使用示例数据或离线重建内容。',
       viewProject: '查看项目',
       back: '返回个人项目集',
     },
@@ -294,7 +295,7 @@ export const siteCopy = {
       demos: 'Interactive Demos',
       demoShortcuts: 'Expand or collapse personal-project demo shortcuts',
       resume: 'Resume',
-      availability: 'Open to opportunities and project conversations',
+      availability: 'Seeking frontend, full-stack, and AI Agent roles',
       selectedCases: [
         'Enterprise Console Architecture',
         'Baidu Maps Data Operations',
@@ -312,16 +313,16 @@ export const siteCopy = {
     },
     home: {
       eyebrow: 'FRONTEND TECH LEAD / FULL STACK ENGINEER',
-      titleLines: ['Frontend lead', 'and full-stack developer'],
+      titleLines: ['Frontend architecture', 'and full-stack delivery'],
       intro:
-        'I build frontend and full-stack software and have led teams of 4–8 engineers. My work includes business consoles, map tools, and rich-text editors. Here are some of those projects, along with things you can try yourself.',
-      openAgentDemo: 'Try the page assistant',
-      openPokeDemo: 'Try the Poke editor',
+        'Former Frontend Lead at Meican and Senior Software Engineer at Baidu. Work spans enterprise consoles, business SDKs, map tools, and rich-text editors.',
+      openAgentDemo: 'Agent demo',
       viewSelectedCase: 'Selected work',
-      downloadResume: 'Download résumé',
+      downloadResume: 'View résumé',
+      profileLabel: 'Professional profile',
       facts: [
         ['10+ years', 'Frontend and full-stack experience'],
-        ['4–8 people', 'Frontend teams led over the long term'],
+        ['4–8 engineers', 'Frontend team management'],
         ['2012—2026', 'Professional experience'],
         ['Frontend · Backend · DB · Ops', 'Early end-to-end delivery scope'],
       ],
@@ -338,7 +339,8 @@ export const siteCopy = {
       selectedDescription:
         'The enterprise-console, Baidu Maps data-operations, and Baijiahao editor cases come from production work; the Agent case uses public code and synthetic data. Cross-platform wallets, personal products, and earlier work are included under Personal Projects.',
       viewCase: 'Read the full case',
-      labTitle: 'Try something I built',
+      labEyebrow: 'PROJECTS & EXPERIMENTS',
+      labTitle: 'Products and technical experiments',
       allProjects: 'All personal projects',
       previewLabel: 'Public demo screenshot',
       diagramLabel: 'Architecture study',

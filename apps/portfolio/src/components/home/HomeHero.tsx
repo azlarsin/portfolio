@@ -1,5 +1,5 @@
 import { layeredAgentProject } from '../../data'
-import { ArrowDown, ArrowUpRight, FileText } from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUpRight, FileText } from 'lucide-react'
 import { demoPlayerPath } from '../../data/demoExperiences'
 import { getLocalizedProfile, getLocalizedProject } from '../../data/localized'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -29,23 +29,18 @@ export function HomeHero() {
         <div className="hero-actions">
           <AppLink
             className="button button-primary"
-            to={demoPlayerPath('poke-prototype-editor')}
+            to="/#selected-work"
           >
-            {copy.home.openPokeDemo} <ArrowUpRight size={17} aria-hidden="true" />
+            {copy.home.viewSelectedCase} <ArrowDown size={17} aria-hidden="true" />
+          </AppLink>
+          <AppLink className="button button-secondary hero-resume" to="/resume#pdf-preview">
+            <FileText size={16} aria-hidden="true" /> {copy.home.downloadResume}
           </AppLink>
           <AppLink
-            className="button button-secondary"
+            className="text-link hero-demo"
             to={demoPlayerPath(agentProject.demo?.experienceId || 'layered-route-agent')}
           >
-            {copy.home.openAgentDemo}{' '}
-            <ArrowUpRight size={17} aria-hidden="true" />
-          </AppLink>
-          <AppLink className="text-link" to="/#selected-work">
-            {copy.home.viewSelectedCase}{' '}
-            <ArrowDown size={17} aria-hidden="true" />
-          </AppLink>
-          <AppLink className="text-link hero-resume" to="/resume#pdf-preview">
-            <FileText size={16} aria-hidden="true" /> {copy.home.downloadResume}
+            {copy.home.openAgentDemo} <ArrowUpRight size={16} aria-hidden="true" />
           </AppLink>
         </div>
         <p className="availability-line" title={profile.availability}>
@@ -53,6 +48,19 @@ export function HomeHero() {
           {copy.navigation.availability}
         </p>
       </div>
+      <aside className="home-profile" aria-label={copy.home.profileLabel}>
+        <dl>
+          {copy.home.facts.slice(0, 2).map(([value, label]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <AppLink className="text-link" to="/experience">
+          {copy.navigation.experience} <ArrowRight size={16} aria-hidden="true" />
+        </AppLink>
+      </aside>
       {PUBLIC_COMPANION_ENABLED && <CompanionHomeSlot />}
     </section>
   )

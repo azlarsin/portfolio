@@ -7,7 +7,7 @@ export const baijiahaoEditorProject = {
   provenance: 'production',
   title: '百家号编辑器：从 UEditor 深度定制到内部复用包',
   shortTitle: '百家号编辑器',
-  summary: '把业务仓库中的编辑器整理成独立包，支持 React 和旧页面接入，同时兼容已有插件。',
+  summary: '将 UEditor 深度定制版本迁移为内部复用包，支持 React 与脚本接入，并保持既有插件兼容。',
   eyebrow: 'EDITOR PLATFORM EVOLUTION',
   thesis:
     '百家号图文编辑器基于 UEditor 1.4.3 深度定制。我担任内部开源负责人，设计整体方案与架构模块，带领 3 名工程师完成历史代码的迁移、清理和模块化，形成支持 React 与浏览器脚本接入的复用包。',

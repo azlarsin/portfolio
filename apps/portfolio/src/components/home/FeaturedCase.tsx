@@ -37,6 +37,7 @@ export function FeaturedCase({
             <ArrowUpRight size={22} aria-hidden="true" />
           </AppLink>
         </h3>
+        <p className="featured-case-role">{project.role}</p>
         <p>{project.summary || project.impact[0]}</p>
         <ul
           className="case-keywords"

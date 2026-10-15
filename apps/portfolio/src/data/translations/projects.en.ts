@@ -163,7 +163,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case comes from internal Meican production projects in which I participated. The public version retains only work that can be described and includes no internal screens, data, or business metrics.',
   },
   'baidu-map-workbench': {
-    summary: 'Select, edit, and review road data, with tools connecting map work to quality checks and reporting.',
+    summary: 'Core SVG map-editor development and spatial statistics services for road editing, batch quality checks, and operations analysis.',
     title: 'Baidu Maps Data Operations: Complex Map Rendering and Data Services',
     shortTitle: 'Baidu Maps Data Operations',
     eyebrow: 'MAP DATA WORKBENCH · PRODUCTION SYSTEM',
@@ -300,7 +300,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case is based on my Baidu work history, retained source, and verifiable repository history. The rendering section describes the operations frontend scope in which I participated and held responsibility without treating an internally shared map foundation with incomplete history as my sole work; backend and team claims are described through retained code and résumé evidence.',
   },
   'baijiahao-editor': {
-    summary: 'Extracting a reusable editor package from a business app, while keeping existing plugins and supporting both React and script-based pages.',
+    summary: 'Migrated a customized UEditor implementation into an internal package with React and script integration, preserving existing plugin compatibility.',
     title: 'Baijiahao Editor: From Deep UEditor Customization to an Internal Reusable Package',
     shortTitle: 'Baijiahao Editor Evolution',
     eyebrow: 'PRODUCTION SYSTEM',
@@ -393,12 +393,12 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case draws on my project experience, code, and engineering documents, with public details sanitized. Internal open source refers to reuse and collaboration within Baidu, not a public GitHub project.',
   },
   'layered-agent': {
-    summary: 'Open an order and watch the pages unfold. Go back, refresh, or copy the link to reopen the same route.',
+    summary: 'Layered routes restore page context; a local planner executes declared actions and verifies route and interface state.',
     title: 'Layered Route × Agent: tasks built from page actions',
     shortTitle: 'Layered Route × Agent',
     eyebrow: 'PUBLIC RECONSTRUCTION / RESEARCH',
     thesis:
-      'A layered-page experiment: open a product, then an order and its editor, while keeping the parent pages available. A local task assistant matches product and order inputs to existing actions and checks that the requested page opened.',
+      'Layered routing supports page stacks, back navigation, and deep-link restoration. A local planner matches product and order parameters to a behavior manifest, executes declared actions, and verifies the resulting route and page stack.',
     period: 'Public reconstruction · Ongoing research',
     role: 'Routing model · Agent design · Core development',
     status: 'Public experiment · Entirely synthetic data',
@@ -651,7 +651,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     provenanceNote: 'This is an archived team project. Public material describes only my contribution and uses an abstract architecture visual; it contains no private keys, account data, or active legacy service integration.',
   },
   'poke-prototype-editor': {
-    summary: 'Change a button and its interaction, then try it on your phone. Save, export, and reopen your project.',
+    summary: 'A mobile prototyping editor with layer editing, interaction configuration, document serialization, and mobile preview.',
     title: 'Poke: High-Fidelity Mobile Prototyping Editor',
     shortTitle: 'Poke Prototype Editor',
     eyebrow: 'EXPERIMENT / ARCHIVE',

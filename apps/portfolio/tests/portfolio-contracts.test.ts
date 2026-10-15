@@ -878,11 +878,11 @@ describe('portfolio acceptance contracts', () => {
     )
 
     expect(siteCopy.zh.home.titleLines).toEqual([
-      '前端技术负责人',
-      ' · 全栈开发',
+      '复杂系统的前端架构',
+      '与全栈交付',
     ])
     expect(homeHero).toContain('copy.home.titleLines')
-    expect(homeHero).toContain('copy.home.openPokeDemo')
+    expect(homeHero).toContain('copy.home.downloadResume')
     expect(homeHero).not.toMatch(/Elasticsearch|Kafka/)
     expect(siteCopy.zh.home.capabilities.map(([title]) => title)).toEqual(
       expect.arrayContaining(['存量系统改造', '跨栈学习与完整交付']),
@@ -905,7 +905,7 @@ describe('portfolio acceptance contracts', () => {
     expect(learningText).not.toMatch(/精通 React Native|精通统计计算|从零掌握/)
   })
 
-  it('keeps prominent Demo entrances at the top of Overview and Personal Projects', () => {
+  it('prioritizes selected work on the homepage while retaining Demo entrances', () => {
     const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
     const homeHero = readFileSync(
       `${sourceRoot}/components/home/HomeHero.tsx`,
@@ -917,8 +917,8 @@ describe('portfolio acceptance contracts', () => {
     )
 
     expect(homeHero).toContain('copy.home.openAgentDemo')
-    expect(homeHero.indexOf('copy.home.openAgentDemo')).toBeLessThan(
-      homeHero.indexOf('copy.home.viewSelectedCase'),
+    expect(homeHero.indexOf('copy.home.viewSelectedCase')).toBeLessThan(
+      homeHero.indexOf('copy.home.openAgentDemo'),
     )
     expect(archivePage).toContain('<DemoDirectory')
     expect(archivePage.indexOf('<DemoDirectory')).toBeLessThan(
@@ -964,8 +964,8 @@ describe('portfolio acceptance contracts', () => {
     }
     expect(JSON.stringify(englishProfile)).not.toMatch(/[\p{Script=Han}]/u)
     expect(siteCopy.en.home.titleLines).toEqual([
-      'Frontend lead',
-      'and full-stack developer',
+      'Frontend architecture',
+      'and full-stack delivery',
     ])
     expect(siteCopy.zh.demo.player.startHere).toBe('建议体验时长')
     expect(siteCopy.en.demo.player.startHere).toBe('Start here')

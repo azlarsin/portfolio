@@ -7,7 +7,7 @@ export const baiduMapWorkbenchProject = {
   provenance: 'production',
   title: '百度地图数据作业：复杂地图渲染与数据服务',
   shortTitle: '百度地图数据作业',
-  summary: '在地图上选择、编辑和核对道路数据，并把作业、质检和统计接到同一条流程中。',
+  summary: '参与 SVG 地图作业前端开发，主导空间统计服务，支持道路数据编辑、批量质检与作业分析。',
   eyebrow: 'MAP DATA WORKBENCH · PRODUCTION SYSTEM',
   thesis:
     '在百度带领 5 名前端工程师期间，我参与并负责地图数据作业方向的核心交付：前端侧在既有内部 SVG 地图体系上组织道路、轨迹、GPS 与业务标记等多类空间要素，处理图层装载、空间检索和复杂编辑交互；服务端侧主导众源空间统计服务，并持续扩展 Python / PostgreSQL 作业与批量质检流程。',

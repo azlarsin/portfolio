@@ -30,10 +30,10 @@ export const layeredAgentProject = {
   provenance: 'public-reconstruction',
   title: 'Layered Route × Agent：基于页面行为约束的任务执行',
   shortTitle: 'Layered Route × Agent',
-  summary: '打开一笔订单，看看页面怎样逐层展开。再返回、刷新，或复制链接重新打开。',
+  summary: '通过分层路由恢复页面上下文，基于行为清单执行任务，并验证路由与界面状态。',
   eyebrow: 'PUBLIC RECONSTRUCTION / RESEARCH',
   thesis:
-    '一个多层页面实验：从产品列表进入订单，再打开编辑页，返回时保留上一级的上下文。我也做了一个本地任务助手，把输入的产品和订单匹配到已有动作，再检查页面是否到达目标。',
+    '基于分层路由实现页面堆叠、返回与深链恢复。本地任务规划器根据产品、订单等参数匹配行为清单，执行已声明的页面动作，并检查目标路由与页面层级。',
   period: '公开重建 · 持续研究',
   role: '路由模型 · Agent 方案 · 核心开发',
   status: '公开实验 · 全部使用合成数据',
