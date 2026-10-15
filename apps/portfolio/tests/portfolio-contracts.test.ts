@@ -753,7 +753,7 @@ describe('portfolio acceptance contracts', () => {
     )
 
     expect(baiduExperience?.overview).toBe(
-      '在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器，并直接参与 PHP / Python 数据服务与批处理交付。',
+      '在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器；主导整个统计项目的设计、开发与持续迭代，涵盖 PHP / Python 数据服务与批处理。',
     )
   })
 

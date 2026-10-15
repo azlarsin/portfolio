@@ -60,13 +60,13 @@ export const profileEn: ProfileTranslation = {
       end: '2019.11',
       period: '2017.11—2019.11',
       overview:
-        'Led five frontend engineers across complex SVG map-data operations, spatial statistics, and the Baijiahao article editor, while directly contributing PHP / Python data services and batch-processing delivery.',
+        'Led five frontend engineers across complex SVG map-data operations, spatial statistics, and the Baijiahao article editor. Led the overall design, development, and ongoing iteration of the statistics project, including PHP / Python data services and batch processing.',
       highlights: [
         {
           title: 'Map operations, backend services, and spatial statistics',
           bullets: [
             'Contributed core work to complex map operations, delivering layered loading, spatial search, and editing for roads, tracks, GPS, and business annotations on an existing internal SVG map system.',
-            'Led PHP / Yii2 crowdsourced-statistics services, metrics APIs, and Python batch jobs, and extended asynchronous QA, callback deduplication, and JSONB exception analysis in Python / PostgreSQL; correlated Elasticsearch count / search / scroll results with MySQL business data.',
+            'Led the overall design, development, and iteration of the statistics project, covering PHP / Yii2 crowdsourced-statistics services, metrics APIs, and Python batch jobs. Extended asynchronous QA, callback deduplication, and JSONB exception analysis in Python / PostgreSQL; correlated Elasticsearch count / search / scroll results with MySQL business data.',
           ],
         },
         {

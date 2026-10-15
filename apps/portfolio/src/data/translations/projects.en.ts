@@ -163,12 +163,12 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case comes from internal Meican production projects in which I participated. The public version retains only work that can be described and includes no internal screens, data, or business metrics.',
   },
   'baidu-map-workbench': {
-    summary: 'Core SVG map-editor development and spatial statistics services for road editing, batch quality checks, and operations analysis.',
+    summary: 'Core SVG map-editor development, with leadership of the overall design, development, and ongoing iteration of the spatial-statistics project.',
     title: 'Baidu Maps Data Operations: Complex Map Rendering and Data Services',
     shortTitle: 'Baidu Maps Data Operations',
     eyebrow: 'MAP DATA WORKBENCH · PRODUCTION SYSTEM',
     thesis:
-      'While leading five frontend engineers at Baidu, I contributed to and owned core delivery for map-data operations. On the frontend, I organized roads, tracks, GPS, and business annotations on top of an existing internal SVG map system, handling layered loading, spatial search, and complex editing. On the backend, I led a crowdsourced spatial-statistics service and continued extending Python and PostgreSQL operations and batch-QA flows.',
+      'While leading five frontend engineers at Baidu, I contributed to and owned core delivery for map-data operations. On the frontend, I organized roads, tracks, GPS, and business annotations on top of an existing internal SVG map system, handling layered loading, spatial search, and complex editing. I led the overall design, development, and ongoing iteration of the crowdsourced spatial-statistics project and extended Python and PostgreSQL operations and batch-QA flows.',
     period: '2017.11—2019.11 · Baidu production work',
     role: 'Map rendering and operations · Data-service design · Frontend leadership',
     status: 'Internal production systems · Public details sanitized',
@@ -186,7 +186,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     impact: [
       'Contributed core work to a complex map-operations frontend, organizing roads, tracks, GPS, and business annotations through Map, Layer, Feature, and Element boundaries in the internal SVG map system.',
       'Handled tile-difference loading, spatial indexing, and geometric filtering as the viewport changed; supported selection, editing, association, highlighting, measurement, and dynamic labels for spatial features; and implemented road-attribute adaptation between backend data specifications and frontend visual models.',
-      'Led PHP / Yii2 spatial-statistics services and Python batch jobs while extending asynchronous QA, callback deduplication, rework / acceptance state, and JSONB exception analysis in the Python / PostgreSQL operations backend.',
+      'Led the design, development, and iteration of PHP / Yii2 spatial-statistics services and Python batch jobs while extending asynchronous QA, callback deduplication, rework / acceptance state, and JSONB exception analysis in the Python / PostgreSQL operations backend.',
       'Used Elasticsearch count / search / scroll and MySQL business records to derive stage timings across collection, matching, command, recycling, and QA.',
       'Led five frontend engineers delivering map operations, statistics consoles, and related tools, including task breakdown, technical design, difficult issues, and code review.',
     ],
@@ -211,7 +211,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Scope: internal map-data operations, not the consumer map',
         paragraphs: [
           'This work supported internal data collection, annotation, QA, and spatial statistics for Baidu Maps rather than the consumer-facing map. Roads, tracks, GPS, imagery, and many business annotations had to share one operations context while task state and metrics connected to backend workflows.',
-          'My work followed two explicit tracks: contributing core frontend implementation and leading frontend delivery for complex map operations, while leading the spatial-statistics service and extending batch QA and data flows in an existing Python and PostgreSQL operations platform.',
+          'My work followed two explicit tracks: contributing core frontend implementation and leading frontend delivery for complex map operations, while leading the overall design, development, and ongoing iteration of the spatial-statistics project and extending batch QA and data flows in an existing Python and PostgreSQL operations platform.',
         ],
         phase: 'Baidu production work',
       },
@@ -272,7 +272,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         id: 'statistics-pipeline',
         title: 'Statistics service: connecting business records and search logs',
         paragraphs: [
-          'I led development of the crowdsourced spatial-data statistics service. PHP / Yii2 APIs covered batches, tasks, devices, tracks, road segments, time, and mileage, while Python jobs scheduled statistics at batch, daily, hourly, and fifteen-minute intervals and extracted and classified geographic data.',
+          'I led the overall design, development, and ongoing iteration of the crowdsourced spatial-data statistics project. PHP / Yii2 APIs covered batches, tasks, devices, tracks, road segments, time, and mileage, while Python jobs scheduled statistics at batch, daily, hourly, and fifteen-minute intervals and extracted and classified geographic data.',
           'Pipeline timing used Elasticsearch count / search / scroll over state logs and joined the results to MySQL business records to derive collection, matching, command, recycling, and QA durations.',
         ],
         phase: 'PHP / Yii2 · Python · Elasticsearch / MySQL',
@@ -282,7 +282,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Team delivery: five frontend engineers and cross-stack work',
         paragraphs: [
           'At Baidu I led five frontend engineers across map-data operations, statistics consoles, and the Baijiahao editor. I combined task breakdown, technical design, and code review with direct work on critical map interactions and difficult implementation issues.',
-          'On the backend, I directly led the statistics service and continued implementing Python and PostgreSQL business capabilities in the existing operations platform.',
+          'I led the overall design, development, and ongoing iteration of the statistics project, and continued implementing Python and PostgreSQL business capabilities in the existing operations platform.',
         ],
         phase: 'Frontend lead · Cross-stack delivery',
       },

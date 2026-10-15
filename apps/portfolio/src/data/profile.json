@@ -56,13 +56,13 @@
       "start": "2017.11",
       "end": "2019.11",
       "period": "2017.11—2019.11",
-      "overview": "在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器，并直接参与 PHP / Python 数据服务与批处理交付。",
+      "overview": "在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器；主导整个统计项目的设计、开发与持续迭代，涵盖 PHP / Python 数据服务与批处理。",
       "highlights": [
         {
           "title": "地图作业、后端与空间统计",
           "bullets": [
             "参与复杂地图作业前端核心开发，在既有内部 SVG 地图体系上交付道路、轨迹、GPS 与多类业务标记的图层装载、空间检索和编辑交互。",
-            "主导 PHP / Yii2 众源统计服务及指标 API 与 Python 批处理，并在 Python / PostgreSQL 作业端扩展异步质检、回调防重与 JSONB 例外分析；使用 Elasticsearch count / search / scroll 关联 MySQL 业务数据。"
+            "主导统计项目的整体设计、开发与迭代，涵盖 PHP / Yii2 众源统计服务及指标 API、Python 批处理；在 Python / PostgreSQL 作业端扩展异步质检、回调防重与 JSONB 例外分析，使用 Elasticsearch count / search / scroll 关联 MySQL 业务数据。"
           ]
         },
         {
