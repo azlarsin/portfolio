@@ -42,7 +42,7 @@ export function RoutePage({ route }: { route: ReturnType<typeof useCurrentRoute>
     case ROUTES.POKE_RENDER.id:
       return <PokeRenderPage route={route} />
     case ROUTES.DEMO.id:
-      return <DemoPlayerPage route={route} />
+      return <DemoPlayerPage key={new URLSearchParams(route.search).get('experience')} route={route} />
     case ROUTES.HOME.id:
       return <HomePage />
     case ROUTES.MEICAN_PLATFORM.id:

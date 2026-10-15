@@ -187,6 +187,25 @@ test("data organization and inspection plans expose deterministic invariants", a
   });
 });
 
+test("missing product requires a choice and never silently opens product 1", async () => {
+  const { planAgentCommand } = await loadPlanner();
+  const ambiguous = planAgentCommand("打开订单 2");
+  assert.equal(ambiguous.mode, "clarify");
+  assert.equal(ambiguous.matchedRoute, undefined);
+  assert.equal(ambiguous.alternatives.length, 2);
+  const alternatives = ambiguous.alternatives.map(({ command }) => planAgentCommand(command));
+  assert.deepEqual(alternatives.map((plan) => plan.matchedRoute), ["/product/1/order/2", "/product/2/order/2"]);
+  assert.ok(alternatives.every((plan) => plan.mode === "execute"));
+  assert.ok(alternatives.every((plan) => !("confidence" in plan)));
+
+  const missingSummary = planAgentCommand("把 Product 2 的订单按状态整理成摘要");
+  assert.equal(missingSummary.mode, "clarify");
+  assert.equal(missingSummary.summary, undefined);
+  const summaryChoice = planAgentCommand("把订单按状态整理成摘要");
+  assert.equal(summaryChoice.mode, "clarify");
+  assert.equal(summaryChoice.alternatives.length, 1);
+});
+
 test("host bridge demo plans Presenter and Modal data commands", async () => {
   const { planAgentCommand } = await loadPlanner();
   const bridge = planAgentCommand(

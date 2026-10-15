@@ -217,7 +217,7 @@ describe('portfolio acceptance contracts', () => {
       '/demo?experience=poke-prototype-editor',
     )
     expect(demoExperiences['poke-prototype-editor'].sandbox).toBe(
-      'allow-scripts allow-same-origin',
+      'allow-scripts allow-same-origin allow-downloads',
     )
 
     const layeredSource = new URL(demoExperiences['layered-route-agent'].source)
@@ -502,7 +502,7 @@ describe('portfolio acceptance contracts', () => {
     expect(centerSelect).toMatch(
       /<option\b(?=[^>]*\bvalue=["']circle["'])(?=[^>]*\bselected\b)[^>]*>/i,
     )
-    expect(source).toMatch(/<label\b[^>]*\bfor=["']count["'][^>]*>\s*Total shape count\b/i)
+    expect(source).toMatch(/<label\b[^>]*\bfor=["']count["'][^>]*>\s*形状数量/i)
     expect(source).toContain('const outerCount = settings.count - 1')
     expect(source).toContain('center fixed')
 
@@ -601,27 +601,13 @@ describe('portfolio acceptance contracts', () => {
     )
     expect(source).toMatch(/\bid=["']search-progress["']/i)
     expect(source).toContain('Measured result and search progress')
-    expect(source).toContain('Compute time')
+    expect(source).toContain('id="elapsed"')
 
     const guide = demoExperiences['irregular-shape-arrangement'].guide
-    expect(guide.zh.summary).toContain('原始用途')
-    expect(guide.zh.summary).toContain('餐盘与异形食品包装')
-    expect(guide.zh.summary).toContain('当前 Lab 仅')
-    expect(guide.en.summary).toContain('original project intent')
-    expect(guide.en.summary).toContain('plates and irregular food packaging')
-    expect(guide.en.summary).toContain('this Lab demonstrates only')
-    expect(guide.zh.steps.join('')).toContain('可选开启计算 / 搜索动画')
-    expect(guide.en.steps.join(' ')).toContain('Optionally enable calculation/search playback')
-    expect(guide.zh.steps.join('')).toContain('动画与即时模式共享同一确定性计算与结果')
-    expect(guide.en.steps.join(' ')).toContain(
-      'animated and immediate modes share the same deterministic calculation and result',
-    )
-    expect(guide.zh.boundary).toContain('clean-room')
-    expect(guide.zh.boundary).toContain('不复现或还原历史内部代码、界面、节奏或速度')
-    expect(guide.en.boundary).toContain('clean-room')
-    expect(guide.en.boundary).toContain(
-      'not a reproduction or restoration of historical internal code, UI, timing, or speed',
-    )
+    expect(guide.zh.boundary).toContain('近似计算间距')
+    expect(guide.zh.boundary).toContain('不保证全局最优')
+    expect(guide.en.boundary).toContain('approximate')
+    expect(guide.en.boundary).toContain('does not guarantee a global optimum')
   })
 
   it('keeps Merchant as a redacted, text-only independent full-stack project archive', () => {
@@ -880,7 +866,7 @@ describe('portfolio acceptance contracts', () => {
     expect(meicanText).not.toContain('团队通常 7 人')
   })
 
-  it('keeps the homepage introduction formal and descriptive', () => {
+  it('keeps the homepage introduction concrete and linked to live demos', () => {
     const sourceRoot = fileURLToPath(new URL('../src/', import.meta.url))
     const homeHero = readFileSync(
       `${sourceRoot}/components/home/HomeHero.tsx`,
@@ -892,11 +878,11 @@ describe('portfolio acceptance contracts', () => {
     )
 
     expect(siteCopy.zh.home.titleLines).toEqual([
-      '复杂系统的前端架构',
-      '与全栈交付',
+      '前端技术负责人',
+      ' · 全栈开发',
     ])
     expect(homeHero).toContain('copy.home.titleLines')
-    expect(JSON.stringify(siteCopy.zh.home)).not.toMatch(/真正|做出来|怎么/)
+    expect(homeHero).toContain('copy.home.openPokeDemo')
     expect(homeHero).not.toMatch(/Elasticsearch|Kafka/)
     expect(siteCopy.zh.home.capabilities.map(([title]) => title)).toEqual(
       expect.arrayContaining(['存量系统改造', '跨栈学习与完整交付']),
@@ -978,8 +964,8 @@ describe('portfolio acceptance contracts', () => {
     }
     expect(JSON.stringify(englishProfile)).not.toMatch(/[\p{Script=Han}]/u)
     expect(siteCopy.en.home.titleLines).toEqual([
-      'Frontend architecture',
-      'and full-stack delivery',
+      'Frontend lead',
+      'and full-stack developer',
     ])
     expect(siteCopy.zh.demo.player.startHere).toBe('建议体验时长')
     expect(siteCopy.en.demo.player.startHere).toBe('Start here')
@@ -1101,7 +1087,7 @@ describe('portfolio acceptance contracts', () => {
     expect(source).toContain('data-tab-prop="pageId"')
     expect(source).toContain('id="previewQrFrame"')
     expect(source).toContain('id="previewLiveFrame"')
-    expect(source).not.toContain('id="previewUrl"')
+    expect(source).toMatch(/id="previewUrl"[^>]*readonly hidden/)
     expect(source).not.toContain('id="previewCta"')
   })
 
@@ -1151,8 +1137,8 @@ describe('portfolio acceptance contracts', () => {
 
     expect(player).toContain('activePath={experience.casePath}')
     expect(player).toContain('if (dismissed) return null')
-    expect(playerCss).toContain('--text: #1d1e19')
-    expect(playerCss).toContain('--accent-soft: #20211b')
+    expect(playerCss).toContain('color: var(--text)')
+    expect(playerCss).toContain('background: var(--surface)')
     expect(sidebar).toContain('archiveProjects.filter((project) => Boolean(project.demo))')
     expect(sidebar).toContain('className="nav-projects-toggle"')
     expect(sidebar).toContain('className="nav-demo"')
@@ -1182,11 +1168,11 @@ describe('portfolio acceptance contracts', () => {
     expect(turntable).toContain('function removeSlice(index)')
     expect(turntable).toContain('const midpoint = (removed.start+removed.end)/2')
     expect(turntable).toContain('right.targetStart = removed.start')
-    expect(poke).toContain('请在 PC 平台体验')
+    expect(poke).toContain('id="mobilePreview"')
     expect(poke).toContain('class="mobile-pc-notice"')
 
     expect(dataview).toContain('const tourTimeline = [')
-    expect(dataview).toContain('autoTourTimer = setTimeout(runTour,320)')
+    expect(dataview).toContain("querySelector('#runTour').addEventListener('click',runTour)")
     expect(dataview).toContain("{view:'flow',label:'归档完成',flowStep:3}")
     expect(dataview).toContain('class="mobile-pan-viewport"')
     expect(dataview).toContain('touch-action: pan-x')

@@ -42,7 +42,7 @@
     .runner { position: absolute; top: 31px; left: 14px; width: 30px; height: 30px; border-radius: 9px; background: #356ae6; box-shadow: 0 8px 17px rgba(53,106,230,.28); animation: travel 2s infinite alternate; }
     .runner::after { position: absolute; inset: 9px; border: 2px solid white; border-radius: 50%; content: ''; }
     .track.disabled .runner { animation: none; opacity: .38; }
-    @keyframes travel { from { transform: translateX(0) rotate(0); } to { transform: translateX(calc(100% + 220px)) rotate(180deg); } }
+    @keyframes travel { from { transform: translateX(0) rotate(0); } to { transform: translateX(var(--travel-distance, 220px)) rotate(180deg); } }
     .values { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
     .value { padding: 11px; border: 1px solid #e0e4ea; border-radius: 9px; background: white; }
     .value span { display: block; margin-bottom: 5px; color: #9aa1ad; font-size: 8px; }
@@ -66,6 +66,12 @@
       .board-card { width: min(360px, 100%); padding: 16px; }
       .preview { gap: 16px; padding: 20px 18px; }
     }
+    .point-inputs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .point-inputs label { display:grid; gap:5px; color:#596779; font-size:11px; }
+    .point-inputs input { width:100%; min-width:0; padding:8px; border:1px solid #c8d0db; border-radius:6px; background:#fff; color:#20242c; }
+    .preview-actions { display:flex; gap:8px; }
+    .preview-actions button { flex:1; min-height:40px; border:1px solid #c8d0db; border-radius:6px; background:white; color:#36404d; cursor:pointer; }
+    .handle:focus-visible { outline:none; stroke-width:6; }
   </style>
 </head>
 <body>
@@ -87,8 +93,8 @@
             <line class="handle-line start" id="startLine" x1="0" y1="300" />
             <line class="handle-line end" id="endLine" x1="300" y1="0" />
             <path class="curve" id="curve" />
-            <circle class="handle start" id="startHandle" r="8" tabindex="0" />
-            <circle class="handle end" id="endHandle" r="8" tabindex="0" />
+            <circle class="handle start" id="startHandle" r="8" tabindex="0" role="button" aria-label="控制点，使用方向键调整" />
+            <circle class="handle end" id="endHandle" r="8" tabindex="0" role="button" aria-label="控制点，使用方向键调整" />
           </svg>
           <div class="coords"><span id="startCoord"></span><span id="endCoord"></span></div>
         </div>
@@ -96,8 +102,15 @@
       <aside class="preview">
         <div><p class="panel-title">MOTION PREVIEW</p><div class="track" id="track"><div class="runner" id="runner"></div></div></div>
         <div><p class="panel-title">CONTROL POINTS</p><div class="values"><div class="value"><span>X1 / Y1</span><strong id="v1"></strong></div><div class="value"><span>X2 / Y2</span><strong id="v2"></strong></div></div></div>
-        <button class="copy" id="copy">复制 CSS 参数</button>
-        <p class="note">拖拽红、蓝控制点会进入 Self 模式；选择预设可立即比较速度、加速度和回弹节奏。</p>
+        <div class="point-inputs" aria-label="曲线参数">
+          <label>X1<input id="x1" type="number" min="0" max="1" step="0.01" /></label>
+          <label>Y1<input id="y1" type="number" min="0" max="1" step="0.01" /></label>
+          <label>X2<input id="x2" type="number" min="0" max="1" step="0.01" /></label>
+          <label>Y2<input id="y2" type="number" min="0" max="1" step="0.01" /></label>
+        </div>
+        <button class="copy" id="copy" aria-live="polite">复制 CSS 参数</button>
+        <div class="preview-actions"><button id="reset">重置曲线</button><button id="playback" aria-pressed="false">暂停预览</button></div>
+        <p class="note">拖动控制点，或聚焦后用方向键微调。按住 Shift 可加大步长。</p>
       </aside>
     </div>
   </main>
@@ -123,6 +136,7 @@
     const clamp = value => Math.max(0,Math.min(1,value));
     const fmt = value => Number(value).toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
     function render() {
+      ['x1','y1','x2','y2'].forEach(key => { if (document.activeElement !== document.getElementById(key)) document.getElementById(key).value = fmt(point[key]); });
       const sx=point.x1*SIZE, sy=(1-point.y1)*SIZE, ex=point.x2*SIZE, ey=(1-point.y2)*SIZE;
       curve.setAttribute('d', point.picked==='None' ? '' : `M0 300 C${sx} ${sy}, ${ex} ${ey}, 300 0`);
       startHandle.setAttribute('cx',sx); startHandle.setAttribute('cy',sy);
@@ -144,7 +158,7 @@
       const button=document.createElement('button'); button.className='preset'; button.dataset.name=name; button.textContent=name;
       button.addEventListener('click',()=>{point={x1,y1,x2,y2,picked:name};render();}); presetsRoot.appendChild(button);
     });
-    const self=document.createElement('button'); self.className='preset'; self.dataset.name='Self'; self.textContent='Self'; presetsRoot.appendChild(self);
+    const self=document.createElement('span'); self.className='preset'; self.dataset.name='Self'; self.textContent='自定义'; presetsRoot.appendChild(self);
     function updateFromPointer(event) {
       const rect=board.getBoundingClientRect();
       const x=clamp((event.clientX-rect.left)/rect.width), y=clamp(1-(event.clientY-rect.top)/rect.height);
@@ -153,7 +167,55 @@
     [startHandle,endHandle].forEach((handle,index)=>handle.addEventListener('pointerdown',event=>{dragging=index?'end':'start';handle.setPointerCapture(event.pointerId);updateFromPointer(event);}));
     board.addEventListener('pointermove',event=>{if(dragging)updateFromPointer(event);});
     board.addEventListener('pointerup',()=>dragging=null); board.addEventListener('pointercancel',()=>dragging=null);
-    document.querySelector('#copy').addEventListener('click',async event=>{try{await navigator.clipboard.writeText(code.textContent);event.currentTarget.textContent='已复制';setTimeout(()=>event.currentTarget.textContent='复制 CSS 参数',1200);}catch{event.currentTarget.textContent='请手动复制上方代码';}});
+    ['x1','y1','x2','y2'].forEach(key => {
+      const input = document.getElementById(key);
+      input.setAttribute('aria-label', key.toUpperCase());
+      input.addEventListener('input', () => {
+        if (input.value === '' || !Number.isFinite(input.valueAsNumber)) return;
+        point[key] = clamp(input.valueAsNumber); point.picked = 'Self'; render();
+      });
+      input.addEventListener('blur', () => { input.value = fmt(point[key]); });
+    });
+    [startHandle, endHandle].forEach((handle, index) => {
+      handle.setAttribute('aria-label', (index ? '终点' : '起点') + '控制点，使用方向键调整');
+      handle.addEventListener('keydown', event => {
+        if (!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key)) return;
+        event.preventDefault();
+        const axis = event.key === 'ArrowLeft' || event.key === 'ArrowRight' ? 'x' : 'y';
+        const direction = event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 1;
+        const key = axis + (index + 1);
+        point[key] = clamp(point[key] + direction * (event.shiftKey ? .1 : .01));
+        point.picked = 'Self'; render();
+      });
+    });
+    const trackObserver = new ResizeObserver(() => runner.style.setProperty('--travel-distance', Math.max(0, track.clientWidth - 58) + 'px'));
+    trackObserver.observe(track);
+    let paused = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function syncPlayback() {
+      runner.style.animationPlayState = paused ? 'paused' : 'running';
+      document.querySelector('#playback').textContent = paused ? '播放预览' : '暂停预览';
+      document.querySelector('#playback').setAttribute('aria-pressed', String(paused));
+    }
+    document.querySelector('#playback').addEventListener('click', () => { paused = !paused; syncPlayback(); });
+    document.querySelector('#reset').addEventListener('click', () => { point = {x1:.42,y1:0,x2:1,y2:1,picked:'Ease In'}; render(); });
+    syncPlayback();
+    let copyTimer;
+    document.querySelector('#copy').addEventListener('click', async event => {
+      const button = event.currentTarget;
+      clearTimeout(copyTimer);
+      try {
+        await navigator.clipboard.writeText(code.textContent);
+        button.textContent = '已复制';
+      } catch {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(code);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        button.textContent = '已选中代码，请手动复制';
+      }
+      copyTimer = setTimeout(() => { button.textContent = '复制 CSS 参数'; }, 2400);
+    });
     render();
   </script>
 </body>

@@ -1,7 +1,6 @@
 import bezierPickerLab from '../assets/bezier-picker-lab.html?url'
 import dataviewObservatoryDemo from '../assets/dataview-observatory-demo.html?url'
 import irregularShapeLayoutLab from '../assets/irregular-shape-layout-lab.html?url'
-import operationsAgentGraph from '../assets/operations-agent-actiongraph.html?url'
 import pokeEditorDemo from '../assets/poke-editor-demo.html?url'
 import turntableMotionLab from '../assets/turntable-motion-lab.html?url'
 import { createLayeredRouteLabUrl } from '../app/layeredRouteLabUrl'
@@ -43,7 +42,7 @@ const layeredRouteAgentSource = createLayeredRouteLabUrl(layeredRouteLabUrl, '/p
 })
 
 const localSandbox = 'allow-scripts'
-const pokePreviewSandbox = 'allow-scripts allow-same-origin'
+const pokePreviewSandbox = 'allow-scripts allow-same-origin allow-downloads'
 const routeLabSandbox =
   'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox'
 const standardAllow = 'clipboard-write; fullscreen'
@@ -64,24 +63,16 @@ export const demoExperiences = {
     posterVariant: 'agent-console',
     guide: {
       zh: {
-        duration: 4,
-        summary: '从自然语言任务到受约束规划、逐步执行和结果验证的公开研究演示。',
-        boundary: '全部数据为合成数据；播放器不读取 Lab DOM，也不与其交换消息。',
-        steps: [
-          '从预设任务开始，观察行为检索与计划。',
-          '逐步执行动作，留意 URL、页面层级与结果检查。',
-          '使用 Lab 内置控件探索深层路由和检查模式。',
-        ],
+        duration: 1,
+        summary: "打开一笔订单，再试试返回和刷新。",
+        boundary: "示例数据与本地规则匹配；可恢复的页面路径来自 Lab 的路由清单。",
+        steps: ["选择“进入编辑页”，确认产品和订单后运行。", "点“查看页面”，用 Back 返回上一级。", "复制页面链接，或直接刷新，看看路由层级是否恢复。"],
       },
       en: {
-        duration: 4,
-        summary: 'A public research demo from natural-language task to constrained planning, execution, and verification.',
-        boundary: 'All data is synthetic. The player neither reads the Lab DOM nor exchanges messages with it.',
-        steps: [
-          'Start with a preset task and observe retrieval and planning.',
-          'Run actions step by step; watch the URL, layer stack, and verification.',
-          'Use the Lab controls to explore deep routes and inspection mode.',
-        ],
+        duration: 1,
+        summary: "Open an order, then try going back and refreshing.",
+        boundary: "Sample data and local rules. Restorable pages are defined by the Lab route manifest.",
+        steps: ["Choose the edit task, check the product and order, and run it.", "Close the assistant to inspect the page and go back one level.", "Copy the page link or refresh to restore its route layers."],
       },
     },
   },
@@ -91,8 +82,8 @@ export const demoExperiences = {
       zh: '行为动作图',
       en: 'Behavior Action Graph',
     },
-    source: operationsAgentGraph,
-    sandbox: localSandbox,
+    source: createLayeredRouteLabUrl(layeredRouteLabUrl, '/products', { graph: '1', embed: '1' }),
+    sandbox: routeLabSandbox,
     allow: standardAllow,
     casePath: '/work/layered-agent',
     provenance: 'public-reconstruction',
@@ -100,16 +91,16 @@ export const demoExperiences = {
     posterVariant: 'agent-console',
     guide: {
       zh: {
-        duration: 2,
-        summary: '行为图的交互查看器，用于检查页面状态、可执行动作及其来源和覆盖信息。',
-        boundary: '图中数据来自公开 Lab 的合成研究资料，不代表任何生产系统。',
-        steps: ['拖拽画布浏览状态关系。', '缩放并选择节点查看动作详情。', '切换来源与覆盖信息理解动作边界。'],
+        duration: 1,
+        summary: "沿着路由图，看看一个订单页面有哪些上级和分支。",
+        boundary: "节点直接来自当前 Lab 的 Behavior Manifest。",
+        steps: ["选择一个节点，查看它的路径和参数。", "打开对应页面，观察左侧层级变化。"],
       },
       en: {
-        duration: 2,
-        summary: 'An interactive behavior-graph viewer for inspecting page states, executable actions, provenance, and coverage.',
-        boundary: 'Its synthetic research data comes from the public Lab and does not represent a production system.',
-        steps: ['Pan across the state graph.', 'Zoom and select nodes to inspect action details.', 'Switch provenance and coverage views to understand boundaries.'],
+        duration: 1,
+        summary: "Explore the parents and branches of an order page.",
+        boundary: "Nodes come directly from the current Lab behavior manifest.",
+        steps: ["Select a node to inspect its route and parameters.", "Open that page and watch its layer stack change."],
       },
     },
   },
@@ -128,16 +119,16 @@ export const demoExperiences = {
     posterVariant: 'prototype-editor',
     guide: {
       zh: {
-        duration: 3,
-        summary: '原型编辑工作台重建，包含元素多态、跨元素事件、页面转场、系统栏与手机扫码预览。',
-        boundary: '使用虚构项目，不连接历史 Poke 服务或用户内容。',
-        steps: ['选择元素，在右侧创建 State 并修改该状态的属性。', '为 source 的某个 State 配置触发，让本页一个或多个 target 切换 State，并可追加页面跳转。', '点击“扫码预览”，确认二维码和 Live Runtime 的 payload 编号一致后检查动效。'],
+        duration: 1,
+        summary: "改一个按钮，再看看它在手机上怎样运行。",
+        boundary: "这是基于历史 Poke 源码与运行结果重建的示例。保存的草稿留在本机浏览器，导出的文件可以重新打开。",
+        steps: ["选中蓝色按钮，在右侧修改颜色或文字。", "打开“扫码预览”，点按钮观察标题移动和页面切换。", "保存到本机后刷新，或导出项目，再用“打开文件”恢复。"],
       },
       en: {
-        duration: 3,
-        summary: 'A reconstructed prototyping workspace with element states, cross-element actions, page transitions, system bars, and QR mobile preview.',
-        boundary: 'It uses a fictitious project and never connects to historical Poke services or user content.',
-        steps: ['Select an element, create a State in the inspector, and change that state’s properties.', 'Configure a source State and trigger to switch one or more target elements, optionally followed by a page transition.', 'Open QR Preview, match the payload IDs, and test the motion in Live Runtime.'],
+        duration: 1,
+        summary: "Change a button, then try it on your phone.",
+        boundary: "A reconstruction of the original Poke editor. Saved drafts stay in this browser; exported files can be reopened.",
+        steps: ["Select the blue button and change its color or text.", "Open QR preview and tap the button to move the title and change pages.", "Save and refresh, or export the project and reopen its file."],
       },
     },
   },
@@ -156,16 +147,16 @@ export const demoExperiences = {
     posterVariant: 'data-observatory',
     guide: {
       zh: {
-        duration: 3,
-        summary: '面向超宽屏场景的离线监测大屏重建，包含场景切换、筛选与联动。',
-        boundary: '仅使用合成离线数据，不请求原项目接口或呈现客户指标。',
-        steps: ['移动端可左右滑动查看完整超宽看板。', '在不同监测场景间切换。', '修改时间或节点筛选条件。', '打开节点详情，观察相关视图的联动。'],
+        duration: 2,
+        summary: "筛选网络和节点，看看地图、分布与明细怎样一起变化。",
+        boundary: "使用离线示例数据重建，数字不代表实际业务指标。",
+        steps: ["切换到节点地图，筛选一个网络。", "打开节点详情，对照地图高亮与指标。", "点击刷新数据，或播放演示查看其他场景。"],
       },
       en: {
-        duration: 3,
-        summary: 'An offline reconstruction of an ultra-wide monitoring wall with scenes, filters, and linked views.',
-        boundary: 'It uses synthetic offline data only—no historical APIs or client metrics are requested or shown.',
-        steps: ['On mobile, swipe horizontally to inspect the full ultra-wide board.', 'Switch among monitoring scenes.', 'Change the time or node filters.', 'Open node detail and observe linked views update.'],
+        duration: 2,
+        summary: "Filter networks and select a node to see the map, distribution, and details update together.",
+        boundary: "Rebuilt with offline sample data; the numbers are not business metrics.",
+        steps: ["Open the node map and filter by network.", "Select a node and compare its details with the highlighted map.", "Refresh the data or play the tour to explore other scenes."],
       },
     },
   },
@@ -184,16 +175,16 @@ export const demoExperiences = {
     posterVariant: 'motion-lab',
     guide: {
       zh: {
-        duration: 2,
-        summary: '以 SVG 几何和弹簧模型表现数据重组时连续扇区运动的实验。',
-        boundary: '这是独立动效实验，不是抽奖或交易产品。',
-        steps: ['改变数据组合观察扇区重排。', '使用均分或随机占满，让当前全部扇区重新分配 100% 空间。', '拖动速度滑杆后继续操作按钮，慢速检查连续运动。'],
+        duration: 1,
+        summary: "连续重组数据，看看扇区怎样接着当前位置运动。",
+        boundary: "个人 SVG 动效实验。",
+        steps: ["点击“重组数据”，也可以在动画中再次点击。", "降低播放速度，观察扇区连接；双击一块可移除。", "点击重置，从初始状态重新试。"],
       },
       en: {
-        duration: 2,
-        summary: 'An SVG-geometry and spring-motion study of continuous sector movement during data reordering.',
-        boundary: 'This is an independent motion experiment, not a prize-draw or transaction product.',
-        steps: ['Change the data composition to reorder sectors.', 'Use equal or random full-space allocation to redistribute 100% across the current slices.', 'Adjust the playback-speed slider, then keep using the controls to inspect the motion.'],
+        duration: 1,
+        summary: "Reorder the slices repeatedly and watch them continue from their current positions.",
+        boundary: "A personal SVG motion experiment.",
+        steps: ["Reorder the data, including while it is moving.", "Slow the motion down; double-click a slice to remove it.", "Reset to try again from the original state."],
       },
     },
   },
@@ -212,16 +203,16 @@ export const demoExperiences = {
     posterVariant: 'easing-picker',
     guide: {
       zh: {
-        duration: 2,
-        summary: '将 cubic-bezier 参数变为曲线、控制点和运动预览的可操作组件。',
-        boundary: '公开演示仅保留组件交互，不包含旧编辑器项目内容。',
-        steps: ['从预设曲线开始。', '拖动控制点调整曲线。', '对照参数和运动预览查看变化。'],
+        duration: 1,
+        summary: "拖动控制点，比较同一段运动的不同节奏。",
+        boundary: "从早期原型编辑器中拆出的缓动组件。",
+        steps: ["选择一条预设曲线，观察右侧运动。", "拖动控制点，或用方向键微调；也可直接输入参数。", "复制 CSS，或重置后继续比较。"],
       },
       en: {
-        duration: 2,
-        summary: 'A manipulable component that turns cubic-bezier parameters into a curve, control points, and motion preview.',
-        boundary: 'The public demo retains component interaction only, not content from the older editor project.',
-        steps: ['Start from an easing preset.', 'Drag control points to adjust the curve.', 'Compare the parameters with the live motion preview.'],
+        duration: 1,
+        summary: "Drag the control points and compare the pace of the same motion.",
+        boundary: "An easing component extracted from an earlier prototype editor.",
+        steps: ["Choose a preset and watch its motion.", "Drag or use arrow keys to adjust a control point, or enter its values.", "Copy the CSS or reset to compare again."],
       },
     },
   },
@@ -240,26 +231,16 @@ export const demoExperiences = {
     posterVariant: 'irregular-geometry',
     guide: {
       zh: {
-        duration: 3,
-        summary: '项目原始用途是根据餐盘与异形食品包装的轮廓进行自动摆放，为食品宣传图建立整洁、美观的构图基础；当前 Lab 仅以中心预设和种子化合成外轮廓展示这项采样几何研究。',
-        boundary:
-          '这是 clean-room 采样几何研究，仅用中心预设和种子化合成外轮廓；并非精确装箱或全局最优，不包含上游裁切、模型实现或产品算法。动画是对当前公开算法的全新 clean-room 可视化，不复现或还原历史内部代码、界面、节奏或速度。',
-        steps: [
-          '选择中心形状预设，再设置总数、外轮廓种子、目标间隙和边界采样密度。',
-          '可选开启计算 / 搜索动画，并选择回放速度。',
-          '点击“编排”，检查最终状态、计算耗时和调试信息；动画与即时模式共享同一确定性计算与结果。',
-        ],
+        duration: 2,
+        summary: "给一组不同轮廓留出间距，观察自动排布的结果。",
+        boundary: "使用生成的轮廓重建。算法依据采样点近似计算间距，不保证全局最优。",
+        steps: ["调整形状数量、中心形状和间距。", "点击编排，对比排布前后的位置。", "需要看计算过程时，再开启动画或调试图层。"],
       },
       en: {
-        duration: 3,
-        summary: 'The original project intent was to arrange plates and irregular food packaging by contour as a tidy, visually appealing composition foundation for food promotional imagery; this Lab demonstrates only that sampled-geometry study with center presets and seeded synthetic outer contours.',
-        boundary:
-          'This is a clean-room sampled-geometry study using only selected center presets and seeded synthetic outer contours. It is not exact packing or a global optimum and excludes upstream cut-out, model implementation, and product algorithms. Its animation is a new clean-room visualization of the current public algorithm, not a reproduction or restoration of historical internal code, UI, timing, or speed.',
-        steps: [
-          'Choose a center shape preset, then set total count, outer seed, target gap, and boundary-sample density.',
-          'Optionally enable calculation/search playback and choose its speed.',
-          'Arrange and inspect the final status, compute time, and debug overlay; animated and immediate modes share the same deterministic calculation and result.',
-        ],
+        duration: 2,
+        summary: "Arrange different outlines with room between them.",
+        boundary: "Rebuilt with generated shapes. Sampled distances are approximate; the search does not guarantee a global optimum.",
+        steps: ["Adjust the number of shapes, the center shape, and the gap.", "Arrange and compare the positions before and after.", "Enable playback or the debug overlay to inspect the calculation."],
       },
     },
   },

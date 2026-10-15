@@ -1,5 +1,5 @@
 import { ArrowRight, ArrowUpRight } from 'lucide-react'
-import { archiveProjects, demoPlayerPath } from '../../data'
+import { archiveProjects, layeredAgentProject, demoPlayerPath } from '../../data'
 import { getLocalizedProjects } from '../../data/localized'
 import { projectPreviews } from '../../data/projectPreviews'
 import { useLanguage } from '../../i18n/LanguageContext'
@@ -7,13 +7,12 @@ import { AppLink } from '../common/AppLink'
 
 const previews = [
   'poke-prototype-editor',
-  'dataview-observatory',
-  'bezier-easing-picker',
+  'layered-agent',
 ]
 
 export function ProjectPlayground() {
   const { copy, language } = useLanguage()
-  const projects = getLocalizedProjects(archiveProjects, language)
+  const projects = getLocalizedProjects([...archiveProjects, layeredAgentProject], language)
 
   return (
     <section
@@ -30,7 +29,7 @@ export function ProjectPlayground() {
           <ArrowRight size={17} aria-hidden="true" />
         </AppLink>
       </div>
-      <div className="playground-grid">
+      <div className="playground-grid playground-grid--featured">
         {previews.map((slug) => {
           const project = projects.find((item) => item.slug === slug)
           if (!project?.demo) return null
@@ -54,12 +53,12 @@ export function ProjectPlayground() {
                 </span>
               </AppLink>
               <h3>
-                <AppLink to={`/archive/${slug}`}>
+                <AppLink to={`${project.tier === 'featured' ? '/work' : '/archive'}/${slug}`}>
                   {project.shortTitle}
                   <ArrowUpRight size={17} aria-hidden="true" />
                 </AppLink>
               </h3>
-              <p>{project.technologies?.slice(0, 3).join(' / ')}</p>
+              <p>{project.summary}</p>
             </article>
           )
         })}

@@ -444,7 +444,7 @@ networkRequests: 0</code></div>
               <circle class="packet" r="4"><animateMotion dur="2.2s" repeatCount="indefinite" path="M140 180 C220 80 280 80 360 180 C440 280 520 280 600 180 C680 80 740 80 820 180"/></circle>
             </svg>
           </div>
-          <div class="flow-caption"><strong id="flowStatus">01 · 提交请求</strong><p id="flowDescription">客户端生成匿名事务载荷，前端场景将完整样本写入本地视图模型，作为后续动画与状态变化的唯一输入。</p></div>
+          <div class="flow-caption"><strong id="flowStatus">01 · 提交请求</strong><p id="flowDescription">收到一条示例请求，开始记录它的处理进度。</p></div>
         </article>
         <aside class="panel flow-side">
           <header class="panel-head"><h2>流程遥测</h2><small>SIMULATION</small></header>
@@ -497,10 +497,10 @@ networkRequests: 0</code></div>
         gamma:{name:'NETWORK GAMMA',score:91,total:'592',kpis:[18921,21,99.95,2],trend:[20,26,31,29,38,42,48,51,57,62,69,74]}
       };
       const flowSteps = [
-        {title:'01 · 提交请求',description:'客户端生成匿名事务载荷，前端场景将完整样本写入本地视图模型，作为后续动画与状态变化的唯一输入。',latency:'18 ms'},
-        {title:'02 · 策略验证',description:'规则节点检查格式、权限范围与字段完整性。演示使用本地确定性规则，因此结果可重复、可检查，也不需要任何接口。',latency:'26 ms'},
-        {title:'03 · 节点共识',description:'十二个模拟节点按固定序列返回确认；流动粒子、节点高亮与事件日志消费同一状态，不依赖独立的时间轴脚本。',latency:'63 ms'},
-        {title:'04 · 归档完成',description:'最终记录进入本地归档视图，指标、事件表和流程状态同时收敛，完整展示“数据—视图模型—动态图形”的前端闭环。',latency:'81 ms'}
+        {title:'01 · 提交请求',description:'收到一条示例请求，开始记录它的处理进度。',latency:'18 ms'},
+        {title:'02 · 策略验证',description:'检查请求格式和必填字段，再交给节点处理。',latency:'26 ms'},
+        {title:'03 · 节点共识',description:'十二个模拟节点依次确认。图上的高亮和下方日志随处理进度更新。',latency:'63 ms'},
+        {title:'04 · 归档完成',description:'处理完成。查看最终记录、事件日志和本次耗时。',latency:'81 ms'}
       ];
       let state = {view:'overview',tick:0,period:'day',live:true,families:new Set(['alpha','beta','gamma']),mapMode:'family',selectedNode:'NODE-A01',profile:'alpha',flowStep:0,touring:false,tourComplete:false};
       let liveTimer = null;
@@ -508,7 +508,6 @@ networkRequests: 0</code></div>
       let flowTimer = null;
       let clockTimer = null;
       let toastTimer = null;
-      let autoTourTimer = null;
       let tourIndex = 0;
       let flowPlaying = false;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -573,12 +572,12 @@ networkRequests: 0</code></div>
       }
       function renderMap() {
         const visible = visibleNodes();
+        const selected = nodes.find(function(node){return node.id===state.selectedNode;});
+        if (!selected || !state.families.has(selected.family)) state.selectedNode = visible.length ? visible[0].id : '';
         document.querySelector('#mapNodes').innerHTML = visible.map(function(node,index){
           const color = colorForNode(node);
           return '<g class="node '+(node.id===state.selectedNode?'selected':'')+'" data-node="'+node.id+'" tabindex="0" role="button" aria-label="'+node.id+'"><circle class="halo" cx="'+node.x+'" cy="'+node.y+'" r="9" style="color:'+color+';animation-delay:'+(index*.12)+'s"/><circle cx="'+node.x+'" cy="'+node.y+'" r="4.5" fill="'+color+'" style="color:'+color+'"/></g>';
         }).join('');
-        const selected = nodes.find(function(node){return node.id===state.selectedNode;});
-        if (!selected || !state.families.has(selected.family)) state.selectedNode = visible.length ? visible[0].id : '';
         const detail = nodes.find(function(node){return node.id===state.selectedNode;});
         document.querySelector('#nodeDetail').innerHTML = detail ? '<strong>'+detail.id+'</strong><span>'+detail.region+' · '+detail.role.toUpperCase()+'<br>Latency '+detail.latency+' ms · '+(detail.risk==='healthy'?'Healthy':'Needs review')+'<br>Source: synthetic local dataset</span>' : '<strong>NO VISIBLE NODE</strong><span>Enable a network family to continue.</span>';
         const modes = {
@@ -717,8 +716,6 @@ networkRequests: 0</code></div>
         renderTourStatus();
       }
       function runTour() {
-        clearTimeout(autoTourTimer);
-        autoTourTimer = null;
         if (state.touring) {
           stopTourForManual();
           return;
@@ -797,8 +794,6 @@ networkRequests: 0</code></div>
       document.addEventListener('pointerdown',function(event){
         const interactive = event.target.closest('button,[data-node]');
         if (!interactive || interactive.id === 'runTour') return;
-        clearTimeout(autoTourTimer);
-        autoTourTimer = null;
         stopTourForManual();
       },true);
       document.querySelectorAll('[data-view-button]').forEach(function(button){button.addEventListener('click',function(){setView(button.dataset.viewButton);});});
@@ -819,14 +814,6 @@ networkRequests: 0</code></div>
       });
       resumeIntervals();
       renderAll();
-      if (reducedMotion.matches) {
-        state.flowStep = 3;
-        state.tourComplete = true;
-        setView('flow');
-        renderAll();
-      } else {
-        autoTourTimer = setTimeout(runTour,320);
-      }
     }());
   </script>
 </body>

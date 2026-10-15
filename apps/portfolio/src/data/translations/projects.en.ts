@@ -163,6 +163,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case comes from internal Meican production projects in which I participated. The public version retains only work that can be described and includes no internal screens, data, or business metrics.',
   },
   'baidu-map-workbench': {
+    summary: 'Select, edit, and review road data, with tools connecting map work to quality checks and reporting.',
     title: 'Baidu Maps Data Operations: Complex Map Rendering and Data Services',
     shortTitle: 'Baidu Maps Data Operations',
     eyebrow: 'MAP DATA WORKBENCH · PRODUCTION SYSTEM',
@@ -219,8 +220,8 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Complex map rendering: layered spatial features',
         summary: 'An existing internal SVG map system separated map state, layers, domain semantics, and graphic elements through Map, Layer, Feature, and Element boundaries.',
         paragraphs: [
-          'This was not a conventional console with a few markers over a basemap. Recovered source shows Map, Layer, Feature, and Element boundaries: Map handled view and coordinates; Layer owned loading and visibility; Feature represented roads, tracks, lanes, and traffic facilities; Element rendered SVG polylines, polygons, text, and icons.',
-          'Within that existing system, I contributed core operations capabilities and helped organize reference roads, public tracks, GPS, mesh cells, annotations, and QA information as composable layers. The claim is complex map-application engineering, not sole authorship of the underlying map engine.',
+          'The map system used Map, Layer, Feature, and Element boundaries: Map handled view and coordinates; Layer owned loading and visibility; Feature represented roads, tracks, lanes, and traffic facilities; Element rendered SVG polylines, polygons, text, and icons.',
+          'Within that existing system, I contributed core operations capabilities and helped organize reference roads, public tracks, GPS, mesh cells, annotations, and QA information as composable layers.',
         ],
         bullets: [
           'Rendering structure: Map → Layer → Feature → Element',
@@ -258,7 +259,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Backend design: task state and asynchronous batch QA',
         paragraphs: [
           'In the Python / Tornado and PostgreSQL operations platform, I extended submission, batch QA, rework, and acceptance. External QA jobs connected through create requests and success or failure callbacks; the business layer validated callback data, blocked duplicate handling, deduplicated error items, and wrote results back into task state.',
-          'PostgreSQL JSONB supported filtering, pagination, metrics, and reason updates for exception records. State transitions used row locking and QA logs to reduce conflicts between asynchronous callbacks and manual operations. My scope was business workflow and querying rather than authorship of the existing database connection layer.',
+          'PostgreSQL JSONB supported filtering, pagination, metrics, and reason updates for exception records. State transitions used row locking and QA logs to reduce conflicts between asynchronous callbacks and manual operations.',
         ],
         bullets: [
           'State flow: work submission · batch QA · rework · repair · acceptance',
@@ -272,7 +273,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Statistics service: connecting business records and search logs',
         paragraphs: [
           'I led development of the crowdsourced spatial-data statistics service. PHP / Yii2 APIs covered batches, tasks, devices, tracks, road segments, time, and mileage, while Python jobs scheduled statistics at batch, daily, hourly, and fifteen-minute intervals and extracted and classified geographic data.',
-          'Pipeline timing used Elasticsearch count / search / scroll over state logs and joined the results to MySQL business records to derive collection, matching, command, recycling, and QA durations. This was query integration and data correlation, not Elasticsearch cluster setup, operations, or low-level optimization.',
+          'Pipeline timing used Elasticsearch count / search / scroll over state logs and joined the results to MySQL business records to derive collection, matching, command, recycling, and QA durations.',
         ],
         phase: 'PHP / Yii2 · Python · Elasticsearch / MySQL',
       },
@@ -281,7 +282,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         title: 'Team delivery: five frontend engineers and cross-stack work',
         paragraphs: [
           'At Baidu I led five frontend engineers across map-data operations, statistics consoles, and the Baijiahao editor. I combined task breakdown, technical design, and code review with direct work on critical map interactions and difficult implementation issues.',
-          'On the backend, I directly led the statistics service and continued implementing Python and PostgreSQL business capabilities in the existing operations platform. This case separates personal code, team delivery, and pre-existing infrastructure instead of treating leadership as proof of authorship.',
+          'On the backend, I directly led the statistics service and continued implementing Python and PostgreSQL business capabilities in the existing operations platform.',
         ],
         phase: 'Frontend lead · Cross-stack delivery',
       },
@@ -299,6 +300,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case is based on my Baidu work history, retained source, and verifiable repository history. The rendering section describes the operations frontend scope in which I participated and held responsibility without treating an internally shared map foundation with incomplete history as my sole work; backend and team claims are described through retained code and résumé evidence.',
   },
   'baijiahao-editor': {
+    summary: 'Extracting a reusable editor package from a business app, while keeping existing plugins and supporting both React and script-based pages.',
     title: 'Baijiahao Editor: From Deep UEditor Customization to an Internal Reusable Package',
     shortTitle: 'Baijiahao Editor Evolution',
     eyebrow: 'PRODUCTION SYSTEM',
@@ -391,17 +393,18 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'This case draws on my project experience, code, and engineering documents, with public details sanitized. Internal open source refers to reuse and collaboration within Baidu, not a public GitHub project.',
   },
   'layered-agent': {
-    title: 'Layered Route × Verified Agent',
+    summary: 'Open an order and watch the pages unfold. Go back, refresh, or copy the link to reopen the same route.',
+    title: 'Layered Route × Agent: tasks built from page actions',
     shortTitle: 'Layered Route × Agent',
     eyebrow: 'PUBLIC RECONSTRUCTION / RESEARCH',
     thesis:
-      'This project first establishes a layered routing model that can restore pages, Presenters, Modals, and query state from a URL, then generates a Behavior Manifest from source code. The Agent plans only with actions declared in that manifest and verifies the URL, page stack, and data result after every step.',
+      'A layered-page experiment: open a product, then an order and its editor, while keeping the parent pages available. A local task assistant matches product and order inputs to existing actions and checks that the requested page opened.',
     period: 'Public reconstruction · Ongoing research',
     role: 'Routing model · Agent design · Core development',
     status: 'Public experiment · Entirely synthetic data',
     technologies: ['React', 'TypeScript', 'vinext', 'Route AST', 'History API', 'Behavior Manifest', 'Puppeteer research', 'LLM-assisted planning'],
     impact: [
-      'Pages, Presenters, Modals, and query conditions can all be restored from a URL; refreshing a deep link rebuilds the same interface stack.',
+      'Deep links restore route pages and query conditions. Temporary Presenters and Modals use browser history for back navigation.',
       'The Behavior Manifest is generated from source at build time, and its counts are read directly from the generated file.',
       'The public demo implements retrieval, planning, host commands, execution, and verification; the same action manifest also drives regression tests.',
     ],
@@ -438,7 +441,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
         experienceId: 'layered-agent-action-graph',
         kind: 'html-frame',
         title: 'Behavior graph: page states and executable actions',
-        description: 'Pan, zoom, select nodes, and inspect action provenance and test coverage. The graph is generated from the public lab and contains no real business data.',
+        description: 'Read the current Lab behavior manifest. Select a node to inspect its parent and children, then open the corresponding page.',
         provenanceLabel: 'GENERATED FROM PUBLIC LAB · SYNTHETIC DATA',
       },
     ],
@@ -648,10 +651,10 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     provenanceNote: 'This is an archived team project. Public material describes only my contribution and uses an abstract architecture visual; it contains no private keys, account data, or active legacy service integration.',
   },
   'poke-prototype-editor': {
+    summary: 'Change a button and its interaction, then try it on your phone. Save, export, and reopen your project.',
     title: 'Poke: High-Fidelity Mobile Prototyping Editor',
     shortTitle: 'Poke Prototype Editor',
     eyebrow: 'EXPERIMENT / ARCHIVE',
-    summary: 'A high-fidelity mobile prototyping editor whose core ran across desktop and Web environments.',
     thesis: 'Poke combined canvas editing, layers, state and event modeling, document serialization, and mobile preview in a shared editor core that could run in both Electron and the browser.',
     period: '2016–2018 · Early personal project',
     role: 'Editor architecture · Core interaction · Full-stack integration',

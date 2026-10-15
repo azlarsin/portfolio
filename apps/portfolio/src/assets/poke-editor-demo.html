@@ -293,34 +293,37 @@
       .mobile-pc-notice h1 { margin: 0; font-size: clamp(24px, 8vw, 34px); letter-spacing: -.035em; }
       .mobile-pc-notice p { max-width: 330px; margin: 0; color: #9ca9c1; font-size: 13px; line-height: 1.75; }
     }
+    .mobile-preview-button { min-height:44px; padding:10px 24px; border:0; border-radius:8px; background:#8bd8ab; color:#13251a; font:600 15px system-ui; cursor:pointer; }
   </style>
 </head>
 <body>
   <section class="mobile-pc-notice" role="note" aria-label="桌面端体验提示">
     <small>POKE PROTOTYPE EDITOR</small>
-    <h1>请在 PC 平台体验</h1>
-    <p>该演示保留了多面板编辑器、画布拖拽与右键菜单，需要桌面级指针和更宽视口才能完整操作。</p>
+    <h1>先试试做好的原型</h1>
+    <p>点一下按钮，看看标题移动和页面切换。编辑画布请使用电脑。</p>
+    <button id="mobilePreview" class="mobile-preview-button">运行示例 →</button>
   </section>
-  <div class="archive-bar"><span>POKE 0.9 · SOURCE-DRIVEN ARCHIVE RECONSTRUCTION</span><span>SYNTHETIC PROJECT · URL-EMBEDDED DATA · NO STORAGE</span></div>
+  <input id="documentFile" type="file" accept=".json,application/json" hidden />
+  <div class="archive-bar"><span>Poke · 原型编辑器</span><span>示例项目 · 可保存到本机或导出文件</span></div>
   <main class="app">
     <header class="topbar">
       <div class="top-group">
-        <button class="top-action" id="backToProjects"><b>‹</b>项目</button>
+        <button class="top-action" id="backToProjects"><b>↥</b>打开文件</button>
         <button class="top-action" id="preview"><b>▦</b>扫码预览</button>
-        <button class="top-action" data-command="save"><b>⇧</b>保存</button>
+        <button class="top-action" data-command="save"><b>⇧</b>保存到本机</button>
         <button class="top-action" id="undo" title="撤销 · ⌘Z" disabled><b>↶</b>撤销</button>
         <button class="top-action" id="redo" title="重做 · ⇧⌘Z" disabled><b>↷</b>重做</button>
       </div>
       <div class="top-center">
         <button class="top-action" data-command="component" id="componentCommand"><b>◇</b>创建组件</button>
         <button class="top-action" data-command="mask" id="maskCommand"><b>◐</b>Mask</button>
-        <button class="top-action" id="zoom"><b>− 100% +</b>缩放</button>
+        <button class="top-action" id="resetExample"><b>↺</b>恢复示例</button>
         <button class="top-action" data-command="group" id="groupCommand"><b>⌘</b><span id="groupCommandText">组合</span></button>
-        <button class="top-action" data-command="export"><b>▱</b>导出</button>
+        <button class="top-action" data-command="export"><b>▱</b>导出项目</button>
       </div>
       <div class="top-group end">
-        <div class="replay-progress" id="replayProgress"><i></i><span id="replayStatus">READY · MANUAL MODE</span></div>
-        <button class="top-action primary" id="replay"><b>▶</b>重放演示</button>
+        <div class="replay-progress" id="replayProgress"><i></i><span id="replayStatus">修改按钮颜色，然后点“扫码预览”</span></div>
+        <button class="top-action primary" id="replay"><b>▶</b>看看怎么做</button>
       </div>
     </header>
     <div class="workspace">
@@ -344,7 +347,7 @@
         <div class="canvas-wrap" id="canvasScroll" tabindex="0" aria-label="可滚动画布区域"><div class="phone-shell"><div class="artboard" id="artboard"></div></div></div>
       </section>
       <aside class="right-panel" id="inspector"></aside>
-      <div class="toast" id="toast"></div>
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
       <div class="context-menu" id="contextMenu" role="menu" aria-label="编辑器上下文菜单" hidden></div>
       <div class="confirm-layer" id="confirmLayer" hidden>
         <div class="confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
@@ -366,7 +369,7 @@
         <div class="interaction-form"><div class="interaction-starter" id="interactionStarter"><button class="primary" id="beginElementInteraction">＋ 添加交互</button><button id="beginPageInteraction">＋ 页面跳转</button><span>先选择 Target，再编辑它的目标 State。</span></div><div class="interaction-fields" id="interactionFields" hidden><label>目标<select id="eventTarget"></select></label><label class="interaction-field" id="targetStateField">目标 State<select id="eventTargetState"></select></label><label class="interaction-field" id="effectField" hidden>页面转场<select id="eventEffect"><option value="push-left">Push Left</option><option value="push-right">Push Right</option><option value="push-up">Push Up</option><option value="push-down">Push Down</option><option value="fade">Fade</option><option value="modal">Modal</option></select></label><label>缓动<select id="eventEasing"><option value="ease-out">Ease Out</option><option value="ease-in-out">Ease Both</option><option value="linear">Linear</option></select></label><label>延迟<input id="eventDelay" type="number" min="0" max="5" step="0.05" value="0" /></label><label>时长<input id="eventDuration" type="number" min="0.05" max="3" step="0.05" value="0.3" /></label><button class="save" id="saveInteraction">保存页面动作</button></div><div class="interaction-actions" id="interactionActions"></div><p class="interaction-note">元素动作通过遮罩选择 Target；可直接选择已有 State，或在移动 / resize / rotate 后保存为新 State。</p></div>
       </section>
       <div class="preview-modal" id="previewModal">
-        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">SCAN PREVIEW · URL-EMBEDDED PROTOTYPE</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>用手机相机扫码，立即检查交互</strong><p>当前画布、全部 State、元素事件与系统栏配置都会写入同一份预览数据。</p><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">SERIALIZING</span></div></section><section class="preview-device-pane"><span id="previewRuntimeLabel">LIVE RUNTIME · WAITING</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
+        <div class="preview-window" role="dialog" aria-modal="true" aria-labelledby="previewTitle"><div class="preview-titlebar"><span id="previewTitle">在手机上试试</span><button id="closePreview">关闭 ×</button></div><div class="preview-body"><section class="preview-share"><div class="preview-qr-shell"><div class="preview-loading" id="previewLoading">正在生成二维码…</div><iframe id="previewQrFrame" title="Poke 预览二维码"></iframe></div><strong>扫码打开，或直接点右侧预览</strong><p>点击蓝色按钮：标题先移动，再切换到详情页。编辑后重新打开预览，就能看到改动。</p><div class="preview-share-actions"><button class="preview-copy" id="copyPreviewUrl">复制链接</button><span class="preview-payload" id="previewPayload">正在准备…</span></div><input id="previewUrl" aria-label="预览链接" readonly hidden style="width:100%;margin-top:12px;padding:8px;border:1px solid #cbd5e1;border-radius:6px" /></section><section class="preview-device-pane"><span id="previewRuntimeLabel">LIVE RUNTIME · WAITING</span><div class="preview-phone"><iframe id="previewLiveFrame" title="Poke 交互运行时"></iframe></div></section></div></div>
       </div>
     </div>
     <footer class="footer"><span><strong id="footerMode">SELECT</strong> · DOCUMENT / SYNTHETIC-MOBILE-PROTOTYPE</span><span id="footerState">7 ELEMENTS · 2 PAGES · 0 EVENTS</span></footer>
@@ -379,16 +382,16 @@
         {id:'status-bar',name:'Status Bar',type:'status-bar',x:0,y:0,w:280,h:17,fill:'#ffffff',radius:0,opacity:100,color:'#111827'},
         {id:'hero',name:'Hero Gradient',type:'rect',x:0,y:0,w:280,h:230,fill:'#e9efff',radius:0,opacity:100},
         {id:'mark',name:'Product Mark',type:'circle',x:24,y:42,w:34,h:34,fill:'#2e67dd',radius:50,opacity:100},
-        {id:'title',name:'Headline',type:'text',x:24,y:92,w:225,h:64,fill:'#222a36',radius:0,opacity:100,text:'Make ideas tangible.'},
-        {id:'copy',name:'Description',type:'text',x:24,y:160,w:222,h:42,fill:'#718096',radius:0,opacity:100,text:'Design states, connect events, preview the flow.'},
-        {id:'cta',name:'Primary Button',type:'rect',x:24,y:252,w:232,h:48,fill:'#464d5c',radius:8,opacity:100,text:'Open prototype →'},
+        {id:'title',name:'Headline',type:'text',x:24,y:92,w:225,h:64,fill:'#222a36',radius:0,opacity:100,text:'你好，Poke。'},
+        {id:'copy',name:'Description',type:'text',x:24,y:160,w:222,h:42,fill:'#718096',radius:0,opacity:100,text:'点一下按钮，看看标题和页面怎样变化。'},
+        {id:'cta',name:'Primary Button',type:'rect',x:24,y:252,w:232,h:48,fill:'#2e67dd',radius:16,opacity:100,text:'打开详情 →'},
         {id:'tab-bar',name:'Tab Bar',type:'tab-bar',x:0,y:466,w:280,h:56,fill:'#ffffff',radius:0,opacity:100,normalColor:'#8b95a5',selectedColor:'#2e67dd',tabs:[{id:'tab-home',icon:'⌂',text:'Home',pageId:'home'},{id:'tab-details',icon:'◇',text:'Details',pageId:'details'},{id:'tab-profile',icon:'○',text:'Profile',pageId:null}]}
       ];
 
       const detailsElements = [
         {id:'details-back',name:'Back Action',type:'text',x:24,y:50,width:92,height:24,fill:'#2e67dd',radius:0,opacity:100,text:'← Back'},
-        {id:'details-title',name:'Details Headline',type:'text',x:24,y:126,width:232,height:70,fill:'#222a36',radius:0,opacity:100,text:'Interaction\nlinked.'},
-        {id:'details-copy',name:'Details Copy',type:'text',x:24,y:212,width:230,height:42,fill:'#8290a5',radius:0,opacity:100,text:'The configured interaction brought you here.'},
+        {id:'details-title',name:'Details Headline',type:'text',x:24,y:126,width:232,height:70,fill:'#222a36',radius:0,opacity:100,text:'你来到详情页了。'},
+        {id:'details-copy',name:'Details Copy',type:'text',x:24,y:212,width:230,height:42,fill:'#8290a5',radius:0,opacity:100,text:'回到编辑器，改动按钮颜色或动画时长，再试一次。'},
         {id:'details-card',name:'Gradient Card',type:'rect',x:24,y:276,width:232,height:142,fill:'#20bcae',radius:22,opacity:100,text:''}
       ];
 
@@ -456,6 +459,122 @@
           interactionEvents:clone(interactionEvents),
           idSequence:idSequence
         };
+      }
+
+      const DOCUMENT_KEY = 'poke-studio-document-v1';
+      function documentReady() {
+        if (replaying || interactionDraft) {
+          flash('请先完成当前演示或交互编辑');
+          return false;
+        }
+        return true;
+      }
+
+      function documentFile() {
+        return JSON.stringify({format:'poke-document',version:1,document:captureDocumentState()}, null, 2);
+      }
+
+      function parseDocumentFile(text) {
+        if (text.length > 2000000) throw new Error('项目文件不能超过 2 MB');
+        const value = JSON.parse(text);
+        if (value.format !== 'poke-document' || value.version !== 1 || !value.document) throw new Error('请选择 Poke 导出的项目文件');
+        const state = value.document;
+        const id = value => typeof value === 'string' && /^[a-zA-Z0-9_-]{1,80}$/.test(value);
+        const finite = value => typeof value === 'number' && Number.isFinite(value) && Math.abs(value) < 1000000;
+        const fail = () => { throw new Error('项目数据不完整，未替换当前画布'); };
+        const numeric = new Set(['x','y','w','h','width','height','opacity','radius','rotation','startTime','duration','idSequence']);
+        const identifiers = new Set(['id','containerId','symbolId','sourceId','targetId','targetPageId','pageId']);
+        const colors = new Set(['fill','color','normalColor','selectedColor']);
+        let count = 0;
+        function inspect(node, key = '', depth = 0) {
+          if (++count > 100000 || depth > 20) fail();
+          if (numeric.has(key) && !finite(node)) fail();
+          if (identifiers.has(key) && node !== null && !id(node)) fail();
+          if (colors.has(key) && (typeof node !== 'string' || !/^#[0-9a-f]{3,8}$/i.test(node))) fail();
+          if (Array.isArray(node)) {
+            if (node.length > 2000) fail();
+            node.forEach(child => inspect(child, '', depth + 1));
+          } else if (node && typeof node === 'object') {
+            Object.entries(node).forEach(([name, child]) => {
+              if (['__proto__','constructor','prototype'].includes(name)) fail();
+              inspect(child, name, depth + 1);
+            });
+          } else if (typeof node === 'string' && node.length > 20000) fail();
+        }
+        inspect(state);
+        for (const key of ['elements','containers','components','pages','selectedIds','lastHomeSelection','interactionEvents']) {
+          if (!Array.isArray(state[key])) fail();
+        }
+        function checkElement(item) {
+          if (!item || !id(item.id) || typeof item.name !== 'string' || !['rect','circle','text','image','input','nav','status-bar','tab-bar'].includes(item.type)) fail();
+          if (!['x','y','w','h','radius','opacity'].every(key => finite(item[key])) || typeof item.fill !== 'string') fail();
+          if (item.states && (typeof item.states !== 'object' || Array.isArray(item.states))) fail();
+          for (const [key, snapshot] of Object.entries(item.states || {})) {
+            if (!/^\d+$/.test(key) || !snapshot || !['x','y','w','h','radius','opacity'].every(key => finite(snapshot[key]))) fail();
+          }
+          if (item.nowState && (!/^\d+$/.test(item.nowState) || !item.states?.[item.nowState])) fail();
+          if (item.type === 'tab-bar' && (!Array.isArray(item.tabs) || item.tabs.length > 5 || !item.tabs.every(tab => id(tab.id) && typeof tab.text === 'string' && typeof tab.icon === 'string'))) fail();
+        }
+        state.elements.forEach(checkElement);
+        const elementIds = new Set(state.elements.map(item => item.id));
+        const entityIds = new Set([...elementIds, ...state.containers.map(item => item.id)]);
+        if (entityIds.size !== state.elements.length + state.containers.length) fail();
+        for (const item of state.containers) {
+          if (!id(item.id) || typeof item.name !== 'string' || !['group','mask','component'].includes(item.type) || !Array.isArray(item.childIds) || !item.childIds.length || !item.childIds.every(child => elementIds.has(child))) fail();
+          if (!['x','y','w','h'].every(key => finite(item[key]))) fail();
+        }
+        for (const component of state.components) {
+          if (!id(component.id) || typeof component.name !== 'string' || !Array.isArray(component.items)) fail();
+          component.items.forEach(checkElement);
+        }
+        if (!state.pages.length || !state.pages.every(page => id(page.id) && typeof page.name === 'string')) fail();
+        const pageIds = new Set(state.pages.map(page => page.id));
+        if (pageIds.size !== state.pages.length || !pageIds.has(state.currentPage)) fail();
+        if (!['layers','pages','components'].includes(state.activePanel) || !Number.isSafeInteger(state.idSequence) || state.idSequence < 100) fail();
+        if (![...state.selectedIds,...state.lastHomeSelection].every(value => entityIds.has(value))) fail();
+        if (state.expandedContainerId !== null && !state.containers.some(item => item.id === state.expandedContainerId)) fail();
+        for (const event of state.interactionEvents) {
+          if (!event || !elementIds.has(event.sourceId) || !/^\d+$/.test(event.sourceState) || !['click','doubleClick','touch','swipeLeft','swipeRight','swipeUp','swipeDown'].includes(event.trigger) || !Array.isArray(event.elementActions)) fail();
+          const source = state.elements.find(item => item.id === event.sourceId);
+          if (!source.states?.[event.sourceState]) fail();
+          for (const action of event.elementActions) {
+            const target = state.elements.find(item => item.id === action.targetId);
+            if (!target?.states?.[action.targetState]) fail();
+          }
+          if (event.pageAction && !pageIds.has(event.pageAction.targetPageId)) fail();
+        }
+        return state;
+      }
+
+      function saveDocument() {
+        if (!documentReady()) return;
+        try {
+          localStorage.setItem(DOCUMENT_KEY, documentFile());
+          flash('已保存到本机，刷新后可继续编辑');
+        } catch {
+          flash('当前浏览器无法保存，请使用“导出项目”');
+        }
+      }
+
+      function exportDocument() {
+        if (!documentReady()) return;
+        const url = URL.createObjectURL(new Blob([documentFile()], {type:'application/json'}));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'poke-project.json';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        flash('已导出项目，可通过“打开文件”继续编辑');
+      }
+
+      function prepareExample() {
+        const title = getElement('title');
+        ensureElementStates(title);
+        title.states['1'] = {...title.states['0'],x:38,opacity:45,fill:'#6d5bd0'};
+        interactionEvents = [{sourceId:'cta',sourceState:'0',trigger:'click',elementActions:[{targetId:'title',targetState:'1',startTime:0,duration:.35,easing:'ease-out'}],pageAction:{targetPageId:'details',effect:'push-left',startTime:.55,duration:.35,easing:'ease-out'}}];
+        syncEventElementIds();
       }
 
       function pushHistoryState(state, label) {
@@ -1155,7 +1274,7 @@
       function renderCanvas() {
         artboard.innerHTML = '';
         if (currentPage === 'details') {
-          artboard.innerHTML = '<div class="details-canvas" style="position:absolute;inset:0;padding:50px 24px 76px;background:#f8f9fc"><button id="canvasBack" style="border:0;background:transparent;color:#2e67dd;font-size:9px;padding:0">← Back</button><h2 style="margin:52px 0 12px;font:500 31px/1.03 Georgia,serif">Interaction<br>linked.</h2><p style="margin:0;color:#8290a5;font-size:10px;line-height:1.7">The configured interaction brought you here.</p><div style="height:142px;margin-top:22px;border-radius:22px;background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div>';
+          artboard.innerHTML = '<div class="details-canvas" style="position:absolute;inset:0;padding:50px 24px 76px;background:#f8f9fc"><button id="canvasBack" style="border:0;background:transparent;color:#2e67dd;font-size:9px;padding:0">← Back</button><h2 style="margin:52px 0 12px;font:500 31px/1.03 Georgia,serif">你来到<br>详情页了。</h2><p style="margin:0;color:#8290a5;font-size:10px;line-height:1.7">回到编辑器，改动按钮颜色或动画时长，再试一次。</p><div style="height:142px;margin-top:22px;border-radius:22px;background:linear-gradient(135deg,#20bcae,#397ed9)"></div></div>';
           artboard.querySelector('#canvasBack').addEventListener('click', () => switchPage('home'));
           elements.filter(isSystemElement).forEach(item => artboard.appendChild(createElementNode(item, 0, 0, item.id)));
           return;
@@ -2513,7 +2632,8 @@
         if (action === 'delete-page' && context) requestDeletePage(context.id);
       }
 
-      function openConfirm(title, message, action) {
+      function openConfirm(title, message, action, actionLabel = '删除') {
+        document.querySelector('#confirmOk').textContent = actionLabel;
         closeContextMenu();
         confirmAction = action;
         document.querySelector('#confirmTitle').textContent = title;
@@ -2660,8 +2780,8 @@
       document.querySelectorAll('[data-command]').forEach(button => button.addEventListener('click', () => {
         const command = button.dataset.command;
         if (command === 'group' || command === 'mask' || command === 'component') runStructureAction(command);
-        if (command === 'save') flash('已保存到本地演示状态');
-        if (command === 'export') flash('已生成本地预览包');
+        if (command === 'save') saveDocument();
+        if (command === 'export') exportDocument();
       }));
 
       document.querySelector('#closeInteraction').addEventListener('click', () => setInteractionPanelOpen(false));
@@ -2832,8 +2952,9 @@
         loading.hidden = false;
         loading.classList.remove('is-done');
         loading.textContent = '正在生成二维码…';
-        document.querySelector('#previewPayload').textContent = 'SERIALIZING';
-        document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · WAITING';
+        document.querySelector('#previewPayload').textContent = '正在准备…';
+        document.querySelector('#previewUrl').hidden = true;
+        document.querySelector('#previewRuntimeLabel').textContent = '正在打开预览…';
         previewModal.classList.add('open');
         try {
           const encoded = await encodePreviewProject(buildPreviewProject());
@@ -2850,8 +2971,8 @@
           document.querySelector('#copyPreviewUrl').dataset.url = canonicalText;
           qrFrame.dataset.payloadId = payloadId;
           liveFrame.dataset.payloadId = payloadId;
-          document.querySelector('#previewPayload').textContent = 'PAYLOAD ' + payloadId + ' · ' + encoded.bytes + ' B';
-          document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · PAYLOAD ' + payloadId;
+          document.querySelector('#previewPayload').textContent = '链接包含当前原型';
+          document.querySelector('#previewRuntimeLabel').textContent = '交互预览';
           qrFrame.onload = () => {
             setTimeout(() => {
               if (requestId !== previewRequest || qrFrame.dataset.payloadId !== payloadId) return;
@@ -2862,7 +2983,7 @@
           liveFrame.onload = () => {
             setTimeout(() => {
               if (requestId !== previewRequest || liveFrame.dataset.payloadId !== payloadId) return;
-              document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · PAYLOAD ' + payloadId + ' · READY';
+              document.querySelector('#previewRuntimeLabel').textContent = '点击按钮试试';
             }, 180);
           };
           qrFrame.onerror = () => { loading.textContent = '二维码生成失败，请复制链接预览'; };
@@ -2895,7 +3016,7 @@
           if (message.type === 'poke:qr-error') document.querySelector('#previewLoading').textContent = '二维码生成失败，请使用复制链接';
         }
         if (event.source === liveFrame.contentWindow && message.type === 'poke:runtime-ready' && message.payloadId === liveFrame.dataset.payloadId) {
-          document.querySelector('#previewRuntimeLabel').textContent = 'LIVE RUNTIME · PAYLOAD ' + message.payloadId + ' · READY';
+          document.querySelector('#previewRuntimeLabel').textContent = '点击按钮试试';
         }
       });
 
@@ -2905,19 +3026,17 @@
         if (!url) return;
         try {
           await navigator.clipboard.writeText(url);
-        } catch (error) {
-          const input = document.createElement('textarea');
+          flash('预览链接已复制');
+          button.textContent = '已复制 ✓';
+          setTimeout(() => { button.textContent = '复制链接'; }, 1200);
+        } catch {
+          const input = document.querySelector('#previewUrl');
           input.value = url;
-          input.style.position = 'fixed';
-          input.style.opacity = '0';
-          document.body.appendChild(input);
+          input.hidden = false;
+          input.focus();
           input.select();
-          document.execCommand('copy');
-          input.remove();
+          flash('未能自动复制，请复制下方链接');
         }
-        flash('预览链接已复制');
-        button.textContent = '已复制 ✓';
-        setTimeout(() => { button.textContent = '复制链接'; }, 1200);
       });
 
       document.querySelector('#confirmCancel').addEventListener('click', closeConfirm);
@@ -2930,10 +3049,9 @@
         if (event.target === confirmLayer) closeConfirm();
       });
 
-      document.querySelector('#backToProjects').addEventListener('click', () => flash('项目库 · Synthetic Mobile Prototype'));
+      document.querySelector('#backToProjects').addEventListener('click', () => { if (documentReady()) document.querySelector('#documentFile').click(); });
       document.querySelector('#undo').addEventListener('click', undoDocument);
       document.querySelector('#redo').addEventListener('click', redoDocument);
-      document.querySelector('#zoom').addEventListener('click', () => flash('画布比例 100%'));
       document.querySelector('#toggleLayers').addEventListener('click', () => {
         activePanel = 'layers';
         syncTabs();
@@ -2965,6 +3083,7 @@
           redoDocument();
           return;
         }
+        if (commandHeld && commandKey === 's') { event.preventDefault(); saveDocument(); return; }
         if (editable) return;
         if (interactionDraft && (commandHeld || event.key === 'Delete' || event.key === 'Backspace')) {
           event.preventDefault();
@@ -3076,8 +3195,56 @@
         replaying = false;
       }
 
-      document.querySelector('#replay').addEventListener('click', runReplay);
+      document.querySelector('#replay').addEventListener('click', () => {
+        if (documentReady()) openConfirm('从示例开始演示？', '当前画布会被替换，完成后可以撤销。已保存的草稿不受影响。', runReplay, '开始演示');
+      });
+      prepareExample();
+      const exampleDocument = captureDocumentState();
+      document.querySelector('#resetExample').addEventListener('click', () => {
+        if (!documentReady()) return;
+        openConfirm('恢复示例？', '当前画布会被替换，可以撤销。本机保存的草稿保留，点击保存后才会更新。', () => {
+          checkpointHistory('恢复示例');
+          restoreDocumentState(exampleDocument);
+          flash('已恢复示例；点击“扫码预览”试试按钮');
+        }, '恢复示例');
+      });
+      document.querySelector('#documentFile').addEventListener('change', async event => {
+        const input = event.currentTarget;
+        const file = input.files[0];
+        input.value = '';
+        if (!file || !documentReady()) return;
+        try {
+          if (file.size > 2000000) throw new Error('项目文件不能超过 2 MB');
+          const state = parseDocumentFile(await file.text());
+          openConfirm('打开这个项目？', '当前画布会被替换，可以撤销。点击保存后才会更新本机草稿。', () => {
+            checkpointHistory('打开项目');
+            restoreDocumentState(state);
+            flash('项目已打开，图层和交互已恢复');
+          }, '打开项目');
+        } catch (error) {
+          flash(error instanceof SyntaxError ? '文件不是有效的 JSON，当前画布未改变' : error.message);
+        }
+      });
+      document.querySelector('#mobilePreview').addEventListener('click', async event => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        try {
+          const encoded = await encodePreviewProject(buildPreviewProject());
+          const url = new URL('/poke/render', window.location.href);
+          url.searchParams.set('data', encoded.data);
+          window.location.href = url.toString();
+        } catch {
+          button.textContent = '暂时无法打开，再试一次';
+          button.disabled = false;
+        }
+      });
       renderAll();
+      try {
+        const stored = localStorage.getItem(DOCUMENT_KEY);
+        if (stored) { restoreDocumentState(parseDocumentFile(stored)); flash('已恢复上次保存的项目'); }
+      } catch {
+        flash('无法读取本机草稿，已打开示例；你仍可导出项目');
+      }
     }());
   </script>
 </body>

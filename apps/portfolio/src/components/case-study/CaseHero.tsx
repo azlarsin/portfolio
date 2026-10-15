@@ -27,7 +27,6 @@ export function CaseHero({
       <ProvenanceBadge
         provenance={project.provenance}
         displayOverride={project.provenanceDisplay}
-        showDescription
       />
       <p className="eyebrow">{project.eyebrow}</p>
       <h1>{project.title}</h1>

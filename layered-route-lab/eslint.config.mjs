@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Cloud sync can leave numbered dependency-directory copies.
+    "**/node_modules */**",
   ]),
 ]);
 

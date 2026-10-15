@@ -535,7 +535,7 @@ export default function AgentDemoOverlay({
         <span className="agent-logo" aria-hidden="true">A</span>
         <span>
           <strong>Agent Demo</strong>
-          <small>自然语言 → 受约束动作 → 结果校验</small>
+          <small>选择任务，看看页面怎样变化</small>
         </span>
         <kbd>⌘ K</kbd>
       </button>
@@ -564,8 +564,8 @@ export default function AgentDemoOverlay({
               <div className="agent-panel-title">
                 <span className="agent-logo" aria-hidden="true">A</span>
                 <div>
-                  <strong>LAB AGENT</strong>
-                  <span>UNDERSTAND · EXECUTE · VERIFY</span>
+                  <strong>页面操作助手</strong>
+                  <span>Layered Route Lab</span>
                 </div>
               </div>
               <button
@@ -590,15 +590,6 @@ export default function AgentDemoOverlay({
               </div>
             ) : null}
 
-            <div className="agent-status-strip">
-              <span><i /> ROUTE INDEX READY</span>
-              <span>APP BRIDGE READY</span>
-              <span>MODEL: {plan?.model === "skipped" ? "SKIPPED" : "NOT CALLED"}</span>
-              <span>CRAWLS: 0</span>
-              <span>STEP DELAY: {pacedPlayback ? `${(AGENT_STEP_DELAY_MS / 1000).toFixed(1)}S` : "OFF"}</span>
-              <span>REVIEW PLAN → EXECUTE</span>
-            </div>
-
             <button
               type="button"
               className="agent-pace-switch"
@@ -611,9 +602,9 @@ export default function AgentDemoOverlay({
 
             <nav className="agent-tabs" aria-label="Agent Demo 视图">
               {([
-                ["run", "操作"],
-                ["knowledge", "知识"],
-                ["trace", "轨迹"],
+                ["run", "任务"],
+                ["knowledge", "实现"],
+                ["trace", "执行记录"],
               ] as const).map(([id, label]) => (
                 <button
                   type="button"
@@ -630,37 +621,15 @@ export default function AgentDemoOverlay({
               {tab === "run" ? (
                 <div className="agent-run-view">
                   <section className="agent-role-guide" aria-labelledby="agent-role-title">
-                    <header>
-                      <span>AGENT ROLE</span>
-                      {onOpenGuide ? (
-                        <button
-                          type="button"
-                          disabled={running}
-                          onClick={() => {
-                            setOpen(false);
-                            onOpenGuide();
-                          }}
-                        >
-                          页面层指南 ↗
-                        </button>
-                      ) : null}
-                    </header>
-                    <h2 id="agent-role-title">把任务变成可验证的宿主动作</h2>
-                    <div className="agent-role-flow">
-                      <div><span>01 · 理解</span><strong>从任务提取路由与实体</strong></div>
-                      <div><span>02 · 执行</span><strong>只调用 Manifest 允许的动作</strong></div>
-                      <div><span>03 · 校验</span><strong>检查 URL、界面层与数据结果</strong></div>
-                    </div>
-                    <p>
-                      它不依赖坐标点击，也不在信息缺失时猜测。公开版使用本地 planner
-                      与合成数据，不调用线上模型或业务 API。
-                    </p>
+                    <h2 id="agent-role-title">试着打开一笔订单</h2>
+                    <p>选择一个任务，确认后看看页面怎样逐层展开。完成后可以返回上一级，或复制页面链接重新打开。</p>
+                    {onOpenGuide ? <button type="button" onClick={() => { setOpen(false); onOpenGuide(); }}>了解页面操作</button> : null}
                   </section>
 
                   {sharedTask ? (
                     <div className="agent-shared-banner">
-                      <strong>来自 agent_cmd 的分享任务</strong>
-                      <span>已按当前行为清单重新规划，执行前仍需确认。</span>
+                      <strong>收到的分享任务</strong>
+                      <span>确认下面的产品与订单后即可运行。</span>
                     </div>
                   ) : null}
 
@@ -682,15 +651,15 @@ export default function AgentDemoOverlay({
                         autoComplete="off"
                         maxLength={240}
                       />
-                      <button type="submit" disabled={running}>生成计划</button>
+                      <button type="submit" disabled={running}>查看步骤</button>
                     </div>
                   </form>
 
                   {!plan || plan.mode === "clarify" ? (
                     <div className="agent-suggestions">
-                      <span>可运行示例</span>
-                      <p>点击示例生成计划，确认后才会执行。</p>
-                      {agentSuggestions.map((suggestion) => (
+                      <span>从这里开始</span>
+                      <p>选一个任务，约一分钟。</p>
+                      {agentSuggestions.slice(0, 3).map((suggestion) => (
                         <button
                           key={suggestion.command}
                           type="button"
@@ -703,11 +672,11 @@ export default function AgentDemoOverlay({
                       ))}
                       <button
                         type="button"
-                        onClick={() => runCommand("打开订单")}
+                        onClick={() => runCommand("打开订单 2")}
                         disabled={running}
                       >
-                        <small>澄清示例</small>
-                        打开订单
+                        <small>试试缺少参数的任务</small>
+                        打开订单 2
                       </button>
                     </div>
                   ) : null}
@@ -717,7 +686,7 @@ export default function AgentDemoOverlay({
                   ) : (
                     <div className="agent-empty-state">
                       <span>01</span>
-                      <p>选择示例生成计划；确认执行后，依次观察页面动作与状态验证。</p>
+                      <p>先选一个任务，再查看将要打开的页面。</p>
                     </div>
                   )}
 
@@ -725,6 +694,9 @@ export default function AgentDemoOverlay({
                     <div className="agent-clarification">
                       <strong>需要补充信息</strong>
                       <p>{plan.clarification}</p>
+                      {plan.alternatives?.map((choice) => (
+                        <button type="button" key={choice.command} onClick={() => runCommand(choice.command)}>{choice.label}</button>
+                      ))}
                     </div>
                   ) : null}
 
@@ -733,9 +705,9 @@ export default function AgentDemoOverlay({
                       <button type="button" className="agent-primary" onClick={() => void runPlan(plan)}>
                         {sharedTask
                           ? "确认并运行分享任务"
-                          : `执行 ${plan.steps.length} 步`}
+                          : "运行任务"}
                       </button>
-                      <button type="button" onClick={() => void createShare()}>复制 agent_cmd 链接</button>
+                      <button type="button" onClick={() => void createShare()}>分享这个任务</button>
                     </div>
                   ) : null}
 
@@ -750,6 +722,16 @@ export default function AgentDemoOverlay({
 
               {tab === "knowledge" ? (
                 <div className="agent-knowledge-view">
+            <div className="agent-status-strip">
+              <span><i /> ROUTE INDEX READY</span>
+              <span>APP BRIDGE READY</span>
+              <span>MODEL: {plan?.model === "skipped" ? "SKIPPED" : "NOT CALLED"}</span>
+              <span>CRAWLS: 0</span>
+              <span>STEP DELAY: {pacedPlayback ? `${(AGENT_STEP_DELAY_MS / 1000).toFixed(1)}S` : "OFF"}</span>
+              <span>REVIEW PLAN → EXECUTE</span>
+            </div>
+
+
                   <div className="agent-knowledge-hero">
                     <span>BEHAVIOR MANIFEST</span>
                     <h2>路由 AST + 源码特征扫描</h2>
@@ -770,6 +752,12 @@ export default function AgentDemoOverlay({
                   <div className="agent-source-list">
                     <span>生成来源</span>
                     {behaviorManifest.generatedFrom.map((source) => <code key={source}>{source}</code>)}
+                  </div>
+                  <div className="agent-suggestions">
+                    <span>更多任务</span>
+                    {agentSuggestions.slice(3).map((suggestion) => (
+                      <button type="button" key={suggestion.command} onClick={() => runCommand(suggestion.command)}>{suggestion.command}</button>
+                    ))}
                   </div>
                   <div className="agent-action-list">
                     <span>静态识别到的动作候选</span>
@@ -816,13 +804,14 @@ export default function AgentDemoOverlay({
                       {plan.summary ? <SummaryResult plan={plan} /> : null}
                       {plan.lookupResult ? <LookupResult plan={plan} /> : null}
                       <div className="agent-current-state">
-                        <span>CURRENT PAGE</span>
+                        <span>当前页面</span>
                         <code>{typeof window === "undefined" ? "" : `${window.location.pathname}${window.location.search}`}</code>
                       </div>
                       {!running ? (
                         <div className="agent-plan-actions">
-                          <button type="button" onClick={resetRunView}>运行其他指令</button>
-                          <button type="button" onClick={() => void createShare()}>复制 agent_cmd 链接</button>
+                          <button type="button" className="agent-primary" onClick={() => setOpen(false)}>查看页面</button>
+                          <button type="button" onClick={resetRunView}>再试一个任务</button>
+                          <button type="button" onClick={() => void createShare()}>分享这个任务</button>
                         </div>
                       ) : null}
                     </>
@@ -834,9 +823,7 @@ export default function AgentDemoOverlay({
             </div>
 
             <footer className="agent-panel-footer">
-              <span>SYNTHETIC DATA</span>
-              <span>LOCAL PLANNER</span>
-              <span>NO BUSINESS API</span>
+              <span>示例数据 · 本地规则匹配，不调用在线模型</span>
             </footer>
           </aside>
         </div>
@@ -849,8 +836,8 @@ function PlanOverview({ plan, compact = false }: { plan: AgentPlan; compact?: bo
   return (
     <section className={`agent-plan-overview ${compact ? "is-compact" : ""}`}>
       <div className="agent-plan-heading">
-        <div><span>STRUCTURED INTENT</span><strong>{plan.intent}</strong></div>
-        <span>{Math.round(plan.confidence * 100)}% CONF.</span>
+        <div><span>将要执行</span><strong>{plan.mode === "clarify" ? "确认目标" : plan.mode === "organize" ? "汇总订单" : "打开页面"}</strong></div>
+        <span>{plan.mode === "clarify" ? "待补充信息" : "参数已齐全"}</span>
       </div>
       <div className="agent-entity-row">
         {plan.entities.map((entity) => (

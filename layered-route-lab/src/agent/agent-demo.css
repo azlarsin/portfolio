@@ -75,10 +75,10 @@
   height: 100%;
   padding: 0;
   border: 0;
-  background: rgba(12, 13, 19, 0.24);
+  background: rgba(12, 13, 19, 0.08);
   cursor: default;
   pointer-events: auto;
-  backdrop-filter: blur(1.5px);
+  backdrop-filter: none;
 }
 
 .agent-panel {
@@ -236,7 +236,7 @@
 }
 
 .agent-pace-switch[aria-pressed="true"] i::after {
-  background: #c8ff60;
+  background: var(--signal);
   transform: translateX(11px);
 }
 
@@ -302,7 +302,7 @@
   display: grid;
   gap: 9px;
   padding: 12px;
-  background: linear-gradient(145deg, rgba(200, 255, 96, 0.09), rgba(92, 112, 197, 0.08));
+  background: rgba(158, 216, 177, .04);
   border: 1px solid rgba(200, 255, 96, 0.24);
   border-radius: 11px;
 }
@@ -1482,3 +1482,6 @@
     animation-duration: 1ms !important;
   }
 }
+
+.agent-overlay, .agent-dock { --signal: #9ed8b1; }
+.agent-role-guide > button, .agent-clarification button { padding:8px 12px; margin:6px 6px 0 0; border:1px solid #47564d; border-radius:6px; background:#24362c; color:#c4ebd1; font:inherit; cursor:pointer; }

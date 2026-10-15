@@ -23,7 +23,6 @@ export interface AgentPlan {
   command: string;
   mode: AgentPlanMode;
   intent: string;
-  confidence: number;
   model: "skipped" | "not-called";
   entities: Array<{ label: string; value: string }>;
   matchedRoute?: string;
@@ -47,27 +46,28 @@ export interface AgentPlan {
     orderAmount: string;
   };
   clarification?: string;
+  alternatives?: Array<{ label: string; command: string }>;
 }
 
 export const agentSuggestions = [
   {
-    label: "跨分支导航",
+    label: "打开订单",
     command: "打开 Product 1 的已支付订单 1",
   },
   {
-    label: "进入深层编辑",
+    label: "进入编辑页",
     command: "找到 Product 1 的订单 2，进入编辑",
   },
   {
-    label: "本地数据整理",
+    label: "看看订单汇总",
     command: "把 Product 1 的订单按状态整理成摘要",
   },
   {
-    label: "合成数据 · 跨实体查询",
+    label: "按员工查订单",
     command: "查看示例员工 A-17 在 2026-08-06 午餐订单中的香草烩饭",
   },
   {
-    label: "App Bridge · 动画",
+    label: "打开页面与弹窗",
     command: "通过宿主 App 逐步打开 Presenter 和 Modal",
   },
 ] as const;
@@ -149,7 +149,6 @@ function buildNavigationPlan(
     command,
     mode: routeInstanceExists(target) ? "execute" : "clarify",
     intent,
-    confidence: routeInstanceExists(target) ? 0.99 : 0.4,
     model: "skipped",
     entities,
     matchedRoute: target,
@@ -161,7 +160,7 @@ function buildNavigationPlan(
 }
 
 function extractProductId(command: string) {
-  return command.match(/(?:Product|产品)\s*(\d+)/i)?.[1] || "1";
+  return command.match(/(?:Product|产品)\s*(\d+)/i)?.[1] || null;
 }
 
 function extractOrderId(command: string) {
@@ -213,7 +212,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
       command,
       mode: "clarify",
       intent: "missing-command",
-      confidence: 0,
       model: "skipped",
       entities: [],
       steps: [],
@@ -229,7 +227,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
       command,
       mode: "execute",
       intent: "demonstrate-app-bridge",
-      confidence: 0.99,
       model: "skipped",
       entities: [
         { label: "宿主协议", value: "Typed App Bridge" },
@@ -283,7 +280,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
         command,
         mode: "clarify",
         intent: "incomplete-employee-order-query",
-        confidence: 0.52,
         model: "not-called",
         entities: employeeCode ? [{ label: "员工", value: employeeCode }] : [],
         steps: [],
@@ -298,7 +294,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
         command,
         mode: "clarify",
         intent: matches.length ? "ambiguous-employee-order" : "employee-order-not-found",
-        confidence: matches.length ? 0.61 : 0.2,
         model: "not-called",
         entities: [
           { label: "员工", value: employee.name },
@@ -325,7 +320,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
       command,
       mode: "execute",
       intent: "find-employee-order-item",
-      confidence: 0.99,
       model: "skipped",
       entities: [
         { label: "员工", value: employee.name },
@@ -399,14 +393,32 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
     };
   }
 
+  const needsProduct = orderId || /整理|摘要|汇总|已支付|paid|设置|settings/.test(normalized);
+  if (needsProduct && !productId) {
+    const alternatives = ["1", "2"].flatMap((id) => {
+      const nextCommand = `Product ${id} ${command}`;
+      const nextPlan = planAgentCommand(nextCommand);
+      return nextPlan.mode === "clarify" ? [] : [{ label: `Product ${id}`, command: nextCommand }];
+    });
+    return {
+      command,
+      mode: "clarify",
+      intent: "missing-product",
+      model: "not-called",
+      entities: orderId ? [{ label: "订单", value: `Order ${orderId}` }] : [],
+      steps: [],
+      clarification: "要查看哪个产品？请补充产品编号，或选择下面的产品。",
+      alternatives,
+    };
+  }
+
   if (normalized.includes("整理") || normalized.includes("摘要") || normalized.includes("汇总")) {
     const target = `/product/${productId}/orders?demo_data=1`;
-    if (!routeInstanceExists(target)) {
+    if (productId !== "1" || !routeInstanceExists(target)) {
       return {
         command,
         mode: "clarify",
         intent: "missing-demo-entity",
-        confidence: 0.4,
         model: "not-called",
         entities: [{ label: "产品", value: `Product ${productId}` }],
         steps: [],
@@ -417,7 +429,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
       command,
       mode: "organize",
       intent: "aggregate-order-data",
-      confidence: 0.98,
       model: "skipped",
       entities: [
         { label: "产品", value: `Product ${productId}` },
@@ -503,7 +514,6 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
       command,
       mode: "execute",
       intent: "inspect-presenters",
-      confidence: 0.96,
       model: "skipped",
       entities: [{ label: "视图", value: "3D Grid" }],
       steps: [
@@ -532,12 +542,11 @@ export function planAgentCommand(rawCommand: string): AgentPlan {
     command,
     mode: "clarify",
     intent: "ambiguous-route",
-    confidence: 0.36,
     model: "not-called",
     entities: [],
     steps: [],
     clarification:
-      "“打开订单”仍缺少 Product 与 Order 参数。Agent 不会猜测，请补充目标，例如：打开 Product 1 的订单 2。",
+      "请补充产品和订单编号，例如：打开 Product 1 的订单 2。也可以从下面的任务开始。",
   };
 }
 

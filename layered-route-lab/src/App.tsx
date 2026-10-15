@@ -14,6 +14,7 @@ import Presenter from "./core/Presenter";
 import ExperienceGuide from "./ExperienceGuide";
 import RouteRail from "./RouteRail";
 import AgentDemoOverlay from "./agent/AgentDemoOverlay";
+import { connectPlayerLocation } from "./router/playerBridge";
 import BehaviorGraphViewer from "./BehaviorGraphViewer";
 import { behaviorManifest } from "./agent/generated/behaviorManifest";
 import {
@@ -193,6 +194,13 @@ export default function App({
     useState<AgentPlaybackMode>("paced");
   const [agentRunning, setAgentRunning] = useState(false);
   const [behaviorGraphOpen, setBehaviorGraphOpen] = useState(false);
+  useEffect(connectPlayerLocation, []);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("graph") === "1") {
+      const frame = requestAnimationFrame(() => setBehaviorGraphOpen(true));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, []);
   const [routeRailCollapsed, setRouteRailCollapsed] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [agentOpenRequest, setAgentOpenRequest] = useState(0);

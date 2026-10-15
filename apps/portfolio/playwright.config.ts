@@ -11,13 +11,21 @@ export default defineConfig({
     baseURL,
     locale: 'zh-CN',
     channel: process.env.PLAYWRIGHT_CHROMIUM_CHANNEL || undefined,
+    launchOptions: {
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+    },
     trace: 'retain-on-failure',
   },
   webServer: process.env.PORTFOLIO_UI_URL
     ? undefined
-    : {
+    : [{
         command: 'pnpm exec vite --host 127.0.0.1 --port 5184 --strictPort',
         url: baseURL,
         reuseExistingServer: !process.env.CI,
-      },
+      }, {
+        command: 'pnpm --filter layered-route-lab dev',
+        url: 'http://localhost:3000',
+        reuseExistingServer: !process.env.CI,
+        timeout: 120_000,
+      }],
 })

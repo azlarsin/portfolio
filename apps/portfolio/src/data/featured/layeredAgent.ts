@@ -30,9 +30,10 @@ export const layeredAgentProject = {
   provenance: 'public-reconstruction',
   title: 'Layered Route × Agent：基于页面行为约束的任务执行',
   shortTitle: 'Layered Route × Agent',
+  summary: '打开一笔订单，看看页面怎样逐层展开。再返回、刷新，或复制链接重新打开。',
   eyebrow: 'PUBLIC RECONSTRUCTION / RESEARCH',
   thesis:
-    '本项目先建立可从 URL 恢复页面、Presenter、Modal 和查询条件的分层路由模型，再从源码生成 Behavior Manifest。Agent 仅使用清单中的动作制定计划，并在每一步执行后检查 URL、页面层级和数据结果。',
+    '一个多层页面实验：从产品列表进入订单，再打开编辑页，返回时保留上一级的上下文。我也做了一个本地任务助手，把输入的产品和订单匹配到已有动作，再检查页面是否到达目标。',
   period: '公开重建 · 持续研究',
   role: '路由模型 · Agent 方案 · 核心开发',
   status: '公开实验 · 全部使用合成数据',
@@ -47,7 +48,7 @@ export const layeredAgentProject = {
     'LLM-assisted planning',
   ],
   impact: [
-    '页面、Presenter、Modal 和查询条件均可从 URL 恢复，深链刷新后能够重建相同的界面层级。',
+    '通过深链接恢复路由页面及查询条件；临时 Presenter 和 Modal 使用浏览器历史处理返回。',
     `Behavior Manifest 在构建时从源码生成；当前包含 ${manifestSummary}，数字直接读取生成文件。`,
     '公开 Demo 完整实现检索、计划、宿主命令、执行与结果检查；同一份动作清单亦用于回归测试。',
   ],
@@ -98,7 +99,7 @@ export const layeredAgentProject = {
       kind: 'html-frame',
       title: '行为图：页面状态与可执行动作',
       description:
-        '支持拖拽、缩放、节点选择，并可查看动作来源与测试覆盖。图中数据来自公开 Lab，不包含真实业务数据。',
+        '直接读取 Lab 的 Behavior Manifest。选择节点可查看父子关系，并打开对应页面。',
       provenanceLabel: 'GENERATED FROM PUBLIC LAB · SYNTHETIC DATA',
     },
   ],

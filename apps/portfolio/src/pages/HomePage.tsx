@@ -13,6 +13,7 @@ export function HomePage() {
   return (
     <main className="page page-home">
       <HomeHero />
+      <ProjectPlayground />
       <section
         id="selected-work"
         className="home-section selected-work"
@@ -35,7 +36,6 @@ export function HomePage() {
           ))}
         </div>
       </section>
-      <ProjectPlayground />
       <CapabilityList />
     </main>
   )

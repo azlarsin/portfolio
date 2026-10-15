@@ -104,11 +104,11 @@ test("the onboarding guide connects route layers to the constrained Agent loop",
   assert.match(guideCss, /\.experience-guide \{[\s\S]*?overflow-y: auto/);
   assert.match(guideCss, /@media \(max-width: 720px\) \{[\s\S]*?\.experience-guide \{[\s\S]*?top: 66px[\s\S]*?right: 8px[\s\S]*?bottom: 8px[\s\S]*?left: 8px/);
 
-  assert.match(overlay, /把任务变成可验证的宿主动作/);
-  assert.match(overlay, /只调用 Manifest 允许的动作/);
-  assert.match(overlay, /检查 URL、界面层与数据结果/);
+  assert.match(overlay, /试着打开一笔订单/);
+  assert.match(overlay, /alternatives/);
+  assert.match(overlay, /本地规则匹配，不调用在线模型/);
   assert.match(overlay, /openRequest/);
-  assert.match(overlay, /页面层指南/);
+  assert.match(overlay, /了解页面操作/);
 });
 
 test("deep links are served by the frontend catch-all", async () => {

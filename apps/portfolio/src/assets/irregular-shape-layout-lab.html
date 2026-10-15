@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -121,6 +121,7 @@
         border-top: 1px solid rgba(133, 167, 255, .15);
       }
       .process-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(132, 214, 173, .1); }
+      .process-readout[hidden] { display: none; }
       .process-readout[aria-busy="true"] .process-dot { background: var(--warn); animation: process-pulse 900ms ease-in-out infinite; }
       .process-readout > strong { overflow: hidden; color: #dfe8fa; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
       .process-log {
@@ -186,38 +187,38 @@
   <body>
     <main class="lab">
       <aside class="panel" aria-label="Layout controls">
-        <p class="eyebrow">Public reconstruction / clean-room lab</p>
-        <h1>Irregular Shape Layout</h1>
-        <p class="intro">Synthetic seeded blobs arranged from sampled SVG boundaries. This is an approximate geometry study, not exact packing or a global optimum; angle refinement uses a bounded local-neighbor compactness objective.</p>
+        <p class="eyebrow">几何实验</p>
+        <h1>让形状各就各位</h1>
+        <p class="intro">调整形状和间距，看看它们怎样围绕中心排开。</p>
 
         <div class="controls" id="controls">
           <div class="field">
-            <label for="count">Total shape count <output id="count-output"></output></label>
+            <label for="count">形状数量 <output id="count-output"></output></label>
             <input id="count" type="range" min="3" max="8" value="5" />
           </div>
           <div class="field">
-            <label for="seed">Seed <output id="seed-output"></output></label>
+            <label for="seed">随机种子 <output id="seed-output"></output></label>
             <input id="seed" type="range" min="1" max="99" value="19" />
           </div>
           <div class="field">
-            <label for="gap">Target gap <output id="gap-output"></output></label>
+            <label for="gap">目标间距 <output id="gap-output"></output></label>
             <input id="gap" type="range" min="10" max="60" value="28" />
           </div>
           <div class="field">
-            <label for="density">Boundary samples <output id="density-output"></output></label>
+            <label for="density">边界采样点 <output id="density-output"></output></label>
             <input id="density" type="range" min="16" max="64" step="4" value="32" />
           </div>
           <div class="field">
-            <label for="center-shape">Center shape</label>
+            <label for="center-shape">中心形状</label>
             <select id="center-shape">
-              <option value="circle" selected>Circle</option>
-              <option value="ellipse">Ellipse — fish platter</option>
-              <option value="petal">Petal</option>
-              <option value="square">Square</option>
+              <option value="circle" selected>圆形</option>
+              <option value="ellipse">椭圆</option>
+              <option value="petal">花瓣</option>
+              <option value="square">方形</option>
             </select>
           </div>
           <div class="field">
-            <label for="playback-speed">Playback speed</label>
+            <label for="playback-speed">播放速度</label>
             <select id="playback-speed">
               <option value="0.5">0.5×</option>
               <option value="1" selected>1×</option>
@@ -226,37 +227,38 @@
             </select>
           </div>
           <div class="actions">
-            <button type="button" id="arrange">Arrange</button>
-            <button type="button" id="reset">Reset</button>
+            <button type="button" id="arrange">重新排布</button>
+            <button type="button" id="reset">重置</button>
           </div>
-          <label class="toggle" for="animate-search"><input id="animate-search" type="checkbox" /> Animate optional search playback</label>
-          <label class="toggle" for="debug"><input id="debug" type="checkbox" /> Show sampled-geometry debug overlay</label>
-          <p class="playback-note">Animation is optional. Playback speed changes only presentation, never the search or its deterministic result.</p>
+          <label class="toggle" for="animate-search"><input id="animate-search" type="checkbox" /> 播放计算过程</label>
+          <label class="toggle" for="debug"><input id="debug" type="checkbox" /> 显示采样点与测距线</label>
+          <label class="toggle" for="compare-before"><input id="compare-before" type="checkbox" /> 看排布前的位置</label>
+          <p class="playback-note">修改参数后点击“重新排布”。同一组参数会得到相同结果。</p>
         </div>
 
         <section class="status-card" aria-label="Measured result and search progress">
-          <p class="caption">Measured result</p>
-          <p class="status-line">Status: <strong id="status">Ready</strong></p>
-          <p class="status-line">Search: <strong id="search-progress">Idle</strong></p>
-          <p class="status-line">Minimum gap: <strong id="measured-gap">—</strong></p>
-          <p class="status-line">Iterations: <strong id="iterations">—</strong></p>
-          <p class="status-line">Compute time: <strong id="elapsed">—</strong></p>
+          <p class="caption">排布结果</p>
+          <p class="status-line">状态：<strong id="status">Ready</strong></p>
+          <p class="status-line">进度：<strong id="search-progress">Idle</strong></p>
+          <p class="status-line">最小间距：<strong id="measured-gap">—</strong></p>
+          <p class="status-line">迭代次数：<strong id="iterations">—</strong></p>
+          <p class="status-line">计算耗时：<strong id="elapsed">—</strong></p>
         </section>
 
-        <section class="method">
-          <p class="caption">Method and boundary</p>
+        <details class="method">
+          <summary>算法说明</summary>
           <ul>
             <li>Every center preset and outer blob is an SVG path sampled through path-length APIs, then explicitly transformed into world coordinates.</li>
             <li>Sampled minimum distance is guarded by segment intersections and point-in-polygon containment; overlap is invalid, not a positive gap.</li>
             <li>Angle refinement prefers valid candidates, then minimizes overlap and target-gap deficits before compacting adjacent outer shapes; it is not a global packing objective.</li>
             <li>This clean-room playback visualization exposes the same bounded search checkpoints without changing the computed arrangement.</li>
           </ul>
-        </section>
+        </details>
       </aside>
 
       <section class="workspace" id="workspace" aria-label="Irregular shape layout viewport" aria-busy="false" tabindex="-1">
         <header class="workspace-header">
-          <strong>Seeded synthetic geometry · local-only</strong>
+          <strong>生成轮廓 · 近似间距计算</strong>
           <span class="viewport-info" id="viewport-info">Viewport —</span>
           <div class="process-readout" id="process-readout" aria-busy="false">
             <span class="process-dot" aria-hidden="true"></span>
@@ -274,7 +276,7 @@
             <g id="labels"></g>
           </svg>
         </div>
-        <p class="legend">Debug: final placement rays, radial-search bounds on their original search rays, transformed sample points, nearest sampled pair, and current SVG viewport/crop information.</p>
+        <p class="legend" id="view-caption" aria-live="polite"></p>
       </section>
       <p class="visually-hidden" id="search-announcement" aria-live="polite" aria-atomic="true"></p>
     </main>
@@ -314,6 +316,7 @@
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
         const state = {
           shapes: [],
+          beforeShapes: [],
           settings: null,
           result: null,
           run: null,
@@ -930,6 +933,8 @@
           run.computeTime += performance.now() - setupStarted
           state.settings = settings
           state.shapes = shapes
+          state.beforeShapes = shapes.map((shape) => ({ ...shape }))
+          $('compare-before').checked = false
           state.result = null
           state.checkpoint = { phase: 'radial', event: 'starting', placedCount: 1, outerCount: settings.count - 1 }
           state.run = run
@@ -1048,11 +1053,11 @@
           }
           if (!result) return
 
-          const status = result.overlap ? ['Overlap guard triggered', 'bad'] : result.valid ? ['Converged to target gap', 'good'] : ['Bounded search stopped short', 'warn']
-          if (result.cropped && !result.overlap) status[0] += ' · crop warning'
+          const status = result.overlap ? ['检测到重叠', 'bad'] : result.valid ? ['已达到目标间距', 'good'] : ['未达到目标间距', 'warn']
+          if (result.cropped && !result.overlap) status[0] += ' · 部分超出画布'
           statusElement.textContent = status[0]
           statusElement.className = status[1]
-          $('search-progress').textContent = 'Complete · final score'
+          $('search-progress').textContent = '计算完成'
           $('measured-gap').textContent = result.overlap ? 'invalid / overlap' : `${result.minGap.toFixed(1)}px`
           $('iterations').textContent = String(result.iterations)
           $('elapsed').textContent = `${result.computeTime.toFixed(1)} ms`
@@ -1067,7 +1072,14 @@
           const { settings } = state
           if (!settings) return
 
-          const shapes = displayedShapes()
+          const before = $('compare-before').checked && !state.run
+          $('compare-before').disabled = Boolean(state.run)
+          const shapes = before ? state.beforeShapes : displayedShapes()
+          scene.dataset.view = before ? 'before' : 'after'
+          $('view-caption').textContent = before
+            ? '排布前：所有形状放在中心。取消勾选可回到排布结果。'
+            : settings.debug ? '排布后：圆点为采样点，连线表示测距与搜索范围。' : '排布后：勾选“看排布前的位置”可以比较变化。'
+          processReadout.hidden = !settings.animate && !settings.debug
           shapes.forEach((shape) => {
             const group = createSvg('g', { transform: `translate(${shape.x} ${shape.y}) rotate(${shape.rotation})` })
             group.append(createSvg('path', { d: shape.d, class: 'shape', fill: shape.color, stroke: 'rgba(237,242,255,.82)' }))
@@ -1078,8 +1090,10 @@
             layers.labels.append(label)
           })
 
-          renderSearchLayer(state.checkpoint)
-          if (settings.debug) renderDebug(shapes)
+          if (!before) {
+            renderSearchLayer(state.checkpoint)
+            if (settings.debug) renderDebug(shapes)
+          }
           renderStatus()
 
           if (state.run) {
@@ -1089,6 +1103,7 @@
           }
         }
 
+        $('compare-before').addEventListener('change', render)
         $('arrange').addEventListener('click', () => {
           arrange()
           focusWorkspaceOnMobile()

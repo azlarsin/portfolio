@@ -10,7 +10,7 @@ import {
  * refresh or a copied URL has all the state needed to restore the route stack.
  */
 export const STATIC_ROUTE_QUERY_PARAM = "route";
-const PRESERVED_SHELL_QUERY_PARAMS = ["embed", "agent_demo"] as const;
+const PRESERVED_SHELL_QUERY_PARAMS = ["embed", "agent_demo", "graph", "guide", "agent_cmd"] as const;
 
 export function isStaticDemoBuild() {
   return import.meta.env.VITE_STATIC_DEMO === "1";

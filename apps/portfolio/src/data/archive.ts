@@ -12,7 +12,7 @@ const pokeProject = {
   title: 'Poke：高保真移动原型编辑器',
   shortTitle: 'Poke',
   eyebrow: 'EARLY PRODUCT WORK',
-  summary: '支持界面绘制、交互编排和实时预览的移动原型工具',
+  summary: '改动按钮的颜色和动作，再到手机上试试。支持保存、导出和重新打开项目。',
   thesis:
     'Poke 是我在 2016–2018 年独立设计和开发的高保真移动原型编辑器。用户可以绘制页面、管理图层，为点击或滑动配置状态变化和页面跳转，并在网页或 Electron 桌面端实时预览。',
   period: '2016–2018 · 早期个人作品',

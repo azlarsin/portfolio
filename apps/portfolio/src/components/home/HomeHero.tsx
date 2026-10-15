@@ -29,12 +29,18 @@ export function HomeHero() {
         <div className="hero-actions">
           <AppLink
             className="button button-primary"
+            to={demoPlayerPath('poke-prototype-editor')}
+          >
+            {copy.home.openPokeDemo} <ArrowUpRight size={17} aria-hidden="true" />
+          </AppLink>
+          <AppLink
+            className="button button-secondary"
             to={demoPlayerPath(agentProject.demo?.experienceId || 'layered-route-agent')}
           >
             {copy.home.openAgentDemo}{' '}
             <ArrowUpRight size={17} aria-hidden="true" />
           </AppLink>
-          <AppLink className="button button-secondary" to="/#selected-work">
+          <AppLink className="text-link" to="/#selected-work">
             {copy.home.viewSelectedCase}{' '}
             <ArrowDown size={17} aria-hidden="true" />
           </AppLink>

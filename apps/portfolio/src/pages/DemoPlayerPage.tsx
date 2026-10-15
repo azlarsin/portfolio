@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import type { ProjectProvenance } from '../data/types'
+import { labSourceAtLocation, normalizeLabLocation } from '../app/labPlayerLocation'
 import {
   getDemoExperience,
   type DemoExperience,
@@ -37,10 +37,6 @@ function playerExperience(route: ResolvedRoute) {
 
 function experienceLabel(experience: DemoExperience, language: 'zh' | 'en') {
   return experience.name[language]
-}
-
-function statusProvenanceClass(provenance: ProjectProvenance) {
-  return `demo-player-provenance demo-player-provenance--${provenance}`
 }
 
 function ExperienceGuide({
@@ -87,15 +83,15 @@ function ExperienceGuide({
           {copy.demo.player.startHere} · {guide.duration} {copy.demo.player.minutes}
         </p>
         <p>{guide.summary}</p>
-        <p className="demo-guide-boundary">
-          <strong>{copy.demo.player.boundary}</strong>
-          {guide.boundary}
-        </p>
         <ol>
           {guide.steps.map((step) => (
             <li key={step}>{step}</li>
           ))}
         </ol>
+        <details className="demo-guide-boundary">
+          <summary>{copy.demo.player.boundary}</summary>
+          <p>{guide.boundary}</p>
+        </details>
       </div>
     </aside>
   )
@@ -124,7 +120,7 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
   const { language, copy } = useLanguage()
   const experience = playerExperience(route)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [guideDismissed, setGuideDismissed] = useState(false)
+  const [guideDismissed, setGuideDismissed] = useState(true)
   const [loaded, setLoaded] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
   const [attempt, setAttempt] = useState(0)
@@ -134,10 +130,35 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
   const menuButtonRef = useRef<HTMLButtonElement>(null)
   const firstLinkRef = useRef<HTMLAnchorElement>(null)
   const wasDrawerOpen = useRef(false)
+  const frameRef = useRef<HTMLIFrameElement>(null)
+  const isLab = experience?.id === 'layered-route-agent' || experience?.id === 'layered-agent-action-graph'
+  const [labLocation, setLabLocation] = useState(() => normalizeLabLocation(new URLSearchParams(route.search).get('lab')) || '/products')
+  const [frameSource] = useState(() => experience && isLab ? labSourceAtLocation(experience.source, labLocation) : experience?.source)
+  const [shareStatus, setShareStatus] = useState('')
+  const [shareFallback, setShareFallback] = useState('')
+
+  useEffect(() => {
+    if (!isLab || !experience) return
+    const origin = new URL(experience.source, window.location.href).origin
+    const receive = (event: MessageEvent) => {
+      if (event.source !== frameRef.current?.contentWindow || event.origin !== origin || event.data?.type !== 'portfolio:lab-location') return
+      const next = normalizeLabLocation(event.data.location)
+      if (!next) return
+      setLabLocation(next)
+      setShareStatus('')
+      setShareFallback('')
+      const url = new URL(window.location.href)
+      if (url.searchParams.get('lab') === next) return
+      url.searchParams.set('lab', next)
+      window.history.replaceState(window.history.state, '', url)
+    }
+    window.addEventListener('message', receive)
+    return () => window.removeEventListener('message', receive)
+  }, [isLab, experience])
 
   useEffect(() => {
     setDrawerOpen(false)
-    setGuideDismissed(false)
+    setGuideDismissed(true)
     setLoaded(false)
     setTimedOut(false)
     setAttempt(0)
@@ -202,6 +223,19 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
   }
 
   const title = experienceLabel(experience, language)
+  const standaloneSource = isLab ? labSourceAtLocation(experience.source, labLocation, true) : experience.source
+  const copyCurrentPage = async () => {
+    const url = new URL(window.location.href)
+    if (isLab) url.searchParams.set('lab', labLocation)
+    try {
+      await navigator.clipboard.writeText(url.toString())
+      setShareStatus(copy.demo.player.copied)
+      setShareFallback('')
+    } catch {
+      setShareStatus(copy.demo.player.copyManually)
+      setShareFallback(url.toString())
+    }
+  }
   const fullscreenLabel = fullscreen
     ? copy.demo.player.exitFullscreen
     : copy.demo.player.enterFullscreen
@@ -230,8 +264,9 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
       <div className="demo-player-content" inert={drawerOpen ? true : undefined}>
         <section className="demo-player-stage">
           <iframe
+            ref={frameRef}
             key={attempt}
-            src={experience.source}
+            src={frameSource}
             title={title}
             allow={experience.allow}
             sandbox={experience.sandbox}
@@ -239,6 +274,7 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
             onLoad={() => {
               setLoaded(true)
               setTimedOut(false)
+              if (isLab) frameRef.current?.contentWindow?.postMessage({ type: 'portfolio:lab-request-location' }, new URL(experience.source).origin)
             }}
             onError={() => setTimedOut(true)}
           />
@@ -269,10 +305,11 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
             <span />
           </button>
           <div className="demo-player-title">
-            <span className={statusProvenanceClass(experience.provenance)}>{experience.status}</span>
             <strong>{title}</strong>
           </div>
           <div className="demo-player-actions">
+            {isLab ? <button type="button" className="demo-player-share" aria-label={copy.demo.player.sharePage} onClick={() => void copyCurrentPage()}><span aria-hidden="true">⧉</span><span className="demo-player-share-label">{copy.demo.player.sharePage}</span></button> : null}
+            <a className="demo-player-open" href={standaloneSource} target="_blank" rel="noreferrer" aria-label={copy.demo.player.openSource}>↗ <span>{copy.demo.player.openSource}</span></a>
             <button
               type="button"
               className="demo-player-fullscreen"
@@ -300,6 +337,12 @@ export function DemoPlayerPage({ route }: { route: ResolvedRoute }) {
             </AppLink>
           </div>
         </header>
+
+        {shareStatus ? <div className="demo-player-share-result" role="status">
+          <span>{shareStatus}</span>
+          {shareFallback ? <input aria-label={copy.demo.player.sharePage} readOnly value={shareFallback} onFocus={(event) => event.currentTarget.select()} /> : null}
+          <button type="button" aria-label={copy.demo.player.dismissMessage} onClick={() => { setShareStatus(''); setShareFallback('') }}>×</button>
+        </div> : null}
 
         <ExperienceGuide
           experience={experience}
