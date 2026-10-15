@@ -19,6 +19,7 @@ export const baiduMapWorkbenchProject = {
     'JavaScript',
     'SVG',
     'RBush',
+    'Node.js',
     'Python / Tornado',
     'PostgreSQL / JSONB',
     'PHP / Yii2',
@@ -28,7 +29,7 @@ export const baiduMapWorkbenchProject = {
   impact: [
     '参与复杂地图作业前端的核心开发，在内部 SVG 地图体系中以 Map、Layer、Feature、Element 分层组织道路、轨迹、GPS 与业务标记。',
     '围绕视口变化处理瓦片差量装载、空间索引与几何筛选，支持空间要素的选择、编辑、关联、高亮、测距和动态标签；同时实现道路属性规格适配，完成后端数据规格与前端视觉模型之间的双向转换。',
-    '主导 PHP / Yii2 空间统计服务与 Python 批处理的设计、开发和迭代；同时在 Python / PostgreSQL 作业端扩展异步质检、回调防重、返工 / 验收状态流与 JSONB 例外分析。',
+    '主导统计计算与平台展示的设计、开发和迭代：计算由 Node.js 迁移至 Python，PHP / Yii2 用于统计平台展示；同时在 Python / PostgreSQL 作业端扩展异步质检、回调防重、返工 / 验收状态流与 JSONB 例外分析。',
     '在统计链路中使用 Elasticsearch count / search / scroll 检索并关联 MySQL 业务记录，形成采集、匹配、指令、回收与质检的阶段耗时指标。',
     '带领 5 名前端工程师完成地图作业、统计运营页面与相关工具交付，承担任务拆分、技术方案、关键问题处理和代码评审。',
   ],
@@ -38,7 +39,7 @@ export const baiduMapWorkbenchProject = {
     '道路、轨迹、GPS、车道与交通设施等空间要素',
     '选择、编辑、关联、高亮、测距与动态标签',
     'Python / Tornado、PostgreSQL / JSONB 作业流程',
-    'PHP / Yii2 指标 API、Python 批处理与 Elasticsearch / MySQL 查询',
+    'Node.js → Python 统计计算、PHP / Yii2 平台展示与 Elasticsearch / MySQL 查询',
     '5 人前端团队的任务拆分、方案与代码评审',
   ],
   facts: [
@@ -112,12 +113,13 @@ export const baiduMapWorkbenchProject = {
     },
     {
       id: 'statistics-pipeline',
-      title: '统计服务：连接业务记录与检索日志',
+      title: '统计项目：计算迁移与结果展示',
       paragraphs: [
-        '我主导整个众源空间数据统计项目的设计、开发与持续迭代。PHP / Yii2 API 覆盖批次、任务、设备、轨迹、路段、时间和里程等维度；Python 脚本按批次、日、小时与 15 分钟等周期编排统计任务，并完成地理数据抽取、分类和落盘。',
+        '我主导整个众源空间数据统计项目的设计、开发与持续迭代。统计计算最初使用 Node.js 实现，后因内存瓶颈迁移至 Python；PHP / Yii2 用于统计平台展示。',
+        'Python 脚本按批次、日、小时与 15 分钟等周期编排统计任务，完成地理数据抽取、分类和落盘；统计平台按批次、任务、设备、轨迹、路段、时间和里程等维度展示结果。',
         '链路耗时统计通过 Elasticsearch count / search / scroll 查询状态日志，再与 MySQL 业务记录关联，计算采集、匹配、指令、回收与质检阶段的耗时。',
       ],
-      phase: 'PHP / Yii2 · Python · Elasticsearch / MySQL',
+      phase: 'Node.js → Python · PHP / Yii2 展示 · Elasticsearch / MySQL',
     },
     {
       id: 'team-delivery',

@@ -177,6 +177,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'JavaScript',
       'SVG',
       'RBush',
+      'Node.js',
       'Python / Tornado',
       'PostgreSQL / JSONB',
       'PHP / Yii2',
@@ -186,7 +187,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
     impact: [
       'Contributed core work to a complex map-operations frontend, organizing roads, tracks, GPS, and business annotations through Map, Layer, Feature, and Element boundaries in the internal SVG map system.',
       'Handled tile-difference loading, spatial indexing, and geometric filtering as the viewport changed; supported selection, editing, association, highlighting, measurement, and dynamic labels for spatial features; and implemented road-attribute adaptation between backend data specifications and frontend visual models.',
-      'Led the design, development, and iteration of PHP / Yii2 spatial-statistics services and Python batch jobs while extending asynchronous QA, callback deduplication, rework / acceptance state, and JSONB exception analysis in the Python / PostgreSQL operations backend.',
+      'Led the design, development, and iteration of statistics computation and presentation, migrating calculations from Node.js to Python and using PHP / Yii2 for platform presentation. Extended asynchronous QA, callback deduplication, rework / acceptance state, and JSONB exception analysis in the Python / PostgreSQL operations backend.',
       'Used Elasticsearch count / search / scroll and MySQL business records to derive stage timings across collection, matching, command, recycling, and QA.',
       'Led five frontend engineers delivering map operations, statistics consoles, and related tools, including task breakdown, technical design, difficult issues, and code review.',
     ],
@@ -196,7 +197,7 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       'Road, track, GPS, lane, and traffic-facility features',
       'Selection, editing, association, highlighting, measurement, and dynamic labels',
       'Python / Tornado and PostgreSQL / JSONB operations flows',
-      'PHP / Yii2 metrics APIs, Python batch jobs, and Elasticsearch / MySQL queries',
+      'Node.js → Python statistics computation, PHP / Yii2 presentation, and Elasticsearch / MySQL queries',
       'Task breakdown, technical review, and code review for a five-person frontend team',
     ],
     facts: [
@@ -270,12 +271,13 @@ export const projectTranslationsEn: Record<string, PortfolioProjectTranslation> 
       },
       {
         id: 'statistics-pipeline',
-        title: 'Statistics service: connecting business records and search logs',
+        title: 'Statistics project: migrating computation and presenting results',
         paragraphs: [
-          'I led the overall design, development, and ongoing iteration of the crowdsourced spatial-data statistics project. PHP / Yii2 APIs covered batches, tasks, devices, tracks, road segments, time, and mileage, while Python jobs scheduled statistics at batch, daily, hourly, and fifteen-minute intervals and extracted and classified geographic data.',
+          'I led the overall design, development, and ongoing iteration of the crowdsourced spatial-data statistics project. Calculations were initially implemented in Node.js, then migrated to Python after encountering memory limitations. PHP / Yii2 handled presentation of statistics in the platform.',
+          'Python jobs scheduled statistics at batch, daily, hourly, and fifteen-minute intervals and extracted, classified, and wrote geographic data to disk. The platform presented results by batch, task, device, track, road segment, time, and mileage.',
           'Pipeline timing used Elasticsearch count / search / scroll over state logs and joined the results to MySQL business records to derive collection, matching, command, recycling, and QA durations.',
         ],
-        phase: 'PHP / Yii2 · Python · Elasticsearch / MySQL',
+        phase: 'Node.js → Python · PHP / Yii2 presentation · Elasticsearch / MySQL',
       },
       {
         id: 'team-delivery',

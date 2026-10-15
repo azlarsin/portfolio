@@ -753,7 +753,7 @@ describe('portfolio acceptance contracts', () => {
     )
 
     expect(baiduExperience?.overview).toBe(
-      '在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器；主导整个统计项目的设计、开发与持续迭代，涵盖 PHP / Python 数据服务与批处理。',
+      '在百度带领 5 名前端工程师，项目覆盖复杂 SVG 地图数据作业、空间统计与百家号图文编辑器；主导整个统计项目的设计、开发与持续迭代，涵盖 Node.js / Python 统计计算及 PHP / Yii2 统计平台展示。',
     )
   })
 
@@ -763,7 +763,7 @@ describe('portfolio acceptance contracts', () => {
     )
     const baiduText = JSON.stringify(baiduExperience)
 
-    expect(baiduText).toContain('PHP / Yii2 众源统计服务及指标 API')
+    expect(baiduText).toContain('PHP / Yii2 用于统计平台展示')
     expect(baiduText).toContain('Elasticsearch count / search / scroll')
     expect(baiduText).toContain('PostgreSQL')
     expect(baiduText).toContain('JSONB 例外分析')
