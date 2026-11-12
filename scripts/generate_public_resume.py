@@ -283,14 +283,6 @@ def build_styles() -> dict[str, ParagraphStyle]:
             spaceBefore=3,
             spaceAfter=1,
         ),
-        "contact": ParagraphStyle(
-            "Contact",
-            parent=base,
-            fontSize=7.2,
-            leading=10,
-            alignment=TA_CENTER,
-            textColor=colors.HexColor("#777777"),
-        ),
     }
 
 
@@ -346,14 +338,6 @@ def job_header(
 
 def bullet(text: str, styles: dict[str, ParagraphStyle]) -> Paragraph:
     return Paragraph(f"• {plain_text(text)}", styles["bullet"])
-
-
-class ContactParagraph(Paragraph):
-    """Center the final contact line between the body and the page footer."""
-
-    def drawOn(self, canvas, x, y, _sW=0):
-        footer_top = 16 * mm
-        super().drawOn(canvas, x, (y + footer_top) / 2, _sW)
 
 
 def make_footer(note: str, website: str):
@@ -456,12 +440,21 @@ def build_resume() -> None:
     story.extend(bullet(text, styles) for text in profile["selfEvaluation"])
 
     contact = profile["contact"]
-    contact_text = (
-        f"Phone: {plain_text(contact['phone'])}"
-        f" &nbsp;|&nbsp; Email: {plain_text(contact['email'])}"
-        f" &nbsp;|&nbsp; GitHub: {plain_text(contact['github'])}"
+    phone_uri = "tel:" + "".join(contact["phone"].split())
+    story.extend(
+        [
+            Spacer(1, 8),
+            section("与我联系", styles, width),
+            Spacer(1, 4),
+            Paragraph(
+                f'手机：<link href="{escape(phone_uri, quote=True)}">'
+                f"<u>{plain_text(contact['phone'])}</u></link>"
+                f" &nbsp;&nbsp;|&nbsp;&nbsp; 邮箱：{plain_text(contact['email'])}"
+                f" &nbsp;&nbsp;|&nbsp;&nbsp; GitHub：{plain_text(contact['github'])}",
+                styles["body"],
+            ),
+        ]
     )
-    story.append(ContactParagraph(contact_text, styles["contact"]))
 
     footer = make_footer(document["footer"], contact["website"])
     print(f"Using regular font: {regular_font}")
