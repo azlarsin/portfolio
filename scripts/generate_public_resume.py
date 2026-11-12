@@ -283,6 +283,14 @@ def build_styles() -> dict[str, ParagraphStyle]:
             spaceBefore=3,
             spaceAfter=1,
         ),
+        "contact": ParagraphStyle(
+            "Contact",
+            parent=base,
+            fontSize=7.2,
+            leading=10,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor("#777777"),
+        ),
     }
 
 
@@ -340,22 +348,21 @@ def bullet(text: str, styles: dict[str, ParagraphStyle]) -> Paragraph:
     return Paragraph(f"• {plain_text(text)}", styles["bullet"])
 
 
-def make_footer(note: str, contact: dict[str, str]):
-    contact_text = (
-        f"Phone: {contact['phone']}"
-        f"  |  Email: {contact['email']}"
-        f"  |  GitHub: {contact['github']}"
-    )
+class ContactParagraph(Paragraph):
+    """Center the final contact line between the body and the page footer."""
 
+    def drawOn(self, canvas, x, y, _sW=0):
+        footer_top = 16 * mm
+        super().drawOn(canvas, x, (y + footer_top) / 2, _sW)
+
+
+def make_footer(note: str, website: str):
     def footer(canvas, doc) -> None:
         canvas.saveState()
-        canvas.setFont("ResumeSans", 7.2)
-        canvas.setFillColor(colors.HexColor("#777777"))
-        canvas.drawCentredString(A4[0] / 2, 21 * mm, contact_text)
         canvas.setFont("ResumeSans", 7)
         canvas.setFillColor(colors.HexColor("#8a8a8a"))
         canvas.drawString(doc.leftMargin, 13 * mm, note)
-        canvas.drawCentredString(A4[0] / 2, 13 * mm, contact["website"])
+        canvas.drawCentredString(A4[0] / 2, 13 * mm, website)
         canvas.drawRightString(A4[0] - doc.rightMargin, 13 * mm, f"{doc.page}")
         canvas.restoreState()
 
@@ -448,7 +455,15 @@ def build_resume() -> None:
     story.extend([Spacer(1, 5), section("自我评价", styles, width), Spacer(1, 3)])
     story.extend(bullet(text, styles) for text in profile["selfEvaluation"])
 
-    footer = make_footer(document["footer"], profile["contact"])
+    contact = profile["contact"]
+    contact_text = (
+        f"Phone: {plain_text(contact['phone'])}"
+        f" &nbsp;|&nbsp; Email: {plain_text(contact['email'])}"
+        f" &nbsp;|&nbsp; GitHub: {plain_text(contact['github'])}"
+    )
+    story.append(ContactParagraph(contact_text, styles["contact"]))
+
+    footer = make_footer(document["footer"], contact["website"])
     print(f"Using regular font: {regular_font}")
     print(f"Using bold font: {bold_font}")
     print(f"Writing resume to: {OUTPUT}")

@@ -323,9 +323,8 @@ describe('portfolio acceptance contracts', () => {
       resumePage.lastIndexOf('resume-website'),
     )
     expect(resumePage).toContain('profile.contact.website')
-    expect(generator).toContain("contact['website']")
-    expect(generator).toContain("More: {plain_text(contact['website'])}")
-    expect(generator).not.toContain("Website: {plain_text(contact['website'])}")
+    expect(generator).toContain('contact["website"]')
+    expect(generator).not.toContain('More:')
     expect(generator).toContain('drawCentredString(A4[0] / 2, 13 * mm, website)')
   })
 
