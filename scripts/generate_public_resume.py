@@ -33,6 +33,7 @@ except ModuleNotFoundError as exc:
 
 ROOT = Path(__file__).resolve().parents[1]
 PROFILE_PATH = ROOT / "apps" / "portfolio" / "src" / "data" / "profile.json"
+ADDITIONS_PATH = ROOT / "scripts" / "resume-additions.json"
 OUTPUT = ROOT / "output" / "pdf" / "resume-public.pdf"
 
 REGULAR_FONT_CANDIDATES = (
@@ -54,15 +55,20 @@ BOLD_FONT_CANDIDATES = (
 )
 
 
-def load_profile() -> dict[str, Any]:
+def load_json(path: Path) -> dict[str, Any]:
     try:
-        profile = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError as exc:
-        raise FileNotFoundError(f"Resume profile not found: {PROFILE_PATH}") from exc
+        raise FileNotFoundError(f"Resume data not found: {path}") from exc
     except json.JSONDecodeError as exc:
         raise ValueError(
-            f"Invalid JSON in {PROFILE_PATH}:{exc.lineno}:{exc.colno}: {exc.msg}"
+            f"Invalid JSON in {path}:{exc.lineno}:{exc.colno}: {exc.msg}"
         ) from exc
+
+
+def load_profile() -> dict[str, Any]:
+    profile = load_json(PROFILE_PATH)
+    additions = load_json(ADDITIONS_PATH)
 
     required_fields = (
         "name",
@@ -84,6 +90,19 @@ def load_profile() -> dict[str, Any]:
 
     if not isinstance(profile["experience"], list) or not profile["experience"]:
         raise ValueError("Resume profile must contain at least one experience entry")
+
+    # Resume-specific wording and recent roles do not affect portfolio pages.
+    if "strengths" in additions:
+        profile["strengths"] = additions["strengths"]
+    for company, highlights in additions.get("prependHighlights", {}).items():
+        experience = next(
+            (item for item in profile["experience"] if item["company"] == company),
+            None,
+        )
+        if experience is None:
+            raise ValueError(f"Resume highlights refer to an unknown company: {company}")
+        experience["highlights"] = highlights + experience["highlights"]
+    profile["experience"] = additions["experience"] + profile["experience"]
 
     missing_contact_fields = [
         field for field in ("github", "email", "phone") if not profile["contact"].get(field)
@@ -190,6 +209,7 @@ def build_styles() -> dict[str, ParagraphStyle]:
         leading=12.2,
         textColor=colors.HexColor("#242424"),
         wordWrap="CJK",
+        spaceBefore=1.5,
         spaceAfter=2,
     )
     return {
@@ -263,14 +283,6 @@ def build_styles() -> dict[str, ParagraphStyle]:
             spaceBefore=3,
             spaceAfter=1,
         ),
-        "note": ParagraphStyle(
-            "Note",
-            parent=base,
-            fontSize=7.2,
-            leading=10,
-            alignment=TA_CENTER,
-            textColor=colors.HexColor("#777777"),
-        ),
     }
 
 
@@ -328,13 +340,22 @@ def bullet(text: str, styles: dict[str, ParagraphStyle]) -> Paragraph:
     return Paragraph(f"• {plain_text(text)}", styles["bullet"])
 
 
-def make_footer(note: str, website: str):
+def make_footer(note: str, contact: dict[str, str]):
+    contact_text = (
+        f"Phone: {contact['phone']}"
+        f"  |  Email: {contact['email']}"
+        f"  |  GitHub: {contact['github']}"
+    )
+
     def footer(canvas, doc) -> None:
         canvas.saveState()
+        canvas.setFont("ResumeSans", 7.2)
+        canvas.setFillColor(colors.HexColor("#777777"))
+        canvas.drawCentredString(A4[0] / 2, 21 * mm, contact_text)
         canvas.setFont("ResumeSans", 7)
         canvas.setFillColor(colors.HexColor("#8a8a8a"))
         canvas.drawString(doc.leftMargin, 13 * mm, note)
-        canvas.drawCentredString(A4[0] / 2, 13 * mm, website)
+        canvas.drawCentredString(A4[0] / 2, 13 * mm, contact["website"])
         canvas.drawRightString(A4[0] - doc.rightMargin, 13 * mm, f"{doc.page}")
         canvas.restoreState()
 
@@ -354,7 +375,7 @@ def build_resume() -> None:
         leftMargin=17 * mm,
         rightMargin=17 * mm,
         topMargin=13 * mm,
-        bottomMargin=19 * mm,
+        bottomMargin=27 * mm,
         title=document["title"],
         author=document["author"],
         subject=document["subject"],
@@ -427,16 +448,7 @@ def build_resume() -> None:
     story.extend([Spacer(1, 5), section("自我评价", styles, width), Spacer(1, 3)])
     story.extend(bullet(text, styles) for text in profile["selfEvaluation"])
 
-    contact = profile["contact"]
-    contact_text = (
-        f"Phone: {plain_text(contact['phone'])}"
-        f" &nbsp;|&nbsp; Email: {plain_text(contact['email'])}"
-        f" &nbsp;|&nbsp; GitHub: {plain_text(contact['github'])}"
-        f" &nbsp;|&nbsp; More: {plain_text(contact['website'])}"
-    )
-    story.extend([Spacer(1, 5), Paragraph(contact_text, styles["note"])])
-
-    footer = make_footer(document["footer"], contact["website"])
+    footer = make_footer(document["footer"], profile["contact"])
     print(f"Using regular font: {regular_font}")
     print(f"Using bold font: {bold_font}")
     print(f"Writing resume to: {OUTPUT}")

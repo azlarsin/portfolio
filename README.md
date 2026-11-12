@@ -174,10 +174,10 @@ Featured 的数量和首页叙事是有意控制的。新增前应确认它是�
 
 - `data/profile.ts` 提供 TypeScript 类型与经历要点展开函数。
 - Experience、Resume 和全站页脚直接读取同一份 JSON。
-- `scripts/generate_public_resume.py` 读取同一 JSON 生成 PDF，不再硬编码工作经历。
+- `scripts/generate_public_resume.py` 读取同一 JSON，应用 `scripts/resume-additions.json` 中仅用于投递的核心能力表述、经历要点与近期经历，生成带手机号的 PDF。
 - `data/resume.ts` 导入稳定产物 `output/pdf/resume-public.pdf`，并由 Web 层设置下载文件名。
 
-修改履历时先更新 `profile.json`，同时检查 HTML 页面与 PDF。不要直接编辑生成后的 PDF，也不要只改网页副本。
+公开页面履历维护在 `profile.json`；仅用于 PDF 的履历补充维护在 `scripts/resume-additions.json`，不修改 portfolio 页面内容。修改后重新生成 PDF 并检查排版，不直接编辑 PDF 产物。
 
 生成 PDF 需要 Python 3、ReportLab 和可用的中文字体：
 
