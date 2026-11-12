@@ -48,7 +48,7 @@ export const siteCopy = {
       eyebrow: 'FRONTEND TECH LEAD / FULL STACK ENGINEER',
       titleLines: ['复杂系统的前端架构', '与全栈交付'],
       intro:
-        '曾任美餐前端负责人、百度高级研发工程师。工作涵盖企业后台架构、业务 SDK、地图数据作业与富文本编辑器，承担技术方案、核心开发与团队管理。',
+        '曾任美餐前端负责人、百度资深研发工程师。工作涵盖企业后台架构、业务 SDK、地图数据作业与富文本编辑器，承担技术方案、核心开发与团队管理。',
       openAgentDemo: 'Agent 演示',
       viewSelectedCase: '查看精选案例',
       downloadResume: '查看简历',
@@ -315,7 +315,7 @@ export const siteCopy = {
       eyebrow: 'FRONTEND TECH LEAD / FULL STACK ENGINEER',
       titleLines: ['Frontend architecture', 'and full-stack delivery'],
       intro:
-        'Former Frontend Lead at Meican and Senior Software Engineer at Baidu. Work spans enterprise consoles, business SDKs, map tools, and rich-text editors.',
+        'Former Frontend Lead at Meican and Staff Software Engineer at Baidu. Work spans enterprise consoles, business SDKs, map tools, and rich-text editors.',
       openAgentDemo: 'Agent demo',
       viewSelectedCase: 'Selected work',
       downloadResume: 'View résumé',

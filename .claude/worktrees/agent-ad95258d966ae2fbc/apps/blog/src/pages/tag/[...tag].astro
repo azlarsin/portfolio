@@ -1,0 +1,90 @@
+---
+import type { GetStaticPaths } from 'astro';
+import EntryCard from '../../components/EntryCard.astro';
+import Pagination from '../../components/Pagination.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+  getPublicArticles,
+  getTagCounts,
+  legacyTagSlug,
+  pageCount,
+  pageItems,
+  tagUrl,
+} from '../../lib/content';
+
+export const getStaticPaths = (async () => {
+  const articles = await getPublicArticles();
+  return getTagCounts(articles).flatMap(([tag]) => {
+    const taggedArticles = articles.filter((article) => article.data.tags.includes(tag));
+    const slug = legacyTagSlug(tag);
+    const totalPages = pageCount(taggedArticles);
+    const homePath = tagUrl(tag);
+    const routes = [{
+      params: { tag: slug },
+      props: {
+        tag,
+        articles: pageItems(taggedArticles, 1),
+        articleCount: taggedArticles.length,
+        currentPage: 1,
+        totalPages,
+        basePath: homePath,
+        isCompatibilityAlias: false,
+      },
+    }];
+
+    for (let page = 2; page <= totalPages; page += 1) {
+      routes.push({
+        params: { tag: `${slug}/p/${page}` },
+        props: {
+          tag,
+          articles: pageItems(taggedArticles, page),
+          articleCount: taggedArticles.length,
+          currentPage: page,
+          totalPages,
+          basePath: homePath,
+          isCompatibilityAlias: false,
+        },
+      });
+    }
+
+    // The previous site generated this route even for single-page tags. Keep
+    // it as a noindex alias so inbound historical links retain their content.
+    if (totalPages === 1) {
+      routes.push({
+        params: { tag: `${slug}/p/2` },
+        props: {
+          tag,
+          articles: taggedArticles,
+          articleCount: taggedArticles.length,
+          currentPage: 1,
+          totalPages,
+          basePath: homePath,
+          isCompatibilityAlias: true,
+        },
+      });
+    }
+
+    return routes;
+  });
+}) satisfies GetStaticPaths;
+
+const { tag, articles, articleCount, currentPage, totalPages, basePath, isCompatibilityAlias } = Astro.props;
+---
+
+<BaseLayout
+  title={`标签：${tag}`}
+  description={`Azlar Notes 中关于「${tag}」的文章。`}
+  canonicalPath={isCompatibilityAlias ? basePath : undefined}
+  noindex={isCompatibilityAlias}
+>
+  <section class="page page-narrow">
+    <p class="eyebrow">Tag</p>
+    <h1 class="page-title">{tag}</h1>
+    <p class="page-lead">{isCompatibilityAlias ? '这是保留的历史分页链接。' : ''}{articleCount} 篇文章与这个线索相连。</p>
+    {isCompatibilityAlias && <p class="compatibility-note"><a href={basePath}>查看「{tag}」标签首页</a></p>}
+    <div class="entry-list" style="margin-top: 48px;">
+      {articles.map((article) => <EntryCard article={article} />)}
+    </div>
+    {!isCompatibilityAlias && <Pagination currentPage={currentPage} totalPages={totalPages} basePath={basePath} />}
+  </section>
+</BaseLayout>

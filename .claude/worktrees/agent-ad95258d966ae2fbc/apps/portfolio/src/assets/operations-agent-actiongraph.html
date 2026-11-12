@@ -1,0 +1,1120 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>行为图交互示意</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        background: #080c17;
+        color: #edf2ff;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+      }
+
+      body {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        background:
+          radial-gradient(circle at 18% 15%, rgba(83, 106, 208, 0.13), transparent 27%),
+          radial-gradient(circle at 82% 84%, rgba(38, 201, 157, 0.08), transparent 24%), #080c17;
+      }
+
+      button {
+        font: inherit;
+      }
+
+      .topbar {
+        position: relative;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        min-height: 52px;
+        padding: 8px 13px;
+        border-bottom: 1px solid rgba(167, 184, 223, 0.12);
+        background: rgba(8, 12, 23, 0.82);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        white-space: nowrap;
+      }
+
+      .brand-mark {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        border: 1px solid rgba(137, 160, 255, 0.48);
+        border-radius: 8px;
+        background: linear-gradient(145deg, rgba(103, 129, 244, 0.3), rgba(51, 71, 142, 0.07));
+        box-shadow: inset 0 0 16px rgba(106, 134, 255, 0.15);
+      }
+
+      .brand-mark::before,
+      .brand-mark::after {
+        position: absolute;
+        content: "";
+        border-radius: 50%;
+        background: #8ba2ff;
+        box-shadow: 0 0 10px rgba(139, 162, 255, 0.75);
+      }
+
+      .brand-mark::before {
+        top: 6px;
+        left: 6px;
+        width: 5px;
+        height: 5px;
+      }
+
+      .brand-mark::after {
+        right: 5px;
+        bottom: 5px;
+        width: 7px;
+        height: 7px;
+      }
+
+      .brand-text strong,
+      .brand-text span {
+        display: block;
+      }
+
+      .brand-text strong {
+        color: #eef2ff;
+        font-size: 11px;
+        letter-spacing: 0.04em;
+      }
+
+      .brand-text span {
+        margin-top: 2px;
+        color: #586681;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 7px;
+        letter-spacing: 0.12em;
+      }
+
+      .mode-tabs {
+        display: flex;
+        gap: 2px;
+        padding: 3px;
+        border: 1px solid rgba(147, 165, 207, 0.12);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.025);
+      }
+
+      .mode-tab,
+      .tool-button {
+        border: 0;
+        color: #73809b;
+        cursor: pointer;
+      }
+
+      .mode-tab {
+        padding: 5px 10px;
+        border-radius: 5px;
+        background: transparent;
+        font-size: 9px;
+        font-weight: 600;
+        transition: 140ms ease;
+      }
+
+      .mode-tab:hover,
+      .mode-tab.is-active {
+        color: #f3f6ff;
+        background: rgba(126, 151, 255, 0.14);
+      }
+
+      .topbar-spacer {
+        flex: 1;
+      }
+
+      .safe-badge {
+        padding: 5px 8px;
+        border: 1px solid rgba(53, 213, 165, 0.2);
+        border-radius: 999px;
+        color: #55d8b0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 7px;
+        letter-spacing: 0.09em;
+        white-space: nowrap;
+      }
+
+      .tools {
+        display: flex;
+        gap: 4px;
+      }
+
+      .tool-button {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 8px;
+        border: 1px solid rgba(147, 165, 207, 0.12);
+        border-radius: 7px;
+        background: rgba(255, 255, 255, 0.025);
+        font-size: 10px;
+      }
+
+      .tool-button:hover {
+        color: #eef2ff;
+        border-color: rgba(135, 158, 250, 0.32);
+        background: rgba(120, 145, 247, 0.1);
+      }
+
+      .workspace {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 218px;
+        min-height: 0;
+      }
+
+      .canvas-wrap {
+        position: relative;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+      }
+
+      #graph {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+      }
+
+      #graph.is-panning {
+        cursor: grabbing;
+      }
+
+      .edge {
+        fill: none;
+        stroke: #52617e;
+        stroke-linecap: round;
+        stroke-width: 1.35;
+        opacity: 0.27;
+        transition: opacity 160ms ease, stroke 160ms ease, stroke-width 160ms ease;
+      }
+
+      .edge.is-active {
+        stroke: #829bff;
+        stroke-width: 2.2;
+        opacity: 0.92;
+        filter: url(#edge-glow);
+      }
+
+      .node {
+        cursor: pointer;
+        outline: none;
+      }
+
+      .node-card,
+      .node-accent,
+      .node-status {
+        transition: 160ms ease;
+      }
+
+      .node-card {
+        fill: #0e1424;
+        stroke: #26334d;
+        stroke-width: 1;
+      }
+
+      .node:hover .node-card,
+      .node:focus .node-card {
+        fill: #121b30;
+        stroke: #526baf;
+      }
+
+      .node.is-selected .node-card {
+        fill: #131c32;
+        stroke: #829bff;
+        stroke-width: 1.6;
+        filter: url(#node-glow);
+      }
+
+      .node-type {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 8.5px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        opacity: 0.78;
+      }
+
+      .node-label {
+        fill: #dfe6f7;
+        font-size: 13.5px;
+        font-weight: 600;
+      }
+
+      .node-note {
+        fill: #64718c;
+        font-size: 8.5px;
+      }
+
+      .node-status {
+        fill: #101728;
+        stroke: #34415c;
+        stroke-width: 1;
+      }
+
+      .node-status-mark {
+        fill: #8996ae;
+        font-size: 8px;
+        font-weight: 800;
+        text-anchor: middle;
+      }
+
+      body[data-mode="coverage"] .node[data-status="covered"] .node-status {
+        fill: rgba(45, 211, 159, 0.14);
+        stroke: rgba(63, 222, 173, 0.7);
+      }
+
+      body[data-mode="coverage"] .node[data-status="covered"] .node-status-mark {
+        fill: #4ee1b6;
+      }
+
+      body[data-mode="coverage"] .node[data-status="review"] .node-status {
+        fill: rgba(247, 183, 77, 0.12);
+        stroke: rgba(247, 183, 77, 0.68);
+      }
+
+      body[data-mode="coverage"] .node[data-status="review"] .node-status-mark {
+        fill: #f6be67;
+      }
+
+      .canvas-hint,
+      .legend {
+        position: absolute;
+        z-index: 2;
+        border: 1px solid rgba(151, 170, 212, 0.11);
+        background: rgba(8, 13, 25, 0.82);
+        backdrop-filter: blur(12px);
+      }
+
+      .canvas-hint {
+        top: 10px;
+        left: 11px;
+        padding: 6px 8px;
+        border-radius: 7px;
+        color: #596882;
+        font-size: 8px;
+      }
+
+      .legend {
+        bottom: 10px;
+        left: 11px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        max-width: calc(100% - 22px);
+        padding: 7px 9px;
+        border-radius: 8px;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #66738d;
+        font-size: 8px;
+        white-space: nowrap;
+      }
+
+      .legend-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 2px;
+        background: var(--legend-color);
+        box-shadow: 0 0 9px color-mix(in srgb, var(--legend-color), transparent 55%);
+      }
+
+      .inspector {
+        min-width: 0;
+        padding: 15px;
+        overflow: auto;
+        border-left: 1px solid rgba(167, 184, 223, 0.1);
+        background: rgba(9, 14, 26, 0.78);
+      }
+
+      .inspector-eyebrow {
+        margin: 0 0 7px;
+        color: #657492;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 7px;
+        font-weight: 700;
+        letter-spacing: 0.13em;
+      }
+
+      .inspector h2 {
+        margin: 0;
+        color: #f0f4ff;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.015em;
+      }
+
+      .inspector-type {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 9px;
+        color: #90a4eb;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 8px;
+        letter-spacing: 0.08em;
+      }
+
+      .inspector-type::before {
+        width: 6px;
+        height: 6px;
+        border-radius: 2px;
+        background: currentColor;
+        content: "";
+      }
+
+      .inspector-description {
+        margin: 16px 0;
+        color: #8e9ab1;
+        font-size: 10px;
+        line-height: 1.65;
+      }
+
+      .detail-list {
+        display: grid;
+        gap: 11px;
+        margin: 0;
+      }
+
+      .detail-list div {
+        padding-top: 10px;
+        border-top: 1px solid rgba(153, 172, 214, 0.09);
+      }
+
+      .detail-list dt {
+        margin-bottom: 4px;
+        color: #586680;
+        font-size: 7px;
+        letter-spacing: 0.09em;
+      }
+
+      .detail-list dd {
+        margin: 0;
+        color: #bdc8de;
+        font-size: 9px;
+        line-height: 1.45;
+      }
+
+      .pipeline {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 1px;
+        min-height: 70px;
+        border-top: 1px solid rgba(167, 184, 223, 0.1);
+        background: rgba(8, 12, 23, 0.9);
+      }
+
+      .pipeline-step {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 9px;
+        min-width: 0;
+        padding: 10px 13px;
+      }
+
+      .pipeline-step:not(:last-child)::after {
+        position: absolute;
+        top: 50%;
+        right: -4px;
+        z-index: 1;
+        width: 7px;
+        height: 7px;
+        border-top: 1px solid #36445f;
+        border-right: 1px solid #36445f;
+        background: #080c17;
+        content: "";
+        transform: translateY(-50%) rotate(45deg);
+      }
+
+      .pipeline-index {
+        color: #566887;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 18px;
+      }
+
+      .pipeline-step strong,
+      .pipeline-step span {
+        display: block;
+      }
+
+      .pipeline-step strong {
+        color: #cbd5e9;
+        font-size: 8px;
+        letter-spacing: 0.06em;
+      }
+
+      .pipeline-step span:not(.pipeline-index) {
+        margin-top: 3px;
+        overflow: hidden;
+        color: #53617b;
+        font-size: 7px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 660px) {
+        .topbar {
+          gap: 7px;
+          padding: 7px 9px;
+        }
+
+        .brand-text span,
+        .safe-badge,
+        .tool-button:first-child,
+        .mode-tab span {
+          display: none;
+        }
+
+        .mode-tab {
+          padding: 5px 7px;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .inspector {
+          position: absolute;
+          right: 8px;
+          bottom: 8px;
+          left: 8px;
+          z-index: 4;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+          gap: 10px;
+          max-height: 116px;
+          padding: 10px 11px;
+          overflow: hidden;
+          border: 1px solid rgba(145, 166, 218, 0.17);
+          border-radius: 10px;
+          background: rgba(9, 14, 27, 0.93);
+          box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
+          backdrop-filter: blur(14px);
+        }
+
+        .inspector h2 {
+          font-size: 13px;
+        }
+
+        .inspector-description {
+          margin: 7px 0 0;
+          font-size: 8px;
+          line-height: 1.4;
+        }
+
+        .inspector-type,
+        .detail-list div:nth-child(n + 2) {
+          display: none;
+        }
+
+        .detail-list div {
+          padding-top: 7px;
+        }
+
+        .detail-list dd {
+          font-size: 8px;
+        }
+
+        .legend {
+          right: 8px;
+          bottom: 130px;
+          left: auto;
+          max-width: 190px;
+        }
+
+        .canvas-hint {
+          display: none;
+        }
+
+        .pipeline {
+          min-height: 58px;
+          overflow-x: auto;
+          grid-template-columns: repeat(4, minmax(116px, 1fr));
+        }
+
+        .pipeline-step {
+          gap: 6px;
+          padding: 8px 9px;
+        }
+      }
+    </style>
+  </head>
+  <body data-mode="prior">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div class="brand-text">
+          <strong>Behavior Graph</strong>
+          <span>OFFLINE KNOWLEDGE PREPARATION</span>
+        </div>
+      </div>
+      <div class="mode-tabs" role="group" aria-label="视图模式">
+        <button class="mode-tab is-active" data-mode="prior">行为<span>先验</span></button>
+        <button class="mode-tab" data-mode="coverage">回归<span>覆盖</span></button>
+      </div>
+      <div class="topbar-spacer"></div>
+      <span class="safe-badge">PUBLIC · SANITIZED</span>
+      <div class="tools" aria-label="画布控制">
+        <button class="tool-button" data-action="fit">Fit</button>
+        <button class="tool-button" data-action="out" aria-label="缩小">−</button>
+        <button class="tool-button" data-action="in" aria-label="放大">+</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="canvas-wrap">
+        <svg id="graph" aria-label="脱敏行为图" role="img">
+          <defs>
+            <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.7" fill="#202b42" opacity="0.42"></circle>
+            </pattern>
+            <filter id="node-glow" x="-40%" y="-60%" width="180%" height="220%">
+              <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+              <feMerge>
+                <feMergeNode in="blur"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+            <filter id="edge-glow" x="-30%" y="-200%" width="160%" height="500%">
+              <feGaussianBlur stdDeviation="2.2" result="blur"></feGaussianBlur>
+              <feMerge>
+                <feMergeNode in="blur"></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#grid)"></rect>
+          <g id="viewport">
+            <g id="edges"></g>
+            <g id="nodes"></g>
+          </g>
+        </svg>
+        <div class="canvas-hint">拖拽平移 · 滚轮缩放 · 点选节点查看知识</div>
+        <div class="legend" aria-label="节点类型图例"></div>
+      </div>
+
+      <aside class="inspector" aria-live="polite">
+        <div>
+          <p class="inspector-eyebrow">SELECTED KNOWLEDGE</p>
+          <h2 id="detail-title"></h2>
+          <span class="inspector-type" id="detail-type"></span>
+          <p class="inspector-description" id="detail-description"></p>
+        </div>
+        <dl class="detail-list">
+          <div>
+            <dt id="detail-label-one"></dt>
+            <dd id="detail-value-one"></dd>
+          </div>
+          <div>
+            <dt id="detail-label-two"></dt>
+            <dd id="detail-value-two"></dd>
+          </div>
+          <div>
+            <dt id="detail-label-three"></dt>
+            <dd id="detail-value-three"></dd>
+          </div>
+        </dl>
+      </aside>
+    </main>
+
+    <footer class="pipeline" aria-label="Agent 工作链路">
+      <div class="pipeline-step">
+        <span class="pipeline-index">01</span>
+        <div><strong>EXPLORE</strong><span>Puppeteer + DOM 状态</span></div>
+      </div>
+      <div class="pipeline-step">
+        <span class="pipeline-index">02</span>
+        <div><strong>COMPILE</strong><span>构建行为图与前置条件</span></div>
+      </div>
+      <div class="pipeline-step">
+        <span class="pipeline-index">03</span>
+        <div><strong>GROUND</strong><span>约束模型候选与上下文</span></div>
+      </div>
+      <div class="pipeline-step">
+        <span class="pipeline-index">04</span>
+        <div><strong>VERIFY</strong><span>生成用例并浏览器回放</span></div>
+      </div>
+    </footer>
+
+    <script>
+      const SVG_NS = 'http://www.w3.org/2000/svg'
+      const CARD = { width: 144, height: 60 }
+      const typeMeta = {
+        page: { label: 'PAGE', color: '#7f9cff' },
+        navigation: { label: 'NAVIGATION', color: '#43d9b0' },
+        tab: { label: 'TAB', color: '#46c8ef' },
+        popover: { label: 'POPOVER', color: '#f4a65f' },
+        presenter: { label: 'PRESENTER', color: '#b58aff' },
+        action: { label: 'ACTION', color: '#ef78ae' },
+      }
+
+      const nodes = [
+        {
+          id: 'workspace',
+          type: 'page',
+          label: '运营工作台',
+          note: '根页面状态',
+          x: 20,
+          y: 222,
+          status: 'covered',
+          description: '离线探索的起点，记录全局导航与当前可见页面范围。',
+          prior: ['已认证页面', '页面类型与可见入口', '确定当前操作边界'],
+          coverage: ['打开工作台', '页面可交互', '自动检查'],
+        },
+        {
+          id: 'tasks',
+          parent: 'workspace',
+          type: 'navigation',
+          label: '任务导航',
+          note: '全局入口',
+          x: 182,
+          y: 58,
+          status: 'covered',
+          description: '从全局入口进入高频任务域，候选由本地索引优先召回。',
+          prior: ['运营工作台', '入口标题与关键词', '本地检索可直达'],
+          coverage: ['进入任务域', '导航结果可见', '自动检查'],
+        },
+        {
+          id: 'search',
+          parent: 'workspace',
+          type: 'popover',
+          label: '全局搜索',
+          note: '语义入口',
+          x: 182,
+          y: 222,
+          status: 'review',
+          description: '本地候选不足时承接自然语言，模型只返回受约束的结构化意图。',
+          prior: ['用户自然语言', '图谱摘要与 DOM 上下文', '澄清或标准动作'],
+          coverage: ['输入模糊表达', '响应类型有效', '可视化复核'],
+        },
+        {
+          id: 'settings',
+          parent: 'workspace',
+          type: 'navigation',
+          label: '配置导航',
+          note: '次级入口',
+          x: 182,
+          y: 386,
+          status: 'covered',
+          description: '表示另一条可重放的导航分支，保留进入条件与页面状态。',
+          prior: ['运营工作台', '入口类别与路径模式', '导航后等待状态'],
+          coverage: ['进入配置域', '目标页面激活', '自动检查'],
+        },
+        {
+          id: 'task-list',
+          parent: 'tasks',
+          type: 'page',
+          label: '任务列表',
+          note: '列表页',
+          x: 344,
+          y: 30,
+          status: 'covered',
+          description: '页面节点提供稳定的上下文，后续动作只在该状态下有效。',
+          prior: ['任务导航', '列表页标题与结构', '筛选或打开详情'],
+          coverage: ['打开列表页', '列表结构存在', '自动检查'],
+        },
+        {
+          id: 'filter',
+          parent: 'tasks',
+          type: 'popover',
+          label: '筛选面板',
+          note: '临时叠层',
+          x: 344,
+          y: 140,
+          status: 'covered',
+          description: '记录浮层触发方式与当前顶层容器，避免命中被遮盖的旧界面。',
+          prior: ['任务列表', '触发控件与顶层叠层', '选择筛选项'],
+          coverage: ['打开筛选面板', '浮层可见', '自动检查'],
+        },
+        {
+          id: 'detail',
+          parent: 'search',
+          type: 'presenter',
+          label: '任务详情',
+          note: '无路由叠盖页',
+          x: 344,
+          y: 250,
+          status: 'covered',
+          description: '用基础页面与动作路径表达没有独立路由的深层页面。',
+          prior: ['列表或搜索结果', '标准动作与前置步骤', '详情面板激活'],
+          coverage: ['查找并打开详情', '命令面板完成执行', '可视化复核'],
+        },
+        {
+          id: 'rules',
+          parent: 'settings',
+          type: 'page',
+          label: '规则列表',
+          note: '配置页',
+          x: 344,
+          y: 386,
+          status: 'covered',
+          description: '配置域中的页面知识同样被编译为可检索节点与动作词表。',
+          prior: ['配置导航', '页面标题与关键词', '查看或编辑规则'],
+          coverage: ['打开规则列表', '页面状态匹配', '自动检查'],
+        },
+        {
+          id: 'preview',
+          parent: 'task-list',
+          type: 'action',
+          label: '预览结果',
+          note: '可执行动作',
+          x: 506,
+          y: 18,
+          status: 'covered',
+          description: '模型给出意图后，执行器使用图中保存的规范动作完成落地。',
+          prior: ['任务列表', '标准动作标签', '结果状态可观察'],
+          coverage: ['执行预览动作', '结果面板打开', '自动检查'],
+        },
+        {
+          id: 'filter-option',
+          parent: 'filter',
+          type: 'action',
+          label: '选择筛选项',
+          note: '浮层内动作',
+          x: 506,
+          y: 132,
+          status: 'covered',
+          description: 'TreeWalker 在当前可见浮层中定位文本，再回溯真实可点击元素。',
+          prior: ['筛选面板已打开', '可见文本与点击祖先', '列表完成刷新'],
+          coverage: ['输入筛选指令', '筛选项被选择', '可视化复核'],
+        },
+        {
+          id: 'detail-tab',
+          parent: 'detail',
+          type: 'tab',
+          label: '详情标签页',
+          note: '局部状态',
+          x: 506,
+          y: 246,
+          status: 'covered',
+          description: '将当前激活项和可选项注入上下文，缩小模型的判断空间。',
+          prior: ['详情面板已激活', '当前与可选标签', '切换后等待内容'],
+          coverage: ['切换详情标签', '活动状态更新', '自动检查'],
+        },
+        {
+          id: 'edit',
+          parent: 'rules',
+          type: 'presenter',
+          label: '编辑面板',
+          note: '多步子流程',
+          x: 506,
+          y: 374,
+          status: 'review',
+          description: '深层动作由行为图补齐前置步骤；信息不足时先请求澄清。',
+          prior: ['规则列表', '打开与编辑动作序列', '保存前需要确认'],
+          coverage: ['发起编辑指令', '面板进入编辑状态', '可视化复核'],
+        },
+        {
+          id: 'confirm',
+          parent: 'detail-tab',
+          type: 'action',
+          label: '确认操作',
+          note: '受约束终点',
+          x: 668,
+          y: 246,
+          status: 'review',
+          description: '高风险或语义不完整的动作保留确认步骤，不由模型直接猜测。',
+          prior: ['详情标签页', '用户确认', '结果可撤回或观察'],
+          coverage: ['进入确认流程', '等待显式确认', '人工复核'],
+        },
+        {
+          id: 'feedback',
+          parent: 'edit',
+          type: 'action',
+          label: '结果反馈',
+          note: '状态闭环',
+          x: 668,
+          y: 374,
+          status: 'covered',
+          description: '执行结果、截图和结构化记录进入回归报告，支持定位失败阶段。',
+          prior: ['编辑面板', '执行状态与截图', '反馈到图谱或规则'],
+          coverage: ['保存执行结果', '报告材料齐全', '自动检查'],
+        },
+      ]
+
+      const nodeById = Object.fromEntries(nodes.map((node) => [node.id, node]))
+      const edges = nodes
+        .filter((node) => node.parent)
+        .map((node) => ({ source: node.parent, target: node.id }))
+      const viewport = document.querySelector('#viewport')
+      const edgeLayer = document.querySelector('#edges')
+      const nodeLayer = document.querySelector('#nodes')
+      const graph = document.querySelector('#graph')
+      const legend = document.querySelector('.legend')
+      const canvas = document.querySelector('.canvas-wrap')
+      let mode = 'prior'
+      let selectedId = 'detail'
+      let transform = { x: 0, y: 0, scale: 1 }
+      let dragState = null
+
+      function svgElement(name, attributes = {}) {
+        const element = document.createElementNS(SVG_NS, name)
+        for (const [key, value] of Object.entries(attributes)) {
+          element.setAttribute(key, String(value))
+        }
+        return element
+      }
+
+      function createEdge(edge) {
+        const source = nodeById[edge.source]
+        const target = nodeById[edge.target]
+        const startX = source.x + CARD.width
+        const startY = source.y + CARD.height / 2
+        const endX = target.x
+        const endY = target.y + CARD.height / 2
+        const middleX = (startX + endX) / 2
+        const path = svgElement('path', {
+          class: 'edge',
+          d: `M ${startX} ${startY} C ${middleX} ${startY}, ${middleX} ${endY}, ${endX} ${endY}`,
+          'data-source': edge.source,
+          'data-target': edge.target,
+        })
+        return path
+      }
+
+      function createNode(node) {
+        const meta = typeMeta[node.type]
+        const group = svgElement('g', {
+          class: 'node',
+          transform: `translate(${node.x} ${node.y})`,
+          tabindex: '0',
+          role: 'button',
+          'aria-label': `${node.label}，${meta.label}`,
+          'data-id': node.id,
+          'data-status': node.status,
+        })
+        const card = svgElement('rect', {
+          class: 'node-card',
+          width: CARD.width,
+          height: CARD.height,
+          rx: 10,
+        })
+        const accent = svgElement('rect', {
+          class: 'node-accent',
+          width: 4,
+          height: CARD.height,
+          rx: 2,
+          fill: meta.color,
+        })
+        const type = svgElement('text', {
+          class: 'node-type',
+          x: 14,
+          y: 18,
+          fill: meta.color,
+        })
+        type.textContent = meta.label
+        const label = svgElement('text', { class: 'node-label', x: 14, y: 37 })
+        label.textContent = node.label
+        const note = svgElement('text', { class: 'node-note', x: 14, y: 51 })
+        note.textContent = node.note
+        const status = svgElement('circle', {
+          class: 'node-status',
+          cx: CARD.width - 17,
+          cy: 17,
+          r: 8,
+        })
+        const statusMark = svgElement('text', {
+          class: 'node-status-mark',
+          x: CARD.width - 17,
+          y: 20,
+        })
+        statusMark.textContent = node.status === 'covered' ? '✓' : '·'
+        group.append(card, accent, type, label, note, status, statusMark)
+        group.addEventListener('click', (event) => {
+          event.stopPropagation()
+          selectNode(node.id)
+        })
+        group.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            selectNode(node.id)
+          }
+        })
+        return group
+      }
+
+      function renderGraph() {
+        edges.forEach((edge) => edgeLayer.appendChild(createEdge(edge)))
+        nodes.forEach((node) => nodeLayer.appendChild(createNode(node)))
+        for (const [type, meta] of Object.entries(typeMeta)) {
+          const item = document.createElement('span')
+          item.className = 'legend-item'
+          const dot = document.createElement('span')
+          dot.className = 'legend-dot'
+          dot.style.setProperty('--legend-color', meta.color)
+          const label = document.createElement('span')
+          label.textContent = meta.label
+          item.dataset.type = type
+          item.append(dot, label)
+          legend.appendChild(item)
+        }
+      }
+
+      function selectedPath(id) {
+        const path = new Set()
+        let current = nodeById[id]
+        while (current) {
+          path.add(current.id)
+          current = current.parent ? nodeById[current.parent] : null
+        }
+        return path
+      }
+
+      function updateSelection() {
+        const path = selectedPath(selectedId)
+        document.querySelectorAll('.node').forEach((element) => {
+          element.classList.toggle('is-selected', element.dataset.id === selectedId)
+        })
+        document.querySelectorAll('.edge').forEach((element) => {
+          const active = path.has(element.dataset.source) && path.has(element.dataset.target)
+          element.classList.toggle('is-active', active)
+        })
+        updateInspector()
+      }
+
+      function updateInspector() {
+        const node = nodeById[selectedId]
+        const values = mode === 'prior' ? node.prior : node.coverage
+        const labels =
+          mode === 'prior'
+            ? ['PRECONDITION', 'CAPTURED KNOWLEDGE', 'RUNTIME ROLE']
+            : ['GENERATED CASE', 'AUTOMATED CHECK', 'REVIEW LEVEL']
+        document.querySelector('#detail-title').textContent = node.label
+        document.querySelector('#detail-type').textContent = typeMeta[node.type].label
+        document.querySelector('#detail-description').textContent = node.description
+        labels.forEach((label, index) => {
+          document.querySelector(`#detail-label-${['one', 'two', 'three'][index]}`).textContent = label
+          document.querySelector(`#detail-value-${['one', 'two', 'three'][index]}`).textContent = values[index]
+        })
+      }
+
+      function selectNode(id) {
+        selectedId = id
+        updateSelection()
+      }
+
+      function updateTransform() {
+        viewport.setAttribute(
+          'transform',
+          `translate(${transform.x} ${transform.y}) scale(${transform.scale})`,
+        )
+      }
+
+      function fitGraph() {
+        const width = canvas.clientWidth
+        const height = canvas.clientHeight
+        const graphWidth = Math.max(...nodes.map((node) => node.x)) + CARD.width + 36
+        const graphHeight = Math.max(...nodes.map((node) => node.y)) + CARD.height + 12
+        const padding = width < 660 ? 18 : 24
+        const scale = Math.min((width - padding * 2) / graphWidth, (height - padding * 2) / graphHeight)
+        transform.scale = Math.max(width < 660 ? 0.4 : 0.34, Math.min(scale, 1.05))
+        transform.x = (width - graphWidth * transform.scale) / 2
+        transform.y = (height - graphHeight * transform.scale) / 2
+        updateTransform()
+      }
+
+      function zoomBy(multiplier, anchorX = canvas.clientWidth / 2, anchorY = canvas.clientHeight / 2) {
+        const oldScale = transform.scale
+        const nextScale = Math.max(0.32, Math.min(oldScale * multiplier, 2.4))
+        const worldX = (anchorX - transform.x) / oldScale
+        const worldY = (anchorY - transform.y) / oldScale
+        transform.x = anchorX - worldX * nextScale
+        transform.y = anchorY - worldY * nextScale
+        transform.scale = nextScale
+        updateTransform()
+      }
+
+      document.querySelectorAll('.mode-tab').forEach((button) => {
+        button.addEventListener('click', () => {
+          mode = button.dataset.mode
+          document.body.dataset.mode = mode
+          document.querySelectorAll('.mode-tab').forEach((tab) => {
+            tab.classList.toggle('is-active', tab === button)
+          })
+          updateInspector()
+        })
+      })
+
+      document.querySelectorAll('.tool-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          if (button.dataset.action === 'fit') fitGraph()
+          if (button.dataset.action === 'in') zoomBy(1.18)
+          if (button.dataset.action === 'out') zoomBy(1 / 1.18)
+        })
+      })
+
+      graph.addEventListener(
+        'wheel',
+        (event) => {
+          event.preventDefault()
+          const rect = graph.getBoundingClientRect()
+          zoomBy(event.deltaY < 0 ? 1.1 : 1 / 1.1, event.clientX - rect.left, event.clientY - rect.top)
+        },
+        { passive: false },
+      )
+
+      graph.addEventListener('pointerdown', (event) => {
+        if (event.target.closest('.node')) return
+        dragState = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          originX: transform.x,
+          originY: transform.y,
+        }
+        graph.setPointerCapture(event.pointerId)
+        graph.classList.add('is-panning')
+      })
+
+      graph.addEventListener('pointermove', (event) => {
+        if (!dragState || dragState.pointerId !== event.pointerId) return
+        transform.x = dragState.originX + event.clientX - dragState.startX
+        transform.y = dragState.originY + event.clientY - dragState.startY
+        updateTransform()
+      })
+
+      function endDrag(event) {
+        if (!dragState || dragState.pointerId !== event.pointerId) return
+        dragState = null
+        graph.classList.remove('is-panning')
+      }
+
+      graph.addEventListener('pointerup', endDrag)
+      graph.addEventListener('pointercancel', endDrag)
+      window.addEventListener('resize', fitGraph)
+
+      renderGraph()
+      updateSelection()
+      requestAnimationFrame(fitGraph)
+    </script>
+  </body>
+</html>

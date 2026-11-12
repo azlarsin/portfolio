@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Poke editor architecture</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body { display: grid; min-height: 100vh; place-items: center; color: #eef4ff; background: radial-gradient(circle at 50% 0, #182542, transparent 44%), #090e18; }
+    .shell { width: min(1040px, 100%); padding: 34px; }
+    header { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 30px; }
+    .eyebrow { margin: 0 0 8px; color: #6f83a9; font-size: 9px; font-weight: 800; letter-spacing: .18em; }
+    h1 { margin: 0; font: 500 28px Georgia, serif; }
+    .legend { color: #7486a6; font: 9px ui-monospace, monospace; }
+    .flow { display: grid; grid-template-columns: 190px 34px minmax(330px,1fr) 34px 190px; align-items: stretch; }
+    .stack { display: grid; gap: 10px; }
+    .card { position: relative; padding: 16px; border: 1px solid rgba(141,165,209,.18); border-radius: 12px; background: linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018)); box-shadow: 0 16px 34px rgba(0,0,0,.13); }
+    .card span { display: block; margin-bottom: 7px; color: #7185aa; font-size: 8px; font-weight: 800; letter-spacing: .14em; }
+    .card strong { display: block; font-size: 12px; }
+    .card p { margin: 7px 0 0; color: #8190aa; font-size: 9px; line-height: 1.65; }
+    .card.accent { border-color: rgba(91,121,255,.38); background: linear-gradient(145deg,rgba(79,105,238,.16),rgba(255,255,255,.025)); }
+    .core { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; padding: 12px; border: 1px solid rgba(95,126,255,.32); border-radius: 16px; background: rgba(29,42,75,.22); }
+    .core-title { padding: 8px 8px 2px; }
+    .core-title span { color: #7790d7; font-size: 8px; font-weight: 800; letter-spacing: .15em; }
+    .core-title h2 { margin: 6px 0 0; font: 500 21px Georgia, serif; }
+    .model { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .model .card { min-height: 122px; }
+    .pipeline { display: grid; grid-template-columns: repeat(5,1fr); gap: 5px; }
+    .step { padding: 10px 6px; border-radius: 8px; color: #8fa0bf; background: rgba(255,255,255,.045); font-size: 8px; text-align: center; }
+    .arrow { display: grid; place-items: center; color: #55698e; font-size: 19px; }
+    footer { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 14px; }
+    footer div { padding: 10px 12px; border: 1px dashed rgba(125,147,190,.17); border-radius: 9px; color: #7586a5; font-size: 8px; text-align: center; }
+    @media(max-width:800px){.flow{grid-template-columns:1fr}.arrow{height:34px;transform:rotate(90deg)}.stack{grid-template-columns:repeat(2,1fr)}footer{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header><div><p class="eyebrow">SOURCE-VERIFIED SYSTEM MODEL</p><h1>一套编辑器内核，两种运行时</h1></div><span class="legend">2016–2018 · ARCHIVE RECONSTRUCTION</span></header>
+    <section class="flow">
+      <div class="stack">
+        <div class="card accent"><span>WEB RUNTIME</span><strong>Browser Development</strong><p>React 编辑器直接运行于浏览器，完成画布、状态与交互编排。</p></div>
+        <div class="card"><span>DESKTOP SHELL</span><strong>Electron Bridge</strong><p>本地项目、文件导入导出、窗口状态、更新与设备预览由宿主桥接。</p></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="core">
+        <div class="core-title"><span>SHARED EDITOR CORE</span><h2>React · Redux · Immutable</h2></div>
+        <div class="model">
+          <div class="card"><span>DOCUMENT</span><strong>Project → Group → Page</strong><p>页面持有元素列表与元素映射；项目保留当前页面、画布和启动页。</p></div>
+          <div class="card"><span>SCENE GRAPH</span><strong>Element + State</strong><p>矩形、文字、图片、容器及系统控件统一进入可选择、变换的元素模型。</p></div>
+          <div class="card"><span>INTERACTION</span><strong>Event → Transition</strong><p>手势事件可驱动元素状态或页面跳转，并携带时序与缓动参数。</p></div>
+        </div>
+        <div class="pipeline"><div class="step">SELECT</div><div class="step">TRANSFORM</div><div class="step">COMMIT</div><div class="step">HISTORY</div><div class="step">PREVIEW</div></div>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stack">
+        <div class="card"><span>AUTHORING</span><strong>Canvas + Inspector</strong><p>直接绘制、图层管理、属性编辑、对齐分布、组合与组件化。</p></div>
+        <div class="card accent"><span>DELIVERY</span><strong>Preview + Export</strong><p>实时预览、项目分享与静态导出沿用同一份文档模型。</p></div>
+      </div>
+    </section>
+    <footer><div>页面与图层双索引</div><div>撤销 / 重做状态历史</div><div>Bezier 交互时序</div><div>宿主能力边界隔离</div></footer>
+  </main>
+</body>
+</html>

@@ -55,7 +55,7 @@ export const profileEn: ProfileTranslation = {
     },
     {
       company: 'Baidu',
-      role: 'Senior R&D Engineer',
+      role: 'Staff R&D Engineer',
       start: '2017.11',
       end: '2019.11',
       period: '2017.11—2019.11',

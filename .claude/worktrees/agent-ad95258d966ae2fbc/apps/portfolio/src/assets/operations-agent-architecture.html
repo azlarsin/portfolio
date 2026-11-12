@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>可迁移 Agent 双路径架构</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+      body {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        color: #dfe7fb;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(72, 123, 229, .13), transparent 26%),
+          radial-gradient(circle at 82% 86%, rgba(119, 78, 210, .11), transparent 25%),
+          #080c17;
+        font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 13px 16px 11px;
+        border-bottom: 1px solid rgba(153, 174, 219, .13);
+      }
+      header span, footer span {
+        color: #6f7d9d;
+        font: 700 8px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: .12em;
+      }
+      header strong { display: block; margin-top: 5px; font-size: 14px; }
+      header > span {
+        padding: 5px 8px;
+        border: 1px solid rgba(89, 219, 172, .24);
+        border-radius: 999px;
+        color: #5ed9ad;
+        letter-spacing: .07em;
+        white-space: nowrap;
+      }
+      main { min-height: 0; padding: 8px; }
+      svg { width: 100%; height: 100%; display: block; }
+      .lane { fill: rgba(13, 20, 36, .72); stroke-width: 1; }
+      .lane.static { stroke: rgba(88, 143, 255, .3); }
+      .lane.runtime { stroke: rgba(120, 94, 222, .3); }
+      .node rect { fill: #10182a; stroke: #2a3a5a; stroke-width: 1.2; }
+      .node .accent { stroke-width: 3; }
+      .node text.title { fill: #e2e8f8; font-size: 13px; font-weight: 700; }
+      .node text.note { fill: #70809f; font-size: 9px; }
+      .node text.tag { font: 700 8px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; }
+      .node.blue .accent, .node.blue text.tag { stroke: #6299ff; fill: #77a7ff; }
+      .node.purple .accent, .node.purple text.tag { stroke: #a68aff; fill: #b49cff; }
+      .node.cyan .accent, .node.cyan text.tag { stroke: #e07acb; fill: #e895d7; }
+      .node.green .accent, .node.green text.tag { stroke: #47d4a2; fill: #58dfaf; }
+      .node.yellow .accent, .node.yellow text.tag { stroke: #eab85c; fill: #f1c46e; }
+      .flow { fill: none; stroke: #596c94; stroke-width: 1.5; marker-end: url(#arrow); }
+      .flow.blue { stroke: #527fd0; }
+      .flow.purple { stroke: #7d68cb; }
+      .flow.cyan { stroke: #bb619f; }
+      .flow.green { stroke: #419d80; }
+      .flow.yellow { stroke: #ac8747; }
+      .flow.optional { stroke-dasharray: 5 5; opacity: .78; }
+      .caption { fill: #5f6f90; font: 8px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .decision { fill: #121a2b; stroke: #516891; stroke-width: 1.2; }
+      .decision-text { fill: #cbd6ec; font-size: 10px; font-weight: 700; text-anchor: middle; }
+      .pulse { animation: pulse 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+      @keyframes pulse { 50% { filter: drop-shadow(0 0 8px rgba(79, 212, 164, .3)); } }
+      footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px 16px;
+        padding: 10px 15px;
+        border-top: 1px solid rgba(153, 174, 219, .13);
+      }
+      footer span { display: inline-flex; align-items: center; gap: 6px; letter-spacing: .04em; }
+      footer i { width: 7px; height: 7px; border-radius: 2px; background: var(--c); }
+      @media (max-width: 620px) {
+        html, body { overflow: hidden; }
+        main {
+          padding: 4px;
+          overflow: auto;
+          overscroll-behavior: contain;
+          touch-action: pan-x pan-y;
+        }
+        svg {
+          width: 920px;
+          min-width: 920px;
+          height: auto;
+          min-height: 484px;
+        }
+        header strong { font-size: 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div><span>PORTABLE AGENT ARCHITECTURE</span><strong>双路径行为知识构建与统一运行闭环</strong></div>
+      <span>PUBLIC · SANITIZED</span>
+    </header>
+    <main>
+      <svg viewBox="0 0 1180 620" role="img" aria-label="可迁移 Agent 双路径架构流程图">
+        <defs>
+          <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#1c2941" opacity=".55" /></pattern>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#65779d" /></marker>
+        </defs>
+        <rect width="1180" height="620" fill="url(#dots)" />
+
+        <rect class="lane static" x="22" y="26" width="370" height="230" rx="16" />
+        <text class="caption" x="42" y="49">PATH A · SOURCE AVAILABLE · LAYERED ROUTE LAB</text>
+        <g class="node blue" transform="translate(42 72)"><rect width="140" height="72" rx="10"/><line class="accent" x1="0" y1="10" x2="0" y2="62"/><text class="tag" x="14" y="22">SOURCE</text><text class="title" x="14" y="43">TypeScript 代码</text><text class="note" x="14" y="59">routes · handlers · surfaces</text></g>
+        <g class="node blue" transform="translate(230 72)"><rect width="140" height="72" rx="10"/><line class="accent" x1="0" y1="10" x2="0" y2="62"/><text class="tag" x="14" y="22">ANALYZE</text><text class="title" x="14" y="43">路由 AST + 特征扫描</text><text class="note" x="14" y="59">0 次页面爬取</text></g>
+        <g class="node blue" transform="translate(136 164)"><rect width="160" height="68" rx="10"/><line class="accent" x1="0" y1="10" x2="0" y2="58"/><text class="tag" x="14" y="21">COMPILE</text><text class="title" x="14" y="42">高置信行为知识</text><text class="note" x="14" y="57">路由 · 动作 · 来源证据</text></g>
+        <path class="flow blue" d="M182 108 H230"/><path class="flow blue" d="M300 144 V154 Q300 174 296 184"/>
+
+        <rect class="lane runtime" x="22" y="278" width="370" height="230" rx="16" />
+        <text class="caption" x="42" y="301">PATH B · BLACK BOX / RUNTIME COMPLEX</text>
+        <g class="node purple" transform="translate(42 324)"><rect width="140" height="72" rx="10"/><line class="accent" x1="0" y1="10" x2="0" y2="62"/><text class="tag" x="14" y="22">ORCHESTRATE</text><text class="title" x="14" y="43">研发期 Agent 编排</text><text class="note" x="14" y="59">主 Agent · 子 Agent</text></g>
+        <g class="node purple" transform="translate(230 324)"><rect width="140" height="72" rx="10"/><line class="accent" x1="0" y1="10" x2="0" y2="62"/><text class="tag" x="14" y="22">EXPLORE</text><text class="title" x="14" y="43">Puppeteer / DOM</text><text class="note" x="14" y="59">真实页面状态</text></g>
+        <g class="node purple" transform="translate(136 416)"><rect width="160" height="68" rx="10"/><line class="accent" x1="0" y1="10" x2="0" y2="58"/><text class="tag" x="14" y="21">MERGE</text><text class="title" x="14" y="42">多样本行为知识</text><text class="note" x="14" y="57">OCR 仅作尝试性补充</text></g>
+        <path class="flow purple" d="M182 360 H230"/><path class="flow purple" d="M300 396 V406 Q300 426 296 436"/><path class="flow purple optional" d="M42 453 H126"/>
+
+        <g class="node green pulse" transform="translate(438 236)"><rect width="170" height="94" rx="14"/><line class="accent" x1="0" y1="12" x2="0" y2="82"/><text class="tag" x="17" y="26">UNIFIED CONTRACT</text><text class="title" x="17" y="52">Behavior Manifest</text><text class="note" x="17" y="70">可版本化 · 可检索 · 可测试</text><text class="note" x="17" y="84">同一种 ActionGraph</text></g>
+        <path class="flow blue" d="M296 198 H410 Q438 198 438 246"/><path class="flow purple" d="M296 450 H410 Q438 450 438 320"/>
+
+        <g class="node green" transform="translate(620 152)"><rect width="150" height="74" rx="11"/><line class="accent" x1="0" y1="10" x2="0" y2="64"/><text class="tag" x="14" y="23">RETRIEVE</text><text class="title" x="14" y="45">本地索引</text><text class="note" x="14" y="61">别名 · 实体 · 参数</text></g>
+        <path class="flow green" d="M608 267 H612 Q620 267 620 211"/>
+        <polygon class="decision" points="850,145 912,189 850,233 788,189"/>
+        <text class="decision-text" x="850" y="185">唯一</text><text class="decision-text" x="850" y="199">召回？</text>
+        <path class="flow green" d="M770 189 H788"/><text class="caption" x="788" y="138">LOCAL FIRST</text>
+        <text class="caption" x="932" y="178">是</text><text class="caption" x="858" y="252">否</text>
+        <g class="node cyan" transform="translate(800 270)"><rect width="130" height="70" rx="10"/><line class="accent" x1="0" y1="9" x2="0" y2="61"/><text class="tag" x="13" y="22">OPTIONAL</text><text class="title" x="13" y="43">LLM 语义补全</text><text class="note" x="13" y="58">仅低置信进入</text></g>
+        <path class="flow cyan optional" d="M850 233 V270"/>
+
+        <g class="node green" transform="translate(986 152)"><rect width="158" height="74" rx="11"/><line class="accent" x1="0" y1="10" x2="0" y2="64"/><text class="tag" x="14" y="23">PLAN</text><text class="title" x="14" y="45">受约束 Planner</text><text class="note" x="14" y="61">Schema + Graph 校验</text></g>
+        <path class="flow green" d="M912 189 H986"/><path class="flow cyan optional" d="M930 305 H966 Q986 305 986 218"/>
+
+        <g class="node green" transform="translate(986 270)"><rect width="158" height="74" rx="11"/><line class="accent" x1="0" y1="10" x2="0" y2="64"/><text class="tag" x="14" y="23">EXECUTE</text><text class="title" x="14" y="45">确定性执行器</text><text class="note" x="14" y="61">Guard · Action · Wait</text></g>
+        <path class="flow green" d="M1065 226 V270"/>
+        <g class="node green" transform="translate(986 388)"><rect width="158" height="74" rx="11"/><line class="accent" x1="0" y1="10" x2="0" y2="64"/><text class="tag" x="14" y="23">VERIFY</text><text class="title" x="14" y="45">状态观测与断言</text><text class="note" x="14" y="61">Trace · Result · Audit</text></g>
+        <path class="flow green" d="M1065 344 V388"/>
+
+        <g class="node yellow" transform="translate(654 430)"><rect width="170" height="76" rx="11"/><line class="accent" x1="0" y1="10" x2="0" y2="66"/><text class="tag" x="14" y="23">SELF TEST</text><text class="title" x="14" y="46">图驱动回归生成</text><text class="note" x="14" y="62">浏览器回放 · 漂移报告</text></g>
+        <path class="flow yellow" d="M523 330 V468 H654"/><path class="flow yellow" d="M824 468 H956 Q986 468 986 438"/><path class="flow yellow optional" d="M739 506 V548 H215 V484"/>
+        <text class="caption" x="465" y="565">代码变化 → 重编译　｜　页面变化 → 重新探索　｜　同一清单 → 重生测试</text>
+      </svg>
+    </main>
+    <footer>
+      <span><i style="--c:#6299ff"></i>源码静态分析</span>
+      <span><i style="--c:#a68aff"></i>运行态探索</span>
+      <span><i style="--c:#e07acb"></i>可选模型</span>
+      <span><i style="--c:#47d4a2"></i>统一运行主链</span>
+      <span><i style="--c:#eab85c"></i>自测试反馈</span>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+---
+type Heading = { depth: number; slug: string; text: string };
+const { headings = [], mobile = false } = Astro.props as { headings: Heading[]; mobile?: boolean };
+---
+
+{headings.length > 0 && (
+  <nav class:list={['table-of-contents', { 'table-of-contents-mobile': mobile }]} aria-label="文章目录">
+    <p>目录</p>
+    <ol>
+      {headings.filter((heading) => heading.depth <= 3).map((heading) => (
+        <li class={`toc-depth-${heading.depth}`}><a href={`#${heading.slug}`}>{heading.text}</a></li>
+      ))}
+    </ol>
+  </nav>
+)}

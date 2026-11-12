@@ -1,0 +1,112 @@
+{
+  "snack": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/snack/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/snack/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/snack/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/snack/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/snack/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/snack/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/snack/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/snack/model-thumb.webp"
+  },
+  "play": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/play/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/play/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/play/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/play/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/play/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/play/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/play/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/play/model-thumb.webp"
+  },
+  "peek": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/peek/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/peek/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/peek/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/peek/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/peek/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/peek/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/peek/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/peek/model-thumb.webp"
+  },
+  "little": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/little/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/little/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/little/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/little/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/little/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/little/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/little/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/little/model-thumb.webp"
+  },
+  "thinking": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/thinking/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/thinking/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/thinking/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/thinking/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/thinking/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/thinking/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/thinking/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/thinking/model-thumb.webp"
+  },
+  "surprise": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/surprise/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/surprise/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/surprise/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/surprise/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/surprise/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/surprise/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/surprise/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/surprise/model-thumb.webp"
+  },
+  "cream": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/cream/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/cream/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/cream/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/cream/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/cream/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/cream/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/cream/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/cream/model-thumb.webp"
+  },
+  "together": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/together/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/together/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/together/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/together/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/together/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/together/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/together/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/together/model-thumb.webp"
+  },
+  "peace": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/peace/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/peace/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/peace/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/peace/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/peace/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/peace/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/peace/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/peace/model-thumb.webp"
+  },
+  "riding": {
+    "revision": "portrait-v7-photo-figure",
+    "photo": "/portraits/generated/portrait-v7-photo-figure/riding/photo.webp",
+    "thumbnail": "/portraits/generated/portrait-v7-photo-figure/riding/photo-thumb.webp",
+    "svg": "/portraits/generated/portrait-v7-photo-figure/riding/portrait.svg",
+    "svgPreview": "/portraits/generated/portrait-v7-photo-figure/riding/svg.webp",
+    "svgThumbnail": "/portraits/generated/portrait-v7-photo-figure/riding/svg-thumb.webp",
+    "model": "/portraits/generated/portrait-v7-photo-figure/riding/portrait.glb",
+    "modelPreview": "/portraits/generated/portrait-v7-photo-figure/riding/model.webp",
+    "modelThumbnail": "/portraits/generated/portrait-v7-photo-figure/riding/model-thumb.webp"
+  }
+}

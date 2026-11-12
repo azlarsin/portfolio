@@ -1,0 +1,28 @@
+/* The live SVG/WebGL/photo returns between gestures, avoiding permanent seams. */
+.companion-fragments {
+  display: block;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.companion-fragment,
+.companion-fragment canvas {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.route-companion[data-fragments='true'] .companion-visual { opacity: 0; }
+.route-companion[data-fragments='true'] .companion-fragments { opacity: 1; }
+.route-companion[data-fragments='true'] .companion-fragment { will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .route-companion[data-fragments='true'] .companion-visual { opacity: 1; }
+  .route-companion[data-fragments='true'] .companion-fragments { opacity: 0; }
+}

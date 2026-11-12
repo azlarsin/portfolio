@@ -1,0 +1,69 @@
+<button class="theme-toggle" type="button" data-theme-value="system" aria-label="主题：跟随系统。点击切换主题" title="主题：跟随系统">
+  <svg class="theme-icon theme-icon-system" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+    <path d="M12 3a9 9 0 1 0 9 9c0-5-4-9-9-9Z" />
+    <path d="M12 3v18" />
+  </svg>
+  <svg class="theme-icon theme-icon-light" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+    <path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.64 5.64l1.42 1.42m9.88 9.88 1.42 1.42m0-12.72-1.42 1.42m-9.88 9.88-1.42 1.42" />
+    <circle cx="12" cy="12" r="4" />
+  </svg>
+  <svg class="theme-icon theme-icon-dark" aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8">
+    <path d="M20.5 15.3A8.4 8.4 0 0 1 8.7 3.5 8.5 8.5 0 1 0 20.5 15.3Z" />
+  </svg>
+  <span class="sr-only">切换主题</span>
+</button>
+
+<script>
+  const storageKey = 'azlar-blog-theme';
+  const root = document.documentElement;
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('.theme-toggle')];
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const themeOrder = ['system', 'light', 'dark'] as const;
+  type Theme = typeof themeOrder[number];
+  const themeLabel: Record<Theme, string> = {
+    system: '跟随系统',
+    light: '浅色',
+    dark: '深色',
+  };
+
+  function readTheme(): Theme {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return themeOrder.includes(saved as Theme) ? saved as Theme : 'system';
+    } catch {
+      return 'system';
+    }
+  }
+
+  function applyTheme(theme: Theme) {
+    if (theme === 'system') delete root.dataset.theme;
+    else root.dataset.theme = theme;
+
+    const nextTheme = themeOrder[(themeOrder.indexOf(theme) + 1) % themeOrder.length];
+    for (const button of buttons) {
+      button.dataset.themeValue = theme;
+      button.title = `主题：${themeLabel[theme]}`;
+      button.setAttribute('aria-label', `主题：${themeLabel[theme]}。点击切换到${themeLabel[nextTheme]}`);
+    }
+  }
+
+  let currentTheme = readTheme();
+  applyTheme(currentTheme);
+
+  for (const button of buttons) {
+    button.addEventListener('click', () => {
+      const next = themeOrder[(themeOrder.indexOf(currentTheme) + 1) % themeOrder.length];
+      try {
+        localStorage.setItem(storageKey, next);
+      } catch {
+        // Theme switching still works when storage is unavailable.
+      }
+      currentTheme = next;
+      applyTheme(next);
+    });
+  }
+
+  mediaQuery.addEventListener('change', () => {
+    if (currentTheme === 'system') applyTheme('system');
+  });
+</script>

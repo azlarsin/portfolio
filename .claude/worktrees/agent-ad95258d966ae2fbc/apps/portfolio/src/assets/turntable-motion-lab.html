@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Turntable Motion Lab</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body {
+      min-height: 100vh;
+      color: #eef3ff;
+      background:
+        radial-gradient(circle at 24% 18%, rgba(82, 102, 255, .24), transparent 31%),
+        radial-gradient(circle at 80% 80%, rgba(22, 193, 178, .14), transparent 28%),
+        #090c14;
+    }
+    button, input { font: inherit; }
+    .shell { display: grid; min-height: 100vh; grid-template-columns: minmax(0, 1fr) 290px; }
+    .stage { position: relative; display: grid; min-height: 560px; place-items: center; overflow: hidden; padding: 44px; }
+    .stage::before {
+      position: absolute; width: min(55vw, 520px); aspect-ratio: 1; border: 1px solid rgba(151, 166, 202, .09);
+      border-radius: 50%; box-shadow: 0 0 0 46px rgba(151,166,202,.025), 0 0 0 92px rgba(151,166,202,.018); content: '';
+    }
+    svg { position: relative; width: min(58vw, 520px); max-height: 72vh; overflow: visible; filter: drop-shadow(0 22px 42px rgba(0,0,0,.42)); }
+    .slice { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: filter 160ms ease, opacity 160ms ease, transform 220ms cubic-bezier(.2,.9,.2,1.2); }
+    .slice:hover { filter: brightness(1.14) drop-shadow(0 7px 8px rgba(0,0,0,.28)); transform: scale(1.045); }
+    .center { pointer-events: none; }
+    .center-value { fill: white; font-size: 26px; font-weight: 720; text-anchor: middle; }
+    .center-label { fill: #8790a6; font-size: 9px; font-weight: 700; letter-spacing: .16em; text-anchor: middle; }
+    .panel { display: flex; flex-direction: column; gap: 24px; padding: 34px 28px; border-left: 1px solid rgba(147,160,190,.14); background: rgba(12,16,27,.78); backdrop-filter: blur(18px); }
+    .eyebrow { margin: 0 0 9px; color: #7d8aad; font-size: 9px; font-weight: 800; letter-spacing: .18em; }
+    h1 { margin: 0; font-family: Georgia, serif; font-size: 30px; font-weight: 500; line-height: 1.05; }
+    .lede { margin: 12px 0 0; color: #929bb1; font-size: 12px; line-height: 1.7; }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .stat { padding: 12px; border: 1px solid rgba(149,165,199,.13); border-radius: 10px; background: rgba(255,255,255,.025); }
+    .stat span { display: block; margin-bottom: 6px; color: #77829c; font-size: 8px; letter-spacing: .12em; }
+    .stat strong { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; }
+    .controls { display: grid; gap: 9px; }
+    .controls button {
+      min-height: 40px; padding: 0 13px; border: 1px solid rgba(139,157,199,.2); border-radius: 9px;
+      color: #dce5ff; background: rgba(91,109,255,.09); cursor: pointer; font-size: 11px; font-weight: 700; text-align: left;
+    }
+    .controls button:hover { border-color: rgba(130,150,255,.48); background: rgba(91,109,255,.17); }
+    .controls button.primary { color: white; background: #5468ff; border-color: #6678ff; }
+    .speed-row { display: grid; grid-template-columns: minmax(0,1fr) 40px; gap: 9px; }
+    .speed-control {
+      display: grid; min-width: 0; min-height: 40px; grid-template-columns: auto minmax(0,1fr) 42px; align-items: center; gap: 9px;
+      padding: 0 11px; border: 1px solid rgba(139,157,199,.2); border-radius: 9px; color: #dce5ff;
+      background: rgba(91,109,255,.09); font-size: 10px; font-weight: 700; user-select: none;
+    }
+    .speed-control > span { white-space: nowrap; }
+    #speedRange { width: 100%; min-width: 0; height: 28px; margin: 0; accent-color: #59ddc9; cursor: ew-resize; touch-action: pan-y; }
+    .speed-rate { color: #8fa1c8; font: 800 10px ui-monospace, SFMono-Regular, Menlo, monospace; text-align: right; }
+    .controls .speed-reset { display: grid; min-width: 40px; padding: 0; place-items: center; font-size: 18px; text-align: center; }
+    .hint { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(149,165,199,.12); color: #747f97; font-size: 10px; line-height: 1.75; }
+    .hint kbd { display: inline-grid; min-width: 22px; height: 22px; place-items: center; margin-right: 5px; border: 1px solid #374158; border-radius: 5px; color: #aebbd8; background: #151b29; font: 10px ui-monospace, monospace; }
+    .toast { position: absolute; bottom: 24px; left: 24px; padding: 9px 12px; border: 1px solid rgba(136,154,194,.18); border-radius: 999px; color: #9aa7c2; background: rgba(12,16,27,.78); font: 9px ui-monospace, monospace; opacity: 0; transform: translateY(8px); transition: .2s ease; }
+    .toast.show { opacity: 1; transform: none; }
+    @media (max-width: 760px) {
+      html, body { height: 100%; overflow: hidden; }
+      body { min-height: 0; }
+      .shell { position: relative; display: block; height: 100svh; min-height: 480px; overflow: hidden; }
+      .stage { position: absolute; min-height: 0; padding: 18px 18px 202px; inset: 0; }
+      .stage::before { width: min(82vw, 390px); }
+      svg { width: min(82vw, 390px); max-height: calc(100svh - 220px); }
+      .panel {
+        position: absolute;
+        z-index: 2;
+        right: 10px;
+        bottom: max(10px, env(safe-area-inset-bottom));
+        left: 10px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 9px;
+        padding: 10px;
+        border: 1px solid rgba(147,160,190,.22);
+        border-radius: 14px;
+        background: rgba(12,16,27,.91);
+        box-shadow: 0 18px 48px rgba(0,0,0,.35);
+      }
+      .panel header, .hint { display: none; }
+      .stats { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 5px; }
+      .stat { min-width: 0; padding: 6px 7px; }
+      .stat span { margin-bottom: 3px; overflow: hidden; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
+      .stat strong { display: block; overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+      .controls { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 6px; }
+      .controls button { min-height: 44px; padding: 0 7px; font-size: 10px; text-align: center; }
+      .speed-row { grid-column: 1 / -1; grid-template-columns: minmax(0,1fr) 44px; gap: 6px; }
+      .speed-control { min-height: 44px; grid-template-columns: auto minmax(0,1fr) 39px; gap: 6px; padding: 0 8px; }
+      .speed-rate { font-size: 9px; }
+      .toast { right: 12px; bottom: 197px; left: 12px; text-align: center; }
+    }
+    @media (max-width: 760px) and (max-height: 560px) {
+      .stage { padding-bottom: 130px; }
+      svg { width: min(58vw, 270px); max-height: calc(100svh - 140px); }
+      .stats { display: none; }
+      .panel { padding: 8px; }
+      .toast { bottom: 122px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="stage" aria-label="SVG 转盘动效画布">
+      <svg id="wheel" viewBox="-250 -250 500 500" role="img" aria-label="可交互的数据转盘">
+        <g id="slices"></g>
+        <g class="center">
+          <circle r="72" fill="#0c111d" stroke="rgba(184,198,230,.14)" />
+          <text class="center-value" y="-2" id="centerCount">5</text>
+          <text class="center-label" y="20">LIVE SLICES</text>
+        </g>
+      </svg>
+      <div class="toast" id="toast">DOUBLE CLICK · REMOVE SLICE</div>
+    </section>
+    <aside class="panel">
+      <header>
+        <p class="eyebrow">2018 · MOTION STUDY</p>
+        <h1>Turntable<br />Motion Lab</h1>
+        <p class="lede">比例数据先变成圆弧几何，再由相邻扇区的实时状态串成连续运动。</p>
+      </header>
+      <div class="stats">
+        <div class="stat"><span>SLICES</span><strong id="sliceCount">05</strong></div>
+        <div class="stat"><span>PLAYBACK</span><strong id="speedLabel">1.00×</strong></div>
+        <div class="stat"><span>STIFFNESS</span><strong id="stiffnessLabel">50</strong></div>
+        <div class="stat"><span>GEOMETRY</span><strong>SVG ARC</strong></div>
+      </div>
+      <div class="controls">
+        <button class="primary" id="randomize">R · 重组数据</button>
+        <button id="equalize">E · 所有扇区均分</button>
+        <button id="randomSpace">A · 随机分配全空间</button>
+        <div class="speed-row">
+          <label class="speed-control" for="speedRange"><span>动画速度</span><input id="speedRange" type="range" min="0.10" max="1.50" step="0.05" value="1.00" aria-label="动画播放速度" /><output class="speed-rate" id="speedRate" for="speedRange" aria-live="polite">1.00×</output></label>
+          <button class="speed-reset" id="reset" type="button" aria-label="重置数据与播放速度" title="重置数据与播放速度"><span aria-hidden="true">↺</span></button>
+        </div>
+      </div>
+      <p class="hint"><kbd>R</kbd> 随机重组扇区<br /><kbd>E</kbd> 所有扇区均分空间 · <kbd>A</kbd> 随机分配全部空间<br />拖动速度滑杆后可继续操作其他按钮；双击任意扇区可移除。</p>
+    </aside>
+  </main>
+  <script>
+    const colors = ['#536dfe','#20c6b7','#f3b84b','#f06f78','#8968ed','#3f9ae8','#e16bb4','#8bbd55'];
+    const TAU = Math.PI * 2;
+    const slicesRoot = document.querySelector('#slices');
+    const toast = document.querySelector('#toast');
+    const countNodes = [document.querySelector('#sliceCount'), document.querySelector('#centerCount')];
+    const speedLabel = document.querySelector('#speedLabel');
+    const speedRange = document.querySelector('#speedRange');
+    const speedRate = document.querySelector('#speedRate');
+    let values = [10,20,30];
+    let slices = [];
+    let nextSliceId = 0;
+    let nextColorIndex = 0;
+    let last = performance.now();
+    let animationFrame = 0;
+    let playbackRate = 1;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    const polar = (angle, radius=205) => ({ x: Math.cos(angle-Math.PI/2)*radius, y: Math.sin(angle-Math.PI/2)*radius });
+    const arcPath = (start, end) => {
+      const a = polar(start), b = polar(end), span = Math.max(0, end-start);
+      if (span >= TAU-.0001) {
+        const midpoint = polar(start+Math.PI);
+        return `M0 0 L${a.x.toFixed(2)} ${a.y.toFixed(2)} A205 205 0 1 1 ${midpoint.x.toFixed(2)} ${midpoint.y.toFixed(2)} A205 205 0 1 1 ${a.x.toFixed(2)} ${a.y.toFixed(2)} Z`;
+      }
+      return `M0 0 L${a.x.toFixed(2)} ${a.y.toFixed(2)} A205 205 0 ${span > Math.PI ? 1 : 0} 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)} Z`;
+    };
+    function normalize(input) { const sum = input.reduce((a,b)=>a+b,0) || 1; return input.map(v => v/sum); }
+    function createSlice(value, origin=TAU) {
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      const slice = {
+        id: nextSliceId++,
+        color: colors[nextColorIndex++ % colors.length],
+        value,
+        start: origin,
+        end: origin,
+        targetStart: origin,
+        targetEnd: origin,
+        startVelocity: 0,
+        endVelocity: 0,
+        path,
+      };
+      path.setAttribute('class','slice');
+      path.addEventListener('dblclick', () => {
+        const index = slices.indexOf(slice);
+        if (index !== -1) removeSlice(index);
+      });
+      path.addEventListener('mouseenter', () => {
+        const index = slices.indexOf(slice);
+        if (index === -1) return;
+        const fraction = Math.max(0,(slice.end-slice.start)/TAU);
+        flash(`SLICE ${String(index+1).padStart(2,'0')} · ${(fraction*100).toFixed(1)}%`);
+      });
+      slicesRoot.appendChild(path);
+      return slice;
+    }
+    function setDistributionTargets(input) {
+      const fractions = normalize(input);
+      let angle = 0;
+      slices.forEach((slice,index) => {
+        slice.value = input[index];
+        slice.targetStart = angle;
+        angle += fractions[index] * TAU;
+        slice.targetEnd = index === slices.length-1 ? TAU : angle;
+        slice.startVelocity = 0;
+        slice.endVelocity = 0;
+      });
+    }
+    function setValues(next) {
+      const oldLength = slices.length;
+      values = next.length ? next : [1];
+      while (slices.length > values.length) slices.pop().path.remove();
+      while (slices.length < values.length) slices.push(createSlice(values[slices.length]));
+      setDistributionTargets(values);
+      if (values.length !== oldLength) flash('DATA CHANGED · SPRING RE-TARGETED');
+      render();
+      requestTick();
+    }
+    function removeSlice(index) {
+      if (slices.length === 1) return flash('至少保留一个扇区');
+      const removed = slices[index];
+      const left = index > 0 ? slices[index-1] : null;
+      const right = index < slices.length-1 ? slices[index+1] : null;
+
+      // Freeze every surviving slice at its visible geometry. Only the two
+      // exposed edges receive a new target, so no unrelated slice translates.
+      slices.forEach(slice => {
+        slice.targetStart = slice.start;
+        slice.targetEnd = slice.end;
+        slice.startVelocity = 0;
+        slice.endVelocity = 0;
+      });
+      if (left && right) {
+        const midpoint = (removed.start+removed.end)/2;
+        left.targetEnd = midpoint;
+        right.targetStart = midpoint;
+      } else if (right) {
+        right.targetStart = removed.start;
+      } else if (left) {
+        left.targetEnd = removed.end;
+      }
+
+      removed.path.remove();
+      slices.splice(index,1);
+      values = slices.map(slice => Math.max(.0001,(slice.targetEnd-slice.targetStart)/TAU));
+      flash('SLICE REMOVED · NEIGHBORS EXPANDING');
+      render();
+      requestTick();
+    }
+    function render() {
+      slices.forEach((slice,index) => {
+        const fraction = Math.max(0,(slice.end-slice.start)/TAU);
+        const path = slice.path;
+        path.setAttribute('d', arcPath(slice.start,slice.end));
+        path.setAttribute('fill', slice.color);
+        path.setAttribute('data-id', slice.id);
+        path.setAttribute('data-index', index);
+        path.setAttribute('data-share', (fraction*100).toFixed(2));
+        path.setAttribute('aria-label', `扇区 ${index+1}，占比 ${(fraction*100).toFixed(1)}%`);
+        path.style.opacity = fraction < .0001 ? '0' : '1';
+      });
+      countNodes[0].textContent = String(slices.length).padStart(2,'0');
+      countNodes[1].textContent = slices.length;
+    }
+    function settleSlices() {
+      slices.forEach(slice => {
+        slice.start = slice.targetStart;
+        slice.end = slice.targetEnd;
+        slice.startVelocity = 0;
+        slice.endVelocity = 0;
+      });
+    }
+    function requestTick() {
+      if (animationFrame || document.hidden) return;
+      if (reducedMotion.matches) {
+        settleSlices();
+        render();
+        return;
+      }
+      animationFrame = requestAnimationFrame(tick);
+    }
+    function advanceEdge(position, velocity, target, dt) {
+      const distance = target-position;
+      if (Math.abs(distance) < .00005 && Math.abs(velocity) < .00005) return [target,0,false];
+      const omega = Math.sqrt(50);
+      const offset = position-target;
+      const decay = Math.exp(-omega*dt);
+      const change = (velocity+omega*offset)*dt;
+      const nextPosition = target+(offset+change)*decay;
+      const nextVelocity = (velocity-omega*change)*decay;
+      return [nextPosition,nextVelocity,true];
+    }
+    function tick(now) {
+      animationFrame = 0;
+      const dt = Math.min(32, now-last) / 1000 * playbackRate;
+      last = now;
+      let moving = false;
+      slices.forEach(slice => {
+        const startState = advanceEdge(slice.start,slice.startVelocity,slice.targetStart,dt);
+        const endState = advanceEdge(slice.end,slice.endVelocity,slice.targetEnd,dt);
+        [slice.start,slice.startVelocity] = startState;
+        [slice.end,slice.endVelocity] = endState;
+        moving ||= startState[2] || endState[2];
+      });
+      render();
+      if (moving) requestTick();
+    }
+    function randomize() {
+      const count = 4 + Math.floor(Math.random()*6);
+      setValues(Array.from({length:count},()=>8+Math.round(Math.random()*38)));
+    }
+    function equalize() {
+      setValues(Array.from({length:values.length},()=>1));
+      flash(`EQUAL SPLIT · ${values.length} SLICES · 100% FILLED`);
+    }
+    function randomizeSpace() {
+      setValues(Array.from({length:values.length},()=>.35+Math.random()));
+      flash(`RANDOM SPLIT · ${values.length} SLICES · 100% FILLED`);
+    }
+    function renderPlaybackRate() {
+      const label = `${playbackRate.toFixed(2)}×`;
+      speedLabel.textContent = label;
+      speedRange.value = playbackRate.toFixed(2);
+      speedRate.value = label;
+    }
+    function setPlaybackRate(value) {
+      const next = Number(value);
+      const fallback = Number.isFinite(next) ? next : 1;
+      playbackRate = Math.min(Number(speedRange.max),Math.max(Number(speedRange.min),fallback));
+      renderPlaybackRate();
+    }
+    let toastTimer;
+    function flash(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>toast.classList.remove('show'),1300); }
+    document.querySelector('#randomize').addEventListener('click', randomize);
+    document.querySelector('#equalize').addEventListener('click', equalize);
+    document.querySelector('#randomSpace').addEventListener('click', randomizeSpace);
+    document.querySelector('#reset').addEventListener('click', () => {
+      slices.forEach(slice => slice.path.remove());
+      slices = [];
+      nextColorIndex = 0;
+      setValues([10,20,30]);
+      setPlaybackRate(1);
+      flash('RESET · DATA 10 / 20 / 30 · SPEED 1.00×');
+    });
+    speedRange.addEventListener('input', event => setPlaybackRate(event.currentTarget.value));
+    window.addEventListener('keydown', e => {
+      const key = e.key.toLowerCase();
+      if (!e.repeat && key==='r') randomize();
+      if (!e.repeat && key==='e') equalize();
+      if (!e.repeat && key==='a') randomizeSpace();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (animationFrame) cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+        return;
+      }
+      last = performance.now();
+      requestTick();
+    });
+    reducedMotion.addEventListener('change', () => {
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      last = performance.now();
+      requestTick();
+    });
+    slices = values.map(value => createSlice(value,0));
+    setDistributionTargets(values);
+    renderPlaybackRate();
+    render();
+    requestTick();
+  </script>
+</body>
+</html>

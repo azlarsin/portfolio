@@ -1,0 +1,46 @@
+---
+import EntryCard from '../components/EntryCard.astro';
+import Pagination from '../components/Pagination.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getPublicArticles, getTagCounts, pageCount, pageItems, tagUrl } from '../lib/content';
+
+const articles = await getPublicArticles();
+const latestArticles = pageItems(articles, 1);
+const totalPages = pageCount(articles);
+const popularTags = getTagCounts(articles).slice(0, 8);
+---
+
+<BaseLayout title="文章与记录">
+  <section class="page">
+    <div class="home-hero">
+      <p class="eyebrow">Azlar Notes · since 2016</p>
+      <h1>文章与记录</h1>
+      <div class="hero-actions">
+        <a class="button-link" href="/archives/">浏览全部归档</a>
+        <a class="button-link button-link-subtle" href="/search/">搜索笔记</a>
+      </div>
+    </div>
+
+    <div class="home-grid">
+      <section aria-labelledby="latest-writing">
+        <div class="section-heading">
+          <h2 id="latest-writing">最近发布</h2>
+          <a href="/archives/">全部文章 →</a>
+        </div>
+        <div class="entry-list">
+          {latestArticles.map((article) => <EntryCard article={article} />)}
+        </div>
+        <Pagination currentPage={1} totalPages={totalPages} />
+      </section>
+
+      <aside class="home-aside">
+        <section class="aside-block">
+          <h2>常见标签</h2>
+          <ul>
+            {popularTags.map(([tag, count]) => <li><a href={tagUrl(tag)}>{tag} <span aria-hidden="true">({count})</span></a></li>)}
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>

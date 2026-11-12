@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            min-height: 400px;
+            flex-wrap: wrap;
+        }
+
+        body > div {
+            flex-basis: 30%;
+            margin: 10px .5% 0 1%;
+
+        }
+
+        body > div > .layers {
+            width: 100% !important;
+            min-height: 500px;
+        }
+
+        body > div > .actions {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        body > div > .actions > button {
+            flex-basis: 30%;
+            width: 50px !important;
+            height: 50px;
+            background: rgba(0,0,255, .2);
+            border: none;
+            margin: 1%;
+            font-size: 14px;
+        }
+
+        body > div > .actions > button:focus,
+        body > div > .actions > button:active {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <h3>when data changed, will save to sessionStorage:</h3>
+    <div id="draggable-tree" class="layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+<div>
+    <h3>get from sessionStorage:</h3>
+    <div id="draggable-tree-1" class="layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+<div>
+    <h3><span>5</span>s later, it will be reset with data from tree0</h3>
+    <div id="draggable-tree-2" class="layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+
+
+<div>
+    <div class="draggable-tree layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+<div>
+    <div class="draggable-tree layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+<div>
+    <div class="draggable-tree layers">
+
+    </div>
+
+    <div class="actions">
+
+    </div>
+</div>
+
+
+<script src="DraggableTree.min.js"></script>
+<script src="index.js"></script>
+</body>
+</html>

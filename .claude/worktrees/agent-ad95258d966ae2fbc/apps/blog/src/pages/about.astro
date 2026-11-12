@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../data/site';
+---
+
+<BaseLayout title="关于" description="为什么写这个 Blog，以及最新的 Portfolio。">
+  <section class="page page-narrow">
+    <h1 class="page-title">为什么写这个 Blog</h1>
+
+    <div class="about-copy about-simple" data-pagefind-body>
+      <ul>
+        <li>工作以来，做了很多项目，也解决过许多问题，但仍然觉得自己没有明确的核心竞争力，希望通过这个项目持续提高自己。</li>
+        <li>我喜欢向身边的人分享收藏和经验，但一直没有系统整理。随着越来越多的链接失效，我决定建立这个 Blog，把这些内容长期保存下来。</li>
+        <li>这个 Blog 最初基于 React 编写，开发过程记录在<a href="/article/blog/">《开发日历》</a>中。</li>
+      </ul>
+
+      <h2>了解更多 / 工作相关</h2>
+      <p><a href={SITE.links.portfolio}>查看最新的 Portfolio <span aria-hidden="true">↗</span></a></p>
+    </div>
+  </section>
+</BaseLayout>
